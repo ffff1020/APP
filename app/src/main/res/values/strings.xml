@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">iHanc</string>
+
+    <!-- Strings related to login -->
+    <string name="prompt_email">请输入手机号码</string>
+    <string name="prompt_password">请输入密码</string>
+    <string name="action_sign_in">登录</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="error_invalid_email">手机号码不正确</string>
+    <string name="error_invalid_password">This password is too short</string>
+    <string name="error_incorrect_password">密码或验证码不正确</string>
+    <string name="error_field_required">必填</string>
+    <string name="permission_rationale">"Contacts permissions are needed for providing email
+        completions."
+    </string>
+    <string name="title_activity_main">iHanc--瀚盛海鲜行业专用销售系统</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+</resources>
