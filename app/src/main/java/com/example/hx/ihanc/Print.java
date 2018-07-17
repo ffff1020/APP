@@ -35,7 +35,7 @@ public class Print {
             }else{
                 dev.selectReceiptPaper();
                 dev.selectAlignment(EpsonCom.ALIGNMENT.LEFT);
-                dev.printString("Hello HANCHUAN", EpsonCom.FONT.FONT_A,true,false,false,false);
+                dev.printString(content, EpsonCom.FONT.FONT_A,true,false,false,false);
                 dev.cutPaper();
                 dev.closeDevice();
             }

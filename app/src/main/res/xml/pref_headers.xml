@@ -1,0 +1,11 @@
+<preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- These settings headers are only used on tablets. -->
+
+    <header
+        android:fragment="com.example.hx.ihanc.SettingsActivity$GeneralPreferenceFragment"
+        android:icon="@drawable/ic_print_black_24dp"
+        android:title="打印机连接设置" />
+
+
+</preference-headers>

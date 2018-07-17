@@ -56,6 +56,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import cz.msebera.android.httpclient.Header;
 import static android.Manifest.permission.READ_CONTACTS;
+import static com.example.hx.ihanc.ActivityCollector.removeActivity;
 
 /**
  * A login screen that offers login via email/password.
@@ -237,6 +238,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         } else {
             // Show a progress spinner, and kick off a background task to
             // perform the user login attempt.
+
             showProgress(true);
             String input=email+":"+password+":"+code;
             IhancHttpClient.setAuth(Base64.encodeToString(input.getBytes(),0));
@@ -266,6 +268,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                         stopTimer();
                         Intent intent=new Intent(LoginActivity.this,MainActivity.class);
                         startActivity(intent);
+                        //ActivityCollector.removeActivity(LoginActivity.this);
+                        LoginActivity.this.finish();
                     }
 
                     mCode.requestFocus();
@@ -492,7 +496,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             RequestParams params = new RequestParams();
             params.put("data", email);
             System.out.print(IhancHttpClient.getAbsoluteUrl("/index/index/getCode"));
-            IhancHttpClient.post("/index/index/getCode", params, new AsyncHttpResponseHandler() {
+           /* IhancHttpClient.post("/index/index/getCode", params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] response) {
                     // called when response HTTP status is "200 OK"
@@ -515,7 +519,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                    // Log.d("Login on error", new String(errorResponse));
                     System.out.println(e.getMessage());
                 }
-            });
+            }); */   //测试用不发送验证码
         }
     }
     //检测设置蓝牙
@@ -558,7 +562,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             timer.cancel();
             timer=null;
         }
-        ActivityCollector.removeActivity(this);
+        removeActivity(this);
     }
 }
 
