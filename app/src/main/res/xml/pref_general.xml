@@ -1,9 +1,11 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
     <SwitchPreference
-        android:defaultValue="true"
+        android:defaultValue="false"
         android:key="bluetooth_printer"
-        android:title="连接蓝牙打印机" />
+        android:disableDependentsState="true"
+        android:title="使用蓝牙打印机" />
+
 
     <!-- NOTE: EditTextPreference accepts EditText attributes. -->
     <!-- NOTE: EditTextPreference's summary should be set to its value by the activity code. -->
@@ -13,10 +15,11 @@
 
     <EditTextPreference
         android:defaultValue="192.168."
+        android:dependency="bluetooth_printer"
         android:key="@string/printer_IP"
         android:maxLines="1"
         android:selectAllOnFocus="true"
         android:singleLine="true"
-        android:title="输入打印机IP地址" />
+        android:title="使用网络打印机IP" />
 
 </PreferenceScreen>

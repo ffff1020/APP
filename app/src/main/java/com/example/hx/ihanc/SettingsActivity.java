@@ -1,23 +1,33 @@
 package com.example.hx.ihanc;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.CheckBoxPreference;
+import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceScreen;
+import android.preference.SwitchPreference;
+import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.ActionBar;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import java.util.List;
 
@@ -33,6 +43,9 @@ import java.util.List;
  * API Guide</a> for more information on developing a Settings UI.
  */
 public class SettingsActivity extends AppCompatPreferenceActivity {
+    // Intent request codes
+    private static final int REQUEST_CONNECT_DEVICE = 1;
+    private static final int REQUEST_ENABLE_BT = 2;
 
     /**
      * A preference value change listener that updates the preference's summary
@@ -42,7 +55,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         @Override
         public boolean onPreferenceChange(Preference preference, Object value) {
             String stringValue = value.toString();
-
             if (preference instanceof ListPreference) {
                 // For list preferences, look up the correct display value in
                 // the preference's 'entries' list.
@@ -110,10 +122,17 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
         // Trigger the listener immediately with the preference's
         // current value.
-        sBindPreferenceSummaryToValueListener.onPreferenceChange(preference,
-                PreferenceManager
-                        .getDefaultSharedPreferences(preference.getContext())
-                        .getString(preference.getKey(), ""));
+        if(preference instanceof SwitchPreference){
+            boolean value=PreferenceManager
+                    .getDefaultSharedPreferences(preference.getContext())
+                    .getBoolean(preference.getKey(),false);
+            sBindPreferenceSummaryToValueListener.onPreferenceChange(preference,value);
+        }else {
+            sBindPreferenceSummaryToValueListener.onPreferenceChange(preference,
+                    PreferenceManager
+                            .getDefaultSharedPreferences(preference.getContext())
+                            .getString(preference.getKey(), ""));
+        }
     }
 
     @Override
@@ -177,11 +196,41 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
             // guidelines.
-            bindPreferenceSummaryToValue(findPreference("bluetooth_printer"));
+            //bindPreferenceSummaryToValue(findPreference("bluetooth_printer"));
             //bindPreferenceSummaryToValue(findPreference("example_list"));
             bindPreferenceSummaryToValue(findPreference(getString(R.string.printer_IP)));
+            findPreference("bluetooth_printer").setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
+                @Override
+                public boolean onPreferenceChange(Preference preference, Object o) {
+                    String value=o.toString();
+                    Log.d("open bl",value);
+                    if(value.equals("true")){
+                        Intent serverIntent = new Intent(preference.getContext(), DeviceListActivity.class);
+                        startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE);
+                    }
+                    return true;
+                }
+            });
         }
-
+        public void onActivityResult(int requestCode, int resultCode, Intent data) {
+            switch (requestCode) {
+                case REQUEST_CONNECT_DEVICE:
+                    // When DeviceListActivity returns with a device to connect
+                    if (resultCode == Activity.RESULT_OK) {
+                        // Get the device MAC address
+                        String address = data.getExtras()
+                                .getString(DeviceListActivity.EXTRA_DEVICE_ADDRESS);
+                        //SharedPreferences.Editor addressEditor = getSharedPreferences("pref_ihanc", MODE_PRIVATE).edit();
+                        //addressEditor.putString(getString(R.string.bluetooth_printer_address),address);
+                        //addressEditor.commit();
+                        SharedPreferences.Editor addressEditor=findPreference("bluetooth_printer").getEditor();
+                        addressEditor.putString(getString(R.string.bluetooth_printer_address),address);
+                        addressEditor.commit();
+                        Log.d("open bl",address);
+                    }
+                    break;
+            }
+        }
         @Override
         public boolean onOptionsItemSelected(MenuItem item) {
             int id = item.getItemId();
