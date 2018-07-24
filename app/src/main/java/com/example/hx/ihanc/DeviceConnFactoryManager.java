@@ -147,7 +147,7 @@ public class DeviceConnFactoryManager {
                 System.out.println("id -> " + id);
                 mPort = new BluetoothPort(macAddress);
                 isOpenPort = deviceConnFactoryManagers[id].mPort.openPort();
-
+                System.out.println("isOpenPort -> " + isOpenPort);
                 break;
             case USB:
                 mPort = new UsbPort(mContext, mUsbDevice);
@@ -158,6 +158,7 @@ public class DeviceConnFactoryManager {
                 }
                 break;
             case WIFI:
+                Log.d("EthernetPort","EthernetPort");
                 mPort = new EthernetPort(ip, port);
                 isOpenPort = mPort.openPort();
                 break;
@@ -170,6 +171,7 @@ public class DeviceConnFactoryManager {
         }
         //端口打开成功后，检查连接打印机所使用的打印机指令ESC、TSC
         if (isOpenPort) {
+            Log.d("DCFM","port is opened");
             queryCommand();
         } else {
             sendStateBroadcast(CONN_STATE_FAILED);
