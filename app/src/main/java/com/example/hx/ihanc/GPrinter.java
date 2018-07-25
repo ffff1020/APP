@@ -123,6 +123,7 @@ public class GPrinter {
         DeviceConnFactoryManager.getDeviceConnFactoryManagers()[id].sendDataImmediately(datas);
     }
     public void finishPrint(){
+        //App.getContext().unregisterReceiver(receiver);
         DeviceConnFactoryManager.closeAllPort();
     }
 
