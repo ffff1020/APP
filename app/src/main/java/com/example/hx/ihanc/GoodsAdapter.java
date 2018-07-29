@@ -7,18 +7,34 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Filter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class GoodsAdapter extends ArrayAdapter<Goods> {
     private Context mContext;
+    private MyFilter mFilter;
     private int resource;
     private List<Goods> mList;
+    private List<Goods> mDisplayList;
     public GoodsAdapter(@NonNull Context context, int resource, @NonNull List<Goods>objects) {
         super(context, resource, objects);
         this.mContext=context;
         this.resource=resource;
         this.mList=objects;
+        this.mDisplayList=objects;
+    }
+
+    @Override
+    public int getCount() {
+        return mDisplayList.size();
+    }
+
+    @Nullable
+    @Override
+    public Goods getItem(int position) {
+        return mDisplayList.get(position);
     }
 
     @NonNull
@@ -34,8 +50,75 @@ public class GoodsAdapter extends ArrayAdapter<Goods> {
         }else{
             viewHolder=(ViewHolder) convertView.getTag();
         }
-        viewHolder.tvTitle.setText(mList.get(position).getGoods_name());
+        viewHolder.tvTitle.setText(mDisplayList.get(position).getGoods_name());
         return convertView;
+    }
+    //返回过滤器
+    public MyFilter getFilter() {
+        if (mFilter == null) {
+            mFilter = new MyFilter();
+        }
+        return mFilter;
+    }
+    class MyFilter extends Filter {
+        private  String filterType;
+        public void setMyFilter(String mFilterType){
+            this.filterType=mFilterType;
+        }
+        @Override
+        protected FilterResults performFiltering(CharSequence prefix) {
+            FilterResults results = new FilterResults();
+            if ((prefix == null || prefix.length() == 0) ){
+                results.values = mList;
+                results.count = mList.size();
+            } else {
+                final ArrayList<Goods> newValues = new ArrayList<Goods>();
+                switch(filterType){
+                    case Utils.GOODSFILTERCATEGORYID:
+                        int category_id =Integer.parseInt(prefix.toString());
+                        for (int i = 0; i < mList.size(); i++) {
+                            final Goods value = mList.get(i);
+                            if (value.getCategory_id() == category_id) {
+                                newValues.add(value);
+                            }
+                        }
+                        break;
+                    case Utils.GOODSFILTERSEARCHVIEW:
+                        for (int i = 0; i < mList.size(); i++) {
+                            final Goods value = mList.get(i);
+                            if (value.getGoods_sn().contains(prefix)||value.getGoods_name().contains(prefix) ) {
+                                newValues.add(value);
+                            }
+                        }
+                        break;
+                    case Utils.GOODSFILTERPROMOTE:
+                        for (int i = 0; i < mList.size(); i++) {
+                            final Goods value = mList.get(i);
+                            if (value.getPromote()==1 ) {
+                                newValues.add(value);
+                            }
+                        }
+                        break;
+                        default:
+                            break;
+                }
+                results.values = newValues;
+                results.count = newValues.size();
+            }
+
+            return results;
+        }
+
+        @Override
+        protected void publishResults(CharSequence constraint,
+                                      FilterResults results) {
+            mDisplayList = (List<Goods>) results.values;
+            if (results.count > 0) {
+                notifyDataSetChanged();
+            } else {
+                notifyDataSetInvalidated();
+            }
+        }
     }
 
 }

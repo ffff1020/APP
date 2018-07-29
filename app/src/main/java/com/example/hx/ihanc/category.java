@@ -1,8 +1,8 @@
 package com.example.hx.ihanc;
 
 public class category {
-    private int category_id;
-    private String category_name;
+    private int category_id=0;
+    private String category_name="";
     public int getCategory_id(){
         return category_id;
     }

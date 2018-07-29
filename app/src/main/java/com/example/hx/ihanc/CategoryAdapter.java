@@ -3,6 +3,7 @@ package com.example.hx.ihanc;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,6 +36,8 @@ public class CategoryAdapter extends ArrayAdapter<category> {
             viewHolder=(ViewHolder) convertView.getTag();
         }
         viewHolder.tvTitle.setText(categoryList.get(position).getCategory_name());
+        Log.d("getViewCategoryAdapter",categoryList.size()+"");
         return convertView;
     }
+    
 }
