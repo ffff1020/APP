@@ -5,6 +5,4 @@
     android:layout_height="20dp"
     android:textSize="18sp"
     android:padding="5dp"
-    android:textColor="@color/label_orange"
-    android:background="@drawable/goods_background"
     />

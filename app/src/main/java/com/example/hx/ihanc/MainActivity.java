@@ -14,18 +14,28 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
+import android.support.design.widget.TabLayout;
+import android.support.v4.app.Fragment;
+import android.support.v4.view.ViewPager;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.GridView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SearchView;
+import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -61,6 +71,9 @@ public class MainActivity extends AppCompatActivity {
     private GridView mGridView;
     private GoodsAdapter mGoodsAdapter;
     private SearchView mGoodSearchView;
+    private AutoCompleteTextView memberTV;
+    private MemberAdapter memberAdapter;
+    private SalePagerAdapter mSalePagerAdapter;
     // Message types sent from the BluetoothChatService Handler
     public static final int MESSAGE_STATE_CHANGE = 1;
     public static final int MESSAGE_READ = 2;
@@ -76,6 +89,11 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_ENABLE_BT = 2;
     private List mCategoryDataList=new ArrayList<category>();
     private List mGoodsDataList=new ArrayList<Goods>();
+    private List memberDataList=new ArrayList<member>();
+    private List<SaleFragment> fragmentList=new ArrayList<>();
+    private List<member> memberTabsList=new ArrayList<>();
+    private ViewPager vp;
+    private TabLayout tl;
 
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -177,6 +195,50 @@ public class MainActivity extends AppCompatActivity {
                 mFilter.filter(":");
             }
         });
+        memberTV=(AutoCompleteTextView)findViewById(R.id.memberTV);
+        memberAdapter=new MemberAdapter(MainActivity.this,R.layout.member,memberDataList);
+        memberTV.setAdapter(memberAdapter);
+        memberTV.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                MemberAdapter.MemberFilter memberFilter=memberAdapter.getFilter();
+                memberFilter.filter(editable.toString());
+            }
+        });
+        getMemberData();
+        memberTV.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                hideKeyboard();
+                member memberItem=(member)adapterView.getAdapter().getItem(i);
+                memberTV.setText(memberItem.getMember_name());
+                memberTV.clearFocus();
+                addSaleTabs(memberItem);
+                //Log.d("member Click",memberItem.getMember_name());
+            }
+        });
+        memberTV.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean b) {
+                if(b) memberTV.setText("");
+            }
+        });
+        vp=(ViewPager)findViewById(R.id.vp);
+        tl=(TabLayout)findViewById(R.id.tl);
+        mSalePagerAdapter=new SalePagerAdapter(getSupportFragmentManager(),MainActivity.this,fragmentList,memberTabsList);
+        vp.setAdapter(mSalePagerAdapter);
+        tl.setupWithViewPager(vp);
+
     }
     public void getCategoryData(){
         RequestParams params = new RequestParams();
@@ -239,19 +301,70 @@ public class MainActivity extends AppCompatActivity {
                 String res = new String(responseBody);
                 // Log.d("getCategoryData Failed",res.toString());
                 for(int i=0;i<headers.length;i++){
-                    Log.d("getCategoryData Failed",headers[i].toString());
+                    Log.d("getGoodsData Failed",headers[i].toString());
                 }
             }
         });
     }
+    public void getMemberData(){
+        RequestParams params = new RequestParams();
+        IhancHttpClient.get("/index/sale/memberAll", params, new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                String res = new String(responseBody);
+                try {
+                    JSONArray resArray = new JSONArray(res);
+                    for(int i=0;i<resArray.length();i++){
+                        JSONObject myjObject = resArray.getJSONObject(i);
+                        member mItem=new member(myjObject.getInt("member_id"),
+                                myjObject.getString("member_name"),
+                                myjObject.getString("member_sn")
+                        );
+                        memberDataList.add(mItem);
+                    }
 
+                } catch (JSONException e)
+                {
+                    Log.d("JSONArray",e.toString());}
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+
+            }
+        });
+
+    }
     public void onBackPressed() {
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_MAIN);// "android.intent.action.MAIN"
         intent.addCategory(Intent.CATEGORY_HOME); //"android.intent.category.HOME"
         startActivity(intent);
     }
-
+    public void addSaleTabs(member memberItem){
+        if(memberTabsList.size()>5){
+            Toast.makeText(MainActivity.this,"排列中的客户不能超过5个！",Toast.LENGTH_LONG).show();
+            return;
+        }
+        for(int i=0;i<memberTabsList.size();i++){
+            if(memberItem.getMember_id()==memberTabsList.get(i).getMember_id()) {
+                vp.setCurrentItem(i);
+                return;
+            }
+        }
+          memberTabsList.add(memberItem);
+          SaleFragment mFragment=new SaleFragment();
+          mFragment.setMember(memberItem);
+          fragmentList.add(mFragment);
+          mSalePagerAdapter.notifyDataSetChanged();
+          vp.setCurrentItem(memberTabsList.size()-1);
+    }
+    public void deleteCurrentSaleTabs(){
+        int position=vp.getCurrentItem();
+        memberTabsList.remove(position);
+        fragmentList.remove(position);
+        mSalePagerAdapter.notifyDataSetChanged();
+    }
     public void initPrinter(){
         if(sp.getBoolean("bluetooth_printer",false)){
             String macAddress=sp.getString(getString(R.string.bluetooth_printer_address),"");
@@ -277,5 +390,13 @@ public class MainActivity extends AppCompatActivity {
             mGPrinter.print("SAMPLE");
         }
    }
+    public void hideKeyboard() {
+      InputMethodManager imm = (InputMethodManager) this.getSystemService(Context.INPUT_METHOD_SERVICE);
+      if (imm.isActive() && this.getCurrentFocus() != null) {
+          if (this.getCurrentFocus().getWindowToken() != null) {
+              imm.hideSoftInputFromWindow(this.getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+          }
+      }
+    }
 
 }
