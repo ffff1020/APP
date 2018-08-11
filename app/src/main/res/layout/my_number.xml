@@ -4,47 +4,63 @@
     android:layout_height="match_parent"
     android:orientation="horizontal"
     android:baselineAligned="false">
-    <RelativeLayout
-        android:onClick="iv_1"
-        android:layout_gravity="center"
-        android:layout_weight="4"
+    <TextView
         android:layout_width="0dp"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_weight="3"
+        android:textSize="15sp"
+        android:id="@+id/title"
+        />
+    <RelativeLayout
+        android:id="@+id/iv_1"
+        android:layout_gravity="center"
+        android:layout_weight="1"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:background="@drawable/border"
+        >
         <ImageView
             android:layout_centerInParent="true"
             android:src="@drawable/p1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:contentDescription="TODO" />
+            android:contentDescription="add" />
     </RelativeLayout>
     <RelativeLayout
         android:layout_gravity="center"
         android:layout_weight="5"
         android:layout_width="0dp"
+        android:background="@drawable/middle_border"
         android:layout_height="match_parent">
-        <TextView
+        <EditText
             android:id="@+id/textView1"
-            android:paddingTop="1dp"
-            android:paddingBottom="1dp"
+            android:paddingTop="0dp"
+            android:paddingBottom="0dp"
             android:gravity="center"
+            android:background="@null"
             android:layout_centerInParent="true"
-            android:text="1"
-            android:layout_width="wrap_content"
+            android:textSize="15sp"
+            android:text="0.0"
+            android:ems="5"
+            android:inputType="numberDecimal"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content" />
     </RelativeLayout>
 
     <RelativeLayout
-        android:onClick="iv_2"
+        android:id="@+id/iv_2"
         android:layout_gravity="center"
-        android:layout_weight="4"
+        android:layout_weight="1"
         android:layout_width="0dp"
+        android:background="@drawable/border"
         android:layout_height="match_parent">
         <ImageView
             android:layout_centerInParent="true"
             android:src="@drawable/p2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:contentDescription="TODO" />
+            android:contentDescription="minus" />
     </RelativeLayout>
 
 </LinearLayout>

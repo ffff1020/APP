@@ -9,6 +9,7 @@
         android:layout_height="wrap_content"
         android:textSize="18sp"
         android:padding="5dp"
+        android:textColor="@color/colorAccent"
         />
     <Button
         android:layout_width="match_parent"

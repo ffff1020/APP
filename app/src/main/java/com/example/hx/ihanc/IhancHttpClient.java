@@ -7,8 +7,8 @@ import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 
 public class IhancHttpClient {
-    private static final String BASE_URL = "http://www.ihanc.com/ihanc/hx/tp5/public/index.php";
-    //private static final String BASE_URL = "http://192.168.100.110/hx/tp5/public/index.php";
+    //private static final String BASE_URL = "http://www.ihanc.com/ihanc/hx/tp5/public/index.php";
+    private static final String BASE_URL = "http://192.168.100.118/hx/tp5/public/index.php";
     private static AsyncHttpClient client = new AsyncHttpClient();
     public static String mAuth="";
 

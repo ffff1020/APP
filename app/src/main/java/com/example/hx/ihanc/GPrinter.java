@@ -10,6 +10,8 @@ import android.util.Log;
 
 import com.gprinter.command.EscCommand;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Vector;
 
 import static com.example.hx.ihanc.DeviceConnFactoryManager.CONN_STATE_FAILED;
@@ -23,6 +25,7 @@ public class GPrinter {
     private boolean mHAS_CONNECTED;
     private boolean mORDER_PRINT;
     private int id;
+    private static final String PRINT_LINE = "------------------------------------------------\n";
 
     public  GPrinter(String Address,boolean isBluetooth){
         DeviceConnFactoryManager.closeAllPort();
@@ -75,17 +78,28 @@ public class GPrinter {
         // 设置为倍高倍宽
         esc.addSelectPrintModes(EscCommand.FONT.FONTA, EscCommand.ENABLE.OFF, EscCommand.ENABLE.ON, EscCommand.ENABLE.ON, EscCommand.ENABLE.OFF);
         // 打印文字
-        esc.addText(info);
+        byte[] command = new byte[]{29, 33, 17};
+        esc.addUserCommand(command);
+        esc.addText(Utils.mCompanyInfo.getName());
         esc.addPrintAndLineFeed();
-
+        command = new byte[]{29, 33, 0};
+        esc.addUserCommand(command);
+        esc.addSelectJustification(EscCommand.JUSTIFICATION.LEFT);
+        esc.addText("\n客户："+Utils.printMemberName+"\n");
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String date = df.format(new Date());
+        esc.addText("打印时间："+date+"\n");
+        esc.addText(PRINT_LINE);
         /* 打印文字 */
         // 取消倍高倍宽
         esc.addSelectPrintModes(EscCommand.FONT.FONTA, EscCommand.ENABLE.OFF, EscCommand.ENABLE.OFF, EscCommand.ENABLE.OFF, EscCommand.ENABLE.OFF);
         // 设置打印左对齐
         esc.addSelectJustification(EscCommand.JUSTIFICATION.LEFT);
         // 打印文字
+        esc.addText(info);
         esc.addText("Print text\n");
         // 打印文字
+
         esc.addText("Welcome to use SMARNET printer!\n");
 
 
@@ -101,20 +115,27 @@ public class GPrinter {
         /* 打印图片 */
         // 打印文字
         esc.addText("Print bitmap!\n");
-        /*
-         * QRCode命令打印 此命令只在支持QRCode命令打印的机型才能使用。 在不支持二维码指令打印的机型上，则需要发送二维条码图片
-         */
-        // 打印文字
-        esc.addText("Print QRcode\n");
+
 
         // 设置打印左对齐
+
+
+        esc.addText(PRINT_LINE);
         esc.addSelectJustification(EscCommand.JUSTIFICATION.CENTER);
-        //打印文字
-        esc.addText("Completed!\r\n");
+        esc.addText("感谢您的惠顾，欢迎下次光临！\n");
+        esc.addSelectJustification(EscCommand.JUSTIFICATION.LEFT);
+        esc.addText("联系电话："+Utils.mCompanyInfo.getTel()+"\n");
+        for (int i=0;i<Utils.mCompanyInfo.getAddress().length;i++){
+            esc.addText("地址"+(i+1)+":"+Utils.mCompanyInfo.getAddress()[i]+"\n");
+        }
         esc.addPrintAndLineFeed();
         esc.addPrintAndLineFeed();
         esc.addPrintAndLineFeed();
         esc.addPrintAndLineFeed();
+
+        //切纸
+        command = new byte[]{29, 86, 1};
+        esc.addUserCommand(command);
 
         // 加入查询打印机状态，打印完成后，此时会接收到GpCom.ACTION_DEVICE_STATUS广播
         esc.addQueryPrinterStatus();

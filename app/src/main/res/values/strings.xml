@@ -107,4 +107,7 @@
     <string name="category_name">种类</string>
     <string name="goods_name">产品名称</string>
     <string name="weight">888.8</string>
+    <string name="memberHint">输入客户</string>
+    <string name="selectUnit" />
+    <string name="addToSale">加入销售单</string>
 </resources>
