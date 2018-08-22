@@ -1,17 +1,27 @@
 package com.example.hx.ihanc;
 
+import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.app.Activity;
+import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.os.PowerManager;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.app.LoaderManager.LoaderCallbacks;
 
@@ -41,12 +51,21 @@ import android.widget.Toast;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 import com.google.gson.Gson;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
@@ -92,12 +111,65 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private Timer timer = null;
     private EditText mCode;
     private int getCodeCount=0;
+    private int mVersionCode=0;
+    private ProgressDialog dialog;
+    private String url="";
+    private static final String DOWNLOAD_NAME = "ihanc.apk";
+    private static final int REQUEST_EXTERNAL_STORAGE = 1;
+    private static String[] PERMISSIONS_STORAGE = {
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE };
+    public SharedPreferences sp;
+    @Override
+    protected void onStart(){
+        super.onStart();
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         ActivityCollector.addActivity(this);
+        blueSerialSetting();
+        mProgressView = findViewById(R.id.login_progress);
+        mLoginFormView = findViewById(R.id.login_form);
         mPrefEditor = getSharedPreferences("pref_ihanc", MODE_PRIVATE).edit();
+        sp=getSharedPreferences("pref_ihanc",MODE_PRIVATE);
+        showProgress(true);
+        verifyStoragePermissions(LoginActivity.this);
+        if(sp.getString("name","").length()>0&&sp.getString("token","").length()>0){
+            IhancHttpClient.setAuth(sp.getString("token",""));
+            IhancHttpClient.get("/index/setting/info", null, new AsyncHttpResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                    String res=new String(responseBody);
+                        try {
+                            JSONObject mObject = new JSONObject(res);
+                            String[] address = mObject.getString("cadd").split("\\+");
+                            Utils.mCompanyInfo = new CompanyInfo(
+                                    mObject.getString("cname"),
+                                    mObject.getString("ctel"),
+                                    address
+                            );
+                            showProgress(false);
+                            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                            startActivity(intent);
+                            LoginActivity.this.finish();
+                        } catch (JSONException e) {
+                            Log.d("JSONException", e.toString());
+                            showProgress(false);
+                        }
+
+                }
+                @Override
+                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                    Log.d("Login",responseBody.toString());
+                    showProgress(false);
+                    Toast.makeText(LoginActivity.this,"不能连接到服务器，请检查网络！",Toast.LENGTH_LONG).show();
+                }
+            });
+
+        }else
+            {showProgress(false);}
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         mCodeButtonView=(Button)findViewById(R.id.codeSendBtn);
@@ -112,7 +184,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     }
             }
         });
-        blueSerialSetting();
+
         mPasswordView = (EditText) findViewById(R.id.password);
         mPasswordView.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
@@ -140,8 +212,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             }
         });
 
-        mLoginFormView = findViewById(R.id.login_form);
-        mProgressView = findViewById(R.id.login_progress);
+
+
     }
 
     private void populateAutoComplete() {
@@ -183,6 +255,15 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         if (requestCode == REQUEST_READ_CONTACTS) {
             if (grantResults.length == 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 populateAutoComplete();
+            }
+        }
+        if(requestCode==REQUEST_EXTERNAL_STORAGE){
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                checkVersion();
+            } else {
+                System.exit(0);
+                return;
             }
         }
     }
@@ -265,7 +346,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                         JsonObject JSres = new JsonParser().parse(res).getAsJsonObject();
                         String userName=JSres.get("name").toString();
                         String token=JSres.get("token").toString();
+                        mPrefEditor.putString("token",token);
                         mPrefEditor.putString("name",userName);
+                        mPrefEditor.commit();
                         IhancHttpClient.setAuth(token);
                         stopTimer();
                         Intent intent=new Intent(LoginActivity.this,MainActivity.class);
@@ -341,6 +424,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
         }
     }
+
 
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
@@ -498,7 +582,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             RequestParams params = new RequestParams();
             params.put("data", email);
             System.out.print(IhancHttpClient.getAbsoluteUrl("/index/index/getCode"));
-           /* IhancHttpClient.post("/index/index/getCode", params, new AsyncHttpResponseHandler() {
+            IhancHttpClient.post("/index/index/getCode", params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] response) {
                     // called when response HTTP status is "200 OK"
@@ -521,7 +605,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                    // Log.d("Login on error", new String(errorResponse));
                     System.out.println(e.getMessage());
                 }
-            }); */   //测试用不发送验证码
+            });    //测试用不发送验证码*/
         }
     }
     //检测设置蓝牙
@@ -574,5 +658,178 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             }
         }
     }
+
+    public void checkVersion(){
+        final Context context=LoginActivity.this;
+        try {
+            PackageManager manager = context.getPackageManager();
+            PackageInfo info = manager.getPackageInfo(context.getPackageName(), 0);
+            mVersionCode = info.versionCode;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return;
+        }
+
+        AsyncHttpClient client = new AsyncHttpClient();
+        client.get(IhancHttpClient.HOST_URL+"version.html", new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                String res=new String(responseBody);
+                try {
+                    JSONObject mObject=new JSONObject(res);
+                    if(mObject.getInt("version")>mVersionCode){
+                        Log.d("updateApp",mVersionCode+"");
+                        url=IhancHttpClient.HOST_URL+mObject.getString("url");
+                        showProcessDialog();
+                    }
+                }catch (JSONException e){e.printStackTrace();}
+
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                Toast.makeText(context,"不能连接到服务器，请检查网络！",Toast.LENGTH_LONG).show();
+            }
+        });
+    }
+    public  void verifyStoragePermissions(Activity activity) {
+        // Check if we have write permission
+        int permission = ActivityCompat.checkSelfPermission(activity,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            // We don't have permission so prompt the user
+            ActivityCompat.requestPermissions(activity, PERMISSIONS_STORAGE,
+                    REQUEST_EXTERNAL_STORAGE);
+        }else{
+            checkVersion();
+        }
+    }
+
+    public void showProcessDialog(){
+        final Context mContext=LoginActivity.this;
+        dialog = new ProgressDialog(mContext);
+        dialog.setIcon(R.mipmap.ihanc);
+        dialog.setTitle("iHanc--瀚盛水产销售行业专用系统");
+        dialog.setMessage("APP下载进度：");
+        dialog.setCancelable(false);
+        dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        dialog.setMax(100);
+        //dialog.incrementProgressBy(10);
+        dialog.setIndeterminate(false);
+        final DownloadTask downloadTask = new DownloadTask(
+                mContext);
+        downloadTask.execute(url);
+
+    }
+
+   class DownloadTask extends AsyncTask<String, Integer, String>{
+       private Context context;
+
+       public DownloadTask(Context context) {
+           this.context = context;
+       }
+       protected String doInBackground(String... sUrl) {
+           InputStream input = null;
+           OutputStream output = null;
+           HttpURLConnection connection = null;
+           File file = null;
+           try {
+               URL url = new URL(sUrl[0]);
+               connection = (HttpURLConnection) url.openConnection();
+               connection.connect();
+               // expect HTTP 200 OK, so we don't mistakenly save error
+               // report
+               // instead of the file
+               if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                   return "Server returned HTTP "
+                           + connection.getResponseCode() + " "
+                           + connection.getResponseMessage();
+               }
+               // this will be useful to display download percentage
+               // might be -1: server did not report the length
+               int fileLength = connection.getContentLength();
+               if (Environment.getExternalStorageState().equals(
+                       Environment.MEDIA_MOUNTED)) {
+                   file = new File(Environment.getExternalStorageDirectory(),
+                           DOWNLOAD_NAME);
+
+                   if (!file.exists()) {
+                       // 判断父文件夹是否存在
+                       if (!file.getParentFile().exists()) {
+                           file.getParentFile().mkdirs();
+                       }
+                   }
+               } else {
+                   Toast.makeText(context, "sd卡未挂载",
+                           Toast.LENGTH_LONG).show();
+               }
+               input = connection.getInputStream();
+               output = new FileOutputStream(file);
+               byte data[] = new byte[4096];
+               long total = 0;
+               int count;
+               while ((count = input.read(data)) != -1) {
+                   // allow canceling with back button
+                   if (isCancelled()) {
+                       input.close();
+                       return null;
+                   }
+                   total += count;
+                   // publishing the progress....
+                   if (fileLength > 0) // only if total length is known
+                       publishProgress((int) (total * 100 / fileLength));
+                   output.write(data, 0, count);
+
+               }
+           } catch (Exception e) {
+               Log.d("update",e.toString());
+               return e.toString();
+
+           } finally {
+               try {
+                   if (output != null)
+                       output.close();
+                   if (input != null)
+                       input.close();
+               } catch (IOException ignored) {
+               }
+               if (connection != null)
+                   connection.disconnect();
+           }
+           return null;
+       }
+       @Override
+       protected void onPreExecute() {
+           super.onPreExecute();
+           // take CPU lock to prevent CPU from going off if the user
+           // presses the power button during download
+           dialog.show();
+       }
+       @Override
+       protected void onProgressUpdate(Integer... progress) {
+           super.onProgressUpdate(progress);
+           // if we get here, length is known, now set indeterminate to false
+           dialog.setIndeterminate(false);
+           dialog.setMax(100);
+           dialog.setProgress(progress[0]);
+       }
+       @Override
+       protected void onPostExecute(String result) {
+           dialog.dismiss();
+           Toast.makeText(context,"下载完成！",Toast.LENGTH_LONG).show();
+           Uri uri =null;
+           if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
+                uri = FileProvider.getUriForFile(context,"com.example.hx.ihanc.fileprovider",new File(""));
+                Log.d("update",uri.toString());
+           }else {
+                uri = Uri.fromFile(new File(Environment
+                       .getExternalStorageDirectory(), DOWNLOAD_NAME));
+           }
+           Intent intent = new Intent(Intent.ACTION_VIEW);
+           intent.setDataAndType(uri, "application/vnd.android.package-archive");
+           intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+           startActivity(intent);
+       }
+   }
 }
 

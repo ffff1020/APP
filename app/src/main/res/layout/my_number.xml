@@ -9,7 +9,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_weight="3"
-        android:textSize="15sp"
+        android:textSize="18sp"
         android:id="@+id/title"
         />
     <RelativeLayout
@@ -29,21 +29,22 @@
     </RelativeLayout>
     <RelativeLayout
         android:layout_gravity="center"
-        android:layout_weight="5"
+        android:layout_weight="3"
         android:layout_width="0dp"
         android:background="@drawable/middle_border"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content">
         <EditText
             android:id="@+id/textView1"
-            android:paddingTop="0dp"
-            android:paddingBottom="0dp"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
             android:gravity="center"
             android:background="@null"
             android:layout_centerInParent="true"
-            android:textSize="15sp"
+            android:textSize="20sp"
             android:text="0.0"
             android:ems="5"
             android:inputType="numberDecimal"
+            android:imeOptions="actionDone"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
     </RelativeLayout>

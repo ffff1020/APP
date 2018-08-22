@@ -31,6 +31,7 @@ public class SalePagerAdapter extends FragmentStatePagerAdapter {
 
     @Override
     public Fragment getItem(int position) {
+        if(memberList.size()==0) return null;
         return fragmentList.get(position);
     }
 

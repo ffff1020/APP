@@ -52,4 +52,6 @@ public class Goods {
     public int getPromote() {
         return promote;
     }
+
+    public int getGoods_unit_id(){return Integer.parseInt(goods_unit);};
 }

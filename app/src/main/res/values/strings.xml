@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">iHanc</string>
+    <string name="app_name">瀚盛销售系统</string>
 
     <!-- Strings related to login -->
     <string name="prompt_email">请输入手机号码</string>
@@ -14,9 +14,9 @@
         completions."
     </string>
     <string name="title_activity_main">iHanc--瀚盛海鲜行业专用销售系统</string>
-    <string name="title_home">Home</string>
+    <string name="title_home">销售</string>
     <string name="title_dashboard">设置</string>
-    <string name="title_notifications">Notifications</string>
+    <string name="title_notifications">列表</string>
     <string name="title_activity_settings">系统设置</string>
 
     <!-- Strings related to Settings -->
@@ -33,11 +33,17 @@
     <string name="pref_default_display_name">John Smith</string>
 
     <string name="pref_title_add_friends_to_messages">Add friends to messages</string>
-    <string-array name="pref_example_list_titles">
-        <item>Always</item>
-        <item>When possible</item>
-        <item>Never</item>
+    <string name="receipt_type">receipt_type</string>
+    <string name="pref_receipt_type_title">打印方式</string>
+    <string-array name="pref_receipt_type">
+        <item>快速打印</item>
+        <item>大字体打印</item>
     </string-array>
+    <string-array name="pref_receipt_type_value">
+        <item>JsonArray</item>
+        <item>Bitmap</item>
+    </string-array>
+    <string name="receipt_type_default">JsonArray</string>
     <string-array name="pref_example_list_values">
         <item>1</item>
         <item>0</item>
@@ -110,4 +116,8 @@
     <string name="memberHint">输入客户</string>
     <string name="selectUnit" />
     <string name="addToSale">加入销售单</string>
+    <string name="closeSaleFragment">关闭</string>
+    <string name="SaveButton">保存</string>
+    <string name="deleteItem">删</string>
+    <string name="title_activity_list">ListActivity</string>
 </resources>

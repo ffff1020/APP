@@ -87,6 +87,7 @@
                     android:layout_marginLeft="150dp"
                     android:layout_marginTop="-50dp"
                     android:clickable="false"
+                    style="?android:attr/buttonBarButtonStyle"
                     android:text="发送验证码" />
 
             </android.support.design.widget.TextInputLayout>
@@ -100,6 +101,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:text="@string/action_sign_in"
+                android:background="@drawable/add_button"
+                android:textColor="@color/addButtonText"
                 android:textStyle="bold" />
 
 

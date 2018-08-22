@@ -29,73 +29,6 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         android:baselineAligned="false">
-
-
-        <android.support.constraint.ConstraintLayout
-            android:id="@+id/linearLayout"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            android:layout_weight="0.5">
-            <TextView
-                android:id="@+id/categoryTV"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
-                android:text="@string/category_name"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintBottom_toTopOf="@id/category"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                 />
-
-            <ListView
-                android:id="@+id/category"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:layout_constraintTop_toBottomOf="@id/categoryTV"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="@id/linearLayout"
-                />
-        </android.support.constraint.ConstraintLayout>
-
-        <android.support.constraint.ConstraintLayout
-            android:id="@+id/linearLayout2"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:paddingLeft="5dp"
-            android:paddingRight="5dp"
-            app:layout_constraintLeft_toRightOf="@id/linearLayout"
-            >
-
-            <TextView
-                android:id="@+id/goodsTV"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_horizontal"
-                android:text="@string/goods_name"
-                app:layout_constraintBottom_toTopOf="@+id/goods"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                />
-
-            <GridView
-                android:id="@+id/goods"
-                android:layout_width="wrap_content"
-                android:layout_height="0dp"
-                android:columnWidth="80dp"
-                android:horizontalSpacing="10dp"
-                android:numColumns="auto_fit"
-                android:stretchMode="columnWidth"
-                android:verticalSpacing="10dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="@+id/goodsTV"
-                app:layout_constraintTop_toBottomOf="@+id/goodsTV" />
-        </android.support.constraint.ConstraintLayout>
-
         <android.support.constraint.ConstraintLayout
             android:id="@+id/linearLayout3"
             android:layout_width="0dp"
@@ -103,93 +36,11 @@
             android:layout_weight="2"
             android:background="@drawable/border">
 
-            <TextView
-                android:id="@+id/scale"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:gravity="center_horizontal"
-                android:text="@string/weight"
-                android:textSize="30sp"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <AutoCompleteTextView
-                android:id="@+id/memberTV"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:completionThreshold="2"
-                android:hint="@string/memberHint"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toLeftOf="@id/scale"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <LinearLayout
-                android:id="@+id/info"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                app:layout_constraintTop_toBottomOf="@id/memberTV"
-                >
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    >
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:textSize="15sp"
-                        android:textColor="@color/label_orange"
-                        android:gravity="center"
-                        android:id="@+id/infoGoodsName"
-                        android:layout_weight="2"
-                        />
-                    <Spinner
-                        android:id="@+id/unitSpinner"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        />
-
-                </LinearLayout>
-
-                            <com.example.hx.ihanc.MyNumberEdit
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:id="@+id/weight"
-                                >
-                            </com.example.hx.ihanc.MyNumberEdit>
-                            <com.example.hx.ihanc.MyNumberEdit
-                                android:paddingTop="10dp"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:id="@+id/price"
-                                >
-                            </com.example.hx.ihanc.MyNumberEdit>
-                            <Button
-                                android:id="@+id/addToSale"
-                                android:layout_width="match_parent"
-                                android:layout_height="match_parent"
-                                android:gravity="center"
-                                android:text="@string/addToSale" />
-                <ScrollView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                   >
-                    <ImageView
-                        android:id="@+id/s_image"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"/>
-                </ScrollView>
-
-            </LinearLayout>
-
             <android.support.design.widget.TabLayout
                 android:id="@+id/tl"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
-                app:layout_constraintTop_toBottomOf="@id/info">
+                app:layout_constraintTop_toTopOf="parent">
 
             </android.support.design.widget.TabLayout>
 
@@ -200,6 +51,173 @@
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tl" />
         </android.support.constraint.ConstraintLayout>
+        <android.support.constraint.ConstraintLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            android:layout_weight="2">
+
+            <android.support.constraint.ConstraintLayout
+                android:id="@+id/Numbers"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toTopOf="parent"
+                >
+                <TextView
+                    android:id="@+id/scale"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="5dp"
+                    android:gravity="center_horizontal"
+                    android:text="@string/weight"
+                    android:textSize="30sp"
+                    app:layout_constraintRight_toRightOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+                <AutoCompleteTextView
+                    android:id="@+id/memberTV"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:completionThreshold="2"
+                    android:hint="@string/memberHint"
+                    android:focusedByDefault="true"
+                    app:layout_constraintLeft_toLeftOf="parent"
+                    app:layout_constraintRight_toLeftOf="@id/scale"
+                    app:layout_constraintTop_toTopOf="parent" />
+                <LinearLayout
+                    android:id="@+id/info"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    app:layout_constraintTop_toBottomOf="@id/memberTV"
+                    >
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        >
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:textSize="18sp"
+                            android:textColor="@color/colorAccent"
+                            android:gravity="center"
+                            android:id="@+id/infoGoodsName"
+                            android:layout_weight="2"
+                            />
+                        <Spinner
+                            android:id="@+id/unitSpinner"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            />
+
+                    </LinearLayout>
+
+                    <com.example.hx.ihanc.MyNumberEdit
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/weight"
+                        >
+                    </com.example.hx.ihanc.MyNumberEdit>
+                    <com.example.hx.ihanc.MyNumberEdit
+                        android:paddingTop="10dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/price"
+                        >
+                    </com.example.hx.ihanc.MyNumberEdit>
+                    <com.example.hx.ihanc.MyNumberEdit
+                        android:paddingTop="10dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/sumEdit"
+                        >
+                    </com.example.hx.ihanc.MyNumberEdit>
+                    <Button
+                        android:id="@+id/addToSale"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:background="@drawable/add_button"
+                        android:textColor="@color/addButtonText"
+                        android:layout_margin="3dp"
+                        android:text="@string/addToSale" />
+
+                </LinearLayout>
+            </android.support.constraint.ConstraintLayout>
+        <android.support.constraint.ConstraintLayout
+            android:id="@+id/linearLayout"
+            android:layout_width="60dp"
+            android:layout_height="0dp"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/Numbers"
+            app:layout_constraintBottom_toBottomOf="parent"
+            >
+            <TextView
+                android:id="@+id/categoryTV"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="@string/category_name"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toTopOf="@id/category"
+                 />
+
+            <ListView
+                android:id="@+id/category"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                app:layout_constraintTop_toBottomOf="@id/categoryTV"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                app:layout_constraintRight_toRightOf="@id/linearLayout"
+                />
+        </android.support.constraint.ConstraintLayout>
+
+            <android.support.constraint.ConstraintLayout
+                android:id="@+id/linearLayout2"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:paddingLeft="5dp"
+                android:paddingRight="5dp"
+                app:layout_constraintLeft_toRightOf="@id/linearLayout"
+                app:layout_constraintRight_toRightOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/Numbers"
+                app:layout_constraintBottom_toBottomOf="parent"
+                >
+
+                <TextView
+                    android:id="@+id/goodsTV"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_horizontal"
+                    android:text="@string/goods_name"
+                    app:layout_constraintBottom_toTopOf="@+id/goods"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    />
+
+                <GridView
+                    android:id="@+id/goods"
+                    android:layout_width="wrap_content"
+                    android:layout_height="0dp"
+                    android:columnWidth="80dp"
+                    android:horizontalSpacing="10dp"
+                    android:numColumns="auto_fit"
+                    android:stretchMode="columnWidth"
+                    android:verticalSpacing="10dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="@+id/goodsTV"
+                    app:layout_constraintTop_toBottomOf="@+id/goodsTV" />
+            </android.support.constraint.ConstraintLayout>
+
+
+        </android.support.constraint.ConstraintLayout>
+
+
+
+
         </LinearLayout>
 
     <android.support.design.widget.BottomNavigationView
@@ -214,6 +232,49 @@
         app:layout_constraintRight_toRightOf="parent"
         app:menu="@menu/navigation" />
 
+    <android.support.constraint.ConstraintLayout
+        android:id="@+id/wait_progress"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/whiteAL"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        >
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:background="@color/white"
+            android:layout_gravity="center"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:layout_conversion_absoluteHeight="1dp"
+            tools:layout_conversion_absoluteWidth="1dp"
+            tools:layout_editor_absoluteX="0dp"
+            tools:layout_editor_absoluteY="0dp"
+            >
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="?android:attr/progressBarStyleLarge"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:background="@color/white"
+                android:padding="10dp"
+                />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingTop="20dp"
+                android:paddingRight="10dp"
+                android:text="打印中，请稍后..."
+                />
+        </LinearLayout>
+
+
+
+    </android.support.constraint.ConstraintLayout>
 
 
 

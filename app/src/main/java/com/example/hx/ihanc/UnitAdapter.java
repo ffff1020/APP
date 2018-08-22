@@ -48,7 +48,6 @@ public class UnitAdapter extends ArrayAdapter<Unit> implements SpinnerAdapter {
             viewHolder.tvTitle=convertView.findViewById(R.id.unit);
             convertView.setTag(viewHolder);
             viewHolder.tvTitle.setText(displayUnitList.get(position).getUnit_name());
-            return convertView;
         }else{
             viewHolder=(ViewHolder) convertView.getTag();
         }

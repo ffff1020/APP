@@ -1,6 +1,7 @@
 package com.example.hx.ihanc;
 
 import android.content.Context;
+import android.content.Intent;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.util.Log;
@@ -26,7 +27,9 @@ public class Utils {
     public static final String GOODSFILTERSEARCHVIEW="GOODSFILTERSEARCHVIEW";
     public static final String GOODSFILTERPROMOTE="GOODSFILTERPROMOTE";
     public static CompanyInfo mCompanyInfo;
-    public static String printMemberName;
+    public static member printMemberName;
+    public static int storeId;
+    private static boolean Link;
     public static UsbDevice getUsbDeviceFromName(Context context, String usbName) {
         UsbManager usbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
         HashMap<String,UsbDevice> usbDeviceList = usbManager.getDeviceList();
@@ -42,11 +45,21 @@ public class Utils {
         toast.show();
     }
 
+    public static void toastLostLink(Context context) {
+        if (toast == null) {
+            toast = Toast.makeText(context, "不能连接到服务器！", Toast.LENGTH_SHORT);
+        } else {
+            toast.setText("不能连接到服务器！");
+        }
+        toast.show();
+    }
+
     public static void getCompanyInfo(){
         IhancHttpClient.get("/index/setting/info", null, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                 String res=new String(responseBody);
+                Link=true;
                 try {
                     JSONObject mObject=new JSONObject(res);
                     String[] address=mObject.getString("cadd").split("\\+");
@@ -55,6 +68,7 @@ public class Utils {
                             mObject.getString("ctel"),
                             address
                     );
+
                 }catch (JSONException e){
                     Log.d("JSONException",e.toString());
                 }
@@ -63,9 +77,10 @@ public class Utils {
 
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-
+                 Log.d("getCompanyInfo",responseBody.toString());
             }
         });
     }
+
 
 }

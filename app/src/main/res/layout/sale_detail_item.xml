@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="20dp"
+    android:orientation="horizontal"
+    android:paddingBottom="5dp"
+    >
+    <TextView
+        android:id="@+id/saleItemName"
+        android:layout_width="0dp"
+        android:layout_weight="1.5"
+        android:lines="2"
+        android:ellipsize="end"
+        android:text="try"
+        android:layout_height="wrap_content" />
+    <TextView
+        android:id="@+id/saleItemNumber"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content" />
+    <TextView
+    android:id="@+id/saleItemPrice"
+    android:layout_width="0dp"
+    android:layout_weight="1"
+    android:layout_height="wrap_content" />
+    <TextView
+        android:id="@+id/saleItemSum"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content" />
+    <Button
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:id="@+id/saleItemDeleteBtn"
+        android:layout_height="wrap_content"
+        style="?android:attr/buttonBarButtonStyle"
+        android:text="@string/deleteItem"
+        />
+
+</LinearLayout>

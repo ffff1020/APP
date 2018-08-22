@@ -46,7 +46,7 @@ public class GoodsAdapter extends ArrayAdapter<Goods> {
             convertView= LayoutInflater.from(mContext).inflate(resource,null);
             viewHolder.tvTitle=convertView.findViewById(R.id.title);
             convertView.setTag(viewHolder);
-            return convertView;
+           // return convertView;
         }else{
             viewHolder=(ViewHolder) convertView.getTag();
         }

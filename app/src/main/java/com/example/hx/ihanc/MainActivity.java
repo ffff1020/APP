@@ -1,8 +1,12 @@
 package com.example.hx.ihanc;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.annotation.TargetApi;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -11,7 +15,10 @@ import android.graphics.BitmapFactory;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
@@ -19,6 +26,7 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -55,7 +63,9 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Vector;
 
@@ -81,6 +91,7 @@ public class MainActivity extends AppCompatActivity {
     private MemberAdapter memberAdapter;
     private SalePagerAdapter mSalePagerAdapter;
     private UnitAdapter mUnitAdapter;
+    private View mProgressView;
     // Message types sent from the BluetoothChatService Handler
     public static final int MESSAGE_STATE_CHANGE = 1;
     public static final int MESSAGE_READ = 2;
@@ -90,24 +101,29 @@ public class MainActivity extends AppCompatActivity {
     // Key names received from the BluetoothChatService Handler
     public static final String DEVICE_NAME = "device_name";
     public static final String TOAST = "toast";
-
     // Intent request codes
     private static final int REQUEST_CONNECT_DEVICE = 1;
     private static final int REQUEST_ENABLE_BT = 2;
     private List mCategoryDataList=new ArrayList<category>();
     private List mGoodsDataList=new ArrayList<Goods>();
     private List memberDataList=new ArrayList<member>();
-    private List<SaleFragment> fragmentList=new ArrayList<>();
+    private List<SaleFragment> fragmentList=new ArrayList<SaleFragment>();
     private List<member> memberTabsList=new ArrayList<>();
     private List mUnitList=new ArrayList<Unit>();
+    public static List<bank> mBankList=new ArrayList<bank>();
+    private SimpleDateFormat df;
     private ViewPager vp;
     private TabLayout tl;
     private MyNumberEdit mWeight;
     private MyNumberEdit mPrice;
-    private Goods currentGood;
+    private MyNumberEdit mSumEdit;
+    private Goods currentGood=null;
     private TextView infoGoodsName;
     private Spinner unitSpinner;
-    private ImageView mView;
+    private JSONArray printCreditJSON;
+    private Button addToSaleBtn;
+    private boolean exit=false;
+
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
 
@@ -115,16 +131,32 @@ public class MainActivity extends AppCompatActivity {
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
                 case R.id.navigation_home:
-                    //mTextMessage.setText(R.string.title_home);
                     return true;
                 case R.id.navigation_dashboard:
                     Intent intent=new Intent(MainActivity.this,SettingsActivity.class);
                     startActivity(intent);
                     return true;
                 case R.id.navigation_notifications:
-                   // mTextMessage.setText(R.string.title_notifications);
+                   // intent=new Intent(MainActivity.this,ListActivity.class);
+                   // startActivity(intent);
 
                     return true;
+                case R.id.navigation_exit:
+                    if (!exit) {
+                        exit = true;
+                        Toast.makeText(getApplicationContext(), "再按一次退出程序",
+                                Toast.LENGTH_SHORT).show();
+                        eHandler.sendEmptyMessageDelayed(0, 2000);
+                    } else {
+                        IhancHttpClient.setAuth("");
+                        LoginActivity.mPrefEditor.putString("name","");
+                        LoginActivity.mPrefEditor.putString("token","");
+                        LoginActivity.mPrefEditor.commit();
+                        finish();
+                        System.exit(0);
+                    }
+
+
             }
             return false;
         }
@@ -132,7 +164,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart(){
         super.onStart();
-        Utils.getCompanyInfo();
+       // Utils.getCompanyInfo();
+        df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
         /*IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
         filter.addAction(ACTION_USB_DEVICE_DETACHED);
         filter.addAction(ACTION_QUERY_PRINTER_STATE);
@@ -146,12 +180,14 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ActivityCollector.addActivity(this);
         initView();
+        getStore();
     }
     @Override
     protected void onStop() {
         super.onStop();
-        if(mGPrinter!=null){unregisterReceiver(mGPrinter.receiver);}
-       // unregisterReceiver(receiver);
+        if(mGPrinter!=null){
+            //unregisterReceiver(mGPrinter.receiver);
+        }
     }
 
     @Override
@@ -163,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
     public void initView(){
         infoGoodsName=(TextView)findViewById(R.id.infoGoodsName);
         mTextMessage = (TextView) findViewById(R.id.goodsTV);
-        mView=(ImageView)findViewById(R.id.s_image) ;
+        mProgressView = findViewById(R.id.wait_progress);
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
         sp=PreferenceManager.getDefaultSharedPreferences(this);
@@ -190,13 +226,13 @@ public class MainActivity extends AppCompatActivity {
                 currentGood=(Goods)adapterView.getAdapter().getItem(i);
                 infoGoodsName.setText(currentGood.getGoods_name());
                 mPrice.setPrice(currentGood.getGoods_price());
+                mSumEdit.setNum(currentGood.getGoods_price()*mWeight.getNum());
                 RequestParams params = new RequestParams();
                 params.put("goods_id",currentGood.getGoods_id());
                 IhancHttpClient.get("/index/sale/getUnitApp", params, new AsyncHttpResponseHandler() {
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                         String res =new String(responseBody).trim();
-                        Log.d("unit",res);
                         UnitAdapter.UnitFilter mFilter=mUnitAdapter.getFilter();
                         if(res.length()<3){
                             mFilter.filter(currentGood.getGoods_unit());
@@ -287,14 +323,43 @@ public class MainActivity extends AppCompatActivity {
 
         mWeight=(MyNumberEdit)findViewById(R.id.weight);
         mPrice=(MyNumberEdit)findViewById(R.id.price);
+        mSumEdit=(MyNumberEdit)findViewById(R.id.sumEdit);
         mWeight.setTitle("数量：");
         mPrice.setTitle("价格：");
         mPrice.setD(0.5);
-
+        mSumEdit.setTitle("金额：");
+        mSumEdit.setD(1.0);
+        mSumEdit.addTextChangedListener(new MyNumberEdit.TextChangedListener() {
+            @Override
+            public void TextChanged() {
+                if(mWeight.getNum()==0.0)
+                    return;
+                Double sum=mSumEdit.getNum()/mWeight.getNum();
+                mPrice.check=false;
+                mWeight.check=false;
+                mPrice.setNum(sum);
+            }
+        });
+        mPrice.addTextChangedListener(new MyNumberEdit.TextChangedListener() {
+            @Override
+            public void TextChanged() {
+                Double sum=mPrice.getNum()*mWeight.getNum();
+                mSumEdit.check=false;
+                mSumEdit.setNum(sum);
+            }
+        });
+        mWeight.addTextChangedListener(new MyNumberEdit.TextChangedListener() {
+            @Override
+            public void TextChanged() {
+                Double sum=mPrice.getNum()*mWeight.getNum();
+                mSumEdit.check=false;
+                mSumEdit.setNum(sum);
+            }
+        });
         unitSpinner=(Spinner)findViewById(R.id.unitSpinner);
         mUnitAdapter=new UnitAdapter(MainActivity.this,R.layout.unit,mUnitList);
         unitSpinner.setAdapter(mUnitAdapter);
-        getUnitData();
+       // getUnitData();
         unitSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
@@ -302,6 +367,7 @@ public class MainActivity extends AppCompatActivity {
                 Unit unitItem=mAdapter.getItem(i);
                 if(String.valueOf(unitItem.getUnit_id()).equals(currentGood.getGoods_unit())){
                     mPrice.setPrice(currentGood.getGoods_price());
+                    mSumEdit.setNum(currentGood.getGoods_price()*mWeight.getNum());
                 }else{
                     RequestParams params = new RequestParams();
                     params.put("goods_id",currentGood.getGoods_id());
@@ -311,6 +377,7 @@ public class MainActivity extends AppCompatActivity {
                         public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                             String res=new String(responseBody);
                             mPrice.setPrice(res);
+                            mSumEdit.setNum(Double.parseDouble(res)*mWeight.getNum());
                         }
                         @Override
                         public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
@@ -324,7 +391,22 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-
+        addToSaleBtn=(Button)findViewById(R.id.addToSale);
+        addToSaleBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.d("saleFragment","addToSaleBtn");
+                SaleFragment mSaleFragment=(SaleFragment) mSalePagerAdapter.getItem(vp.getCurrentItem());
+                if(currentGood==null) return;
+                if(mSaleFragment!=null) {
+                    DetailGoods good = new DetailGoods(currentGood.getGoods_id(), currentGood.getGoods_name(), currentGood.getGoods_unit_id());
+                    Unit unit = mUnitAdapter.getItem(unitSpinner.getSelectedItemPosition());
+                    SaleDetail detail = new SaleDetail(good, mWeight.getNum(), mPrice.getNum(), unit.getUnit_id(), unit.getUnit_name(),(int)mSumEdit.getNum());
+                    Log.d("saleFragment","addToSaleBtn2");
+                    mSaleFragment.addSaleDetail(detail);
+                }
+            }
+        });
 
     }
     public void getCategoryData(){
@@ -429,6 +511,8 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
     public void addSaleTabs(member memberItem){
+        hideKeyboard();
+        memberTV.setText("");
         if(memberTabsList.size()>5){
             Toast.makeText(MainActivity.this,"排列中的客户不能超过5个！",Toast.LENGTH_LONG).show();
             return;
@@ -452,10 +536,8 @@ public class MainActivity extends AppCompatActivity {
         fragmentList.remove(position);
         mSalePagerAdapter.notifyDataSetChanged();
     }
-    public void initPrinter(){
-        ImageTask mImageTask = new ImageTask();
-        Log.d("bitmap","new");
-        mImageTask.execute("");
+    public void initPrinter(Object bitmap){
+        String receiptType=sp.getString(getString(R.string.receipt_type),null);
         if(sp.getBoolean("bluetooth_printer",false)){
             String macAddress=sp.getString(getString(R.string.bluetooth_printer_address),"");
             if(macAddress.equals("")){
@@ -466,8 +548,11 @@ public class MainActivity extends AppCompatActivity {
                 filter.addAction(ACTION_QUERY_PRINTER_STATE);
                 filter.addAction(DeviceConnFactoryManager.ACTION_CONN_STATE);
                 mGPrinter=new GPrinter(macAddress,true);
-                //registerReceiver(mGPrinter.receiver, filter);
-               // mGPrinter.print("韩川");
+                registerReceiver(mGPrinter.receiver, filter);
+                    if (receiptType.equals(getString(R.string.receipt_type_default)))
+                        mGPrinter.print((JSONArray) bitmap);
+                    else
+                        mGPrinter.print((Bitmap) bitmap);
 
             }
         }else{
@@ -478,7 +563,10 @@ public class MainActivity extends AppCompatActivity {
             filter.addAction(DeviceConnFactoryManager.ACTION_CONN_STATE);
             mGPrinter=new GPrinter(IP,false);
             registerReceiver(mGPrinter.receiver, filter);
-            mGPrinter.print("SAMPLE");
+            if(receiptType.equals(getString(R.string.receipt_type_default)))
+                mGPrinter.print((JSONArray) bitmap);
+            else
+                mGPrinter.print((Bitmap) bitmap);
         }
    }
     public void hideKeyboard() {
@@ -489,25 +577,28 @@ public class MainActivity extends AppCompatActivity {
           }
       }
     }
-    public void getUnitData(){
+    public void printDetails(){
+        final String receiptType=sp.getString(getString(R.string.receipt_type),null);
         RequestParams params = new RequestParams();
-        IhancHttpClient.get("/index/setting/unit", params, new AsyncHttpResponseHandler() {
+        params.put("member_id",Utils.printMemberName.getMember_id());
+        IhancHttpClient.get("/index/sale/creditDetail", params, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                 String res = new String(responseBody);
-
-                try {
-                    JSONArray resArray = new JSONArray(res);
-                    for(int i=0;i<resArray.length();i++){
-                        JSONObject myjObject = resArray.getJSONObject(i);
-                        Unit mItem=new Unit(myjObject.getInt("unit_id"),
-                                myjObject.getString("unit_name")
-                        );
-                        mUnitList.add(mItem);
+                try{
+                    JSONObject myjObject=new JSONObject(res);
+                    printCreditJSON=(JSONArray) myjObject.get("credit");
+                    if(receiptType.equals(getString(R.string.receipt_type_default)))
+                        initPrinter(printCreditJSON);
+                    else{
+                         showProgress(true);
+                         ImageTask mImageTask = new ImageTask();
+                         mImageTask.execute("");
                     }
-            }catch (JSONException e)
-                {
-                    Log.d("JSONArray",e.toString());}
+                   // System.out.print(printCreditJSON);
+
+
+                }catch (JSONException e){Log.d("json",e.toString());}
             }
 
             @Override
@@ -516,101 +607,177 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-    public void printDetails(){
-
-    }
-
     private class ImageTask extends AsyncTask<String, Void, Bitmap> {
         @Override
         protected Bitmap doInBackground(String... params) {
-            Log.d("bitmap","start");
-            return creatImage();
+            //Log.d("bitmap","start");
+            return creatCreditImage();
         }
 
         @Override
         protected void onPreExecute() {
-            Log.d("bitmap","onPreExecute");
+            //Log.d("bitmap","onPreExecute");
             super.onPreExecute();
+            //
         }
 
         @Override
         protected void onPostExecute(Bitmap bitmap) {
+            showProgress(false);
             super.onPostExecute(bitmap);
-            Log.d("bitmap","got bitmap");
-            mView.setImageBitmap(bitmap);
+            initPrinter(bitmap);
+
         }
     }
-    private Bitmap creatImage() {
-        try {
-            InputStream ins = getAssets().open( "print.bmp");
-           // Bitmap imageBitmap = BitmapFactory.decodeStream(ins);
-            ArrayList<StringBitmapParameter> mParameters = new ArrayList<>();
-
-            mParameters.add(new StringBitmapParameter("\n"));
-            mParameters.add(new StringBitmapParameter("\n"));
-            mParameters.add(new StringBitmapParameter("商户存根联"));
-            mParameters.add(new StringBitmapParameter("用户名称(MERCHANT NAME):江苏东大集成电路系统工程技术有限公司"));
-            mParameters.add(new StringBitmapParameter("\n"));
-            mParameters.add(new StringBitmapParameter("商户编号(MERCHANT NO): 304301057328106"));
-            mParameters.add(new StringBitmapParameter("终端编号(TEBMINAL NO): 00706937"));
-            mParameters.add(new StringBitmapParameter("操作员号: 01"));
-            mParameters.add(new StringBitmapParameter("卡号(CARD NO)"));
-            mParameters.add(new StringBitmapParameter("12345678901212(C)", BitmapUtil.IS_RIGHT));
-            mParameters.add(new StringBitmapParameter("\n"));
-            mParameters.add(new StringBitmapParameter("发卡行(ISSUER):工商银行"));
-            mParameters.add(new StringBitmapParameter("收单行(ACQUIRER):华夏银行"));
-            mParameters.add(new StringBitmapParameter("交易类别(TXN TYPE):"));
-            mParameters.add(new StringBitmapParameter(" 消费撤销(VOID)"));
-            mParameters.add(new StringBitmapParameter("-------------------------"));
-            mParameters.add(new StringBitmapParameter("持卡人签名CARD HOLDER SIGNATURE:"));
-            mParameters.add(new StringBitmapParameter("\n"));
-            mParameters.add(new StringBitmapParameter("\n"));
-            mParameters.add(new StringBitmapParameter("\n"));
-
-            mParameters.add(new StringBitmapParameter("模拟农行打印凭条", BitmapUtil.IS_CENTER, BitmapUtil.IS_LARGE));
-            mParameters.add(new StringBitmapParameter("\n"));
-            mParameters.add(new StringBitmapParameter("\n"));
-            mParameters.add(new StringBitmapParameter("商户存根联           请妥善保管"));
-            mParameters.add(new StringBitmapParameter("-------------------------"));
-            mParameters.add(new StringBitmapParameter("用户名称(MERCHANT NAME):"));
-            mParameters.add(new StringBitmapParameter("苏州农行直连测试商户", BitmapUtil.IS_RIGHT));
-            mParameters.add(new StringBitmapParameter("商户编号(MERCHANT NO):"));
-            mParameters.add(new StringBitmapParameter("113320583980037", BitmapUtil.IS_RIGHT));
-            mParameters.add(new StringBitmapParameter("终端编号(TEBMINAL NO): 10300751"));
-            mParameters.add(new StringBitmapParameter("操作员号(OPERATOR NO):     01"));
-            mParameters.add(new StringBitmapParameter("-------------------------"));
-            mParameters.add(new StringBitmapParameter("发卡行(ISSUER)"));
-            mParameters.add(new StringBitmapParameter("农业银行", BitmapUtil.IS_RIGHT));
-            mParameters.add(new StringBitmapParameter("收单行(ACQUIRER)"));
-            mParameters.add(new StringBitmapParameter("农业银行", BitmapUtil.IS_RIGHT));
-            mParameters.add(new StringBitmapParameter("卡号(CARD NO)"));
-            mParameters.add(new StringBitmapParameter("12345678901212(C)", BitmapUtil.IS_RIGHT, BitmapUtil.IS_LARGE));
-            mParameters.add(new StringBitmapParameter("卡有效期(EXP DATE)     2023/10"));
-            mParameters.add(new StringBitmapParameter("交易类型(TXN TYPE)"));
-            mParameters.add(new StringBitmapParameter("消费", BitmapUtil.IS_RIGHT, BitmapUtil.IS_LARGE));
-            mParameters.add(new StringBitmapParameter("-------------------------"));
-            mParameters.add(new StringBitmapParameter("交易金额未超过300.00元，无需签名"));
-
-            ArrayList<StringBitmapParameter> mParametersEx = new ArrayList<>();/**如果是空的列表，也可以传入，会打印空行*/
-            mParametersEx.add(new StringBitmapParameter("\n"));
-            mParametersEx.add(new StringBitmapParameter("\n"));
-            mParametersEx.add(new StringBitmapParameter("\n"));
-
-            Bitmap textBitmap = BitmapUtil.StringListtoBitmap(MainActivity.this, mParameters);
-            Bitmap textBitmap2 = BitmapUtil.StringListtoBitmap(MainActivity.this, mParametersEx);
-
-           // Bitmap mergeBitmap = BitmapUtil.addBitmapInHead(imageBitmap, textBitmap);
-
-           // Bitmap mergeBitmap2 = BitmapUtil.addBitmapInFoot(mergeBitmap, imageBitmap);
-            Bitmap mergeBitmap3 = BitmapUtil.addBitmapInFoot(textBitmap, textBitmap2);
-
-            Log.d("fmx", "argb_8888 =  " + mergeBitmap3.getHeight() * mergeBitmap3.getWidth() * 32);
-            Log.d("fmx", "rgb_565 =  " + mergeBitmap3.getHeight() * mergeBitmap3.getWidth() * 16);
-            return mergeBitmap3;
-        } catch (IOException e) {
-            Log.d("bitmap","error"+e.toString());
-            e.printStackTrace();
+    private Bitmap creatCreditImage() {
+        ArrayList<StringBitmapParameter> title = new ArrayList<>();
+        title.add(new StringBitmapParameter(Utils.mCompanyInfo.getName(),BitmapUtil.IS_CENTER,BitmapUtil.IS_LARGE));
+        title.add(new StringBitmapParameter("对账单\n",BitmapUtil.IS_CENTER));
+        title.add(new StringBitmapParameter("客户："+Utils.printMemberName.getMember_name()));
+        String date = df.format(new Date());
+        title.add(new StringBitmapParameter("打印时间："+date));
+        title.add(new StringBitmapParameter(BitmapUtil.PRINT_LINE));
+        ArrayList<StringBitmapParameter> foot = new ArrayList<>();
+        foot.add(new StringBitmapParameter(BitmapUtil.PRINT_LINE));
+        foot.add(new StringBitmapParameter("感谢您的惠顾，欢迎下次光临!\n",BitmapUtil.IS_CENTER));
+        foot.add(new StringBitmapParameter("联系电话："+Utils.mCompanyInfo.getTel()+"\n"));
+        if(Utils.mCompanyInfo.getAddress().length>1){
+            for (int i=0;i<Utils.mCompanyInfo.getAddress().length;i++){
+                foot.add(new StringBitmapParameter("地址："+(i+1)+Utils.mCompanyInfo.getAddress()[0]+"\n"));
+            }
+        }else{
+            foot.add(new StringBitmapParameter("地址："+Utils.mCompanyInfo.getAddress()[0]+"\n"));
         }
-        return null;
+        Bitmap bitmapTitle=BitmapUtil.StringListtoBitmap(MainActivity.this,title);
+        Bitmap bitmapFoot=BitmapUtil.StringListtoBitmap(MainActivity.this,foot);
+        Bitmap bitmapBody=BitmapUtil.StringListtoBitmap(MainActivity.this,printCreditJSON);
+        Bitmap mergeBitmap = BitmapUtil.addBitmapInHead(bitmapTitle, bitmapBody);
+        mergeBitmap=BitmapUtil.addBitmapInHead(mergeBitmap,bitmapFoot);
+        return mergeBitmap;
     }
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
+    private void showProgress(final boolean show) {
+        // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
+        // for very easy animations. If available, use these APIs to fade-in
+        // the progress spinner.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+            int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
+            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            mProgressView.animate().setDuration(shortAnimTime).alpha(
+                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+                }
+            });
+        } else {
+            // The ViewPropertyAnimator APIs are not available, so simply show
+            // and hide the relevant UI components.
+            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+        }
+    }
+    private void getStore(){
+        IhancHttpClient.get("/index/purchase/purchaseInfo/", null, new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                String res=new String(responseBody);
+                try{
+                    JSONObject mObject=new JSONObject(res);
+                    JSONArray unitArray=mObject.getJSONArray("units");
+                    for(int i=0;i<unitArray.length();i++){
+                        JSONObject myjObject = unitArray.getJSONObject(i);
+                        Unit mItem=new Unit(myjObject.getInt("unit_id"),
+                                myjObject.getString("unit_name")
+                        );
+                        mUnitList.add(mItem);
+                    }
+                    JSONArray storeArray=mObject.getJSONArray("store");
+                    if(storeArray.length()>1){
+                        final String[] stores=new String[storeArray.length()];
+                        final int[] storeId=new int[storeArray.length()];
+                       for (int i=0;i< storeArray.length();i++){
+                           JSONObject myjObject = storeArray.getJSONObject(i);
+                           stores[i]=myjObject.getString("store_name");
+                           storeId[i]=myjObject.getInt("store_id");
+                       }
+                        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                        builder.setTitle("请选择仓库");
+                        builder.setCancelable(false);
+                        builder.setItems(stores, new DialogInterface.OnClickListener()
+                        {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which)
+                            {
+                                //Toast.makeText(MainActivity.this,  stores[which]+storeId[which], Toast.LENGTH_SHORT).show();
+                                Utils.storeId=storeId[which];
+                            }
+                        });
+                        builder.show();
+                    }else{
+                        Utils.storeId=storeArray.getJSONObject(0).getInt("store_id");
+                    }
+
+                    JSONArray bankArray=mObject.getJSONArray("bank");
+                    for (int i=0;i< bankArray.length();i++){
+                        JSONObject myjObject = bankArray.getJSONObject(i);
+                        bank item=new bank(myjObject.getInt("bank_id"),myjObject.getString("bank_name"));
+                        mBankList.add(item);
+                    }
+
+
+                }catch (JSONException e){e.printStackTrace();}
+
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+
+            }
+        });
+
+    }
+    Handler eHandler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            exit = false;
+        }
+    };
+
+    public void initPrinter(ArrayList<SaleDetail> saleDetails,int paid_sum,int credit_sum){
+        Log.d("GPrinter","initPrinter");
+        String receiptType=sp.getString(getString(R.string.receipt_type),null);
+        if(sp.getBoolean("bluetooth_printer",false)){
+            String macAddress=sp.getString(getString(R.string.bluetooth_printer_address),"");
+            if(macAddress.equals("")){
+                Toast.makeText(MainActivity.this,"请配置您的打印机！",Toast.LENGTH_LONG);
+            }else{
+                IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
+                filter.addAction(ACTION_USB_DEVICE_DETACHED);
+                filter.addAction(ACTION_QUERY_PRINTER_STATE);
+                filter.addAction(DeviceConnFactoryManager.ACTION_CONN_STATE);
+                mGPrinter=new GPrinter(macAddress,true);
+                registerReceiver(mGPrinter.receiver, filter);
+                if (receiptType.equals(getString(R.string.receipt_type_default)))
+                    mGPrinter.print(saleDetails,paid_sum,credit_sum);
+               // else
+                    //mGPrinter.print((Bitmap) bitmap);
+
+            }
+        }else{
+            String IP=sp.getString(getString(R.string.printer_IP),"").trim();
+            IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
+            filter.addAction(ACTION_USB_DEVICE_DETACHED);
+            filter.addAction(ACTION_QUERY_PRINTER_STATE);
+            filter.addAction(DeviceConnFactoryManager.ACTION_CONN_STATE);
+            mGPrinter=new GPrinter(IP,false);
+            registerReceiver(mGPrinter.receiver, filter);
+            if(receiptType.equals(getString(R.string.receipt_type_default)))
+                mGPrinter.print(saleDetails,paid_sum,credit_sum);
+         //   else
+          //      mGPrinter.print((Bitmap) bitmap);
+        }
+    }
+
+
 }

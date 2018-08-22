@@ -199,6 +199,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             //bindPreferenceSummaryToValue(findPreference("bluetooth_printer"));
             //bindPreferenceSummaryToValue(findPreference("example_list"));
             bindPreferenceSummaryToValue(findPreference(getString(R.string.printer_IP)));
+            bindPreferenceSummaryToValue(findPreference(getString(R.string.receipt_type)));
             findPreference("bluetooth_printer").setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object o) {
