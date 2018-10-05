@@ -24,6 +24,8 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
@@ -49,7 +51,6 @@ import android.widget.Spinner;
 import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.google.gson.JsonArray;
 import com.gprinter.command.EscCommand;
 import com.gprinter.command.LabelCommand;
@@ -104,42 +105,45 @@ public class MainActivity extends AppCompatActivity {
     // Intent request codes
     private static final int REQUEST_CONNECT_DEVICE = 1;
     private static final int REQUEST_ENABLE_BT = 2;
-    private List mCategoryDataList=new ArrayList<category>();
-    private List mGoodsDataList=new ArrayList<Goods>();
-    private List memberDataList=new ArrayList<member>();
-    private List<SaleFragment> fragmentList=new ArrayList<SaleFragment>();
-    private List<member> memberTabsList=new ArrayList<>();
-    private List mUnitList=new ArrayList<Unit>();
+    public static List mUnitList=new ArrayList<Unit>();
     public static List<bank> mBankList=new ArrayList<bank>();
     private SimpleDateFormat df;
-    private ViewPager vp;
-    private TabLayout tl;
-    private MyNumberEdit mWeight;
-    private MyNumberEdit mPrice;
-    private MyNumberEdit mSumEdit;
-    private Goods currentGood=null;
-    private TextView infoGoodsName;
-    private Spinner unitSpinner;
     private JSONArray printCreditJSON;
-    private Button addToSaleBtn;
     private boolean exit=false;
-
+    private FragmentTransaction transaction;
+    private FragmentManager fragmentManager;
+    private boolean SaleMainFragmentCheck=true;
+    private SaleMainFragment mSaleMainFragment;
+    private boolean ListFragmentCheck=true;
+    private ListFragment mListFragment;
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
 
         @Override
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+            fragmentManager = getSupportFragmentManager();
+            transaction = fragmentManager.beginTransaction();
             switch (item.getItemId()) {
                 case R.id.navigation_home:
+                    if(SaleMainFragmentCheck) {
+                        mSaleMainFragment=new SaleMainFragment();
+                        SaleMainFragmentCheck=false;
+                       // transaction.add(R.id.content,mSaleMainFragment);
+                    }
+                    transaction.replace(R.id.content, mSaleMainFragment);
+                    transaction.commit();
                     return true;
                 case R.id.navigation_dashboard:
                     Intent intent=new Intent(MainActivity.this,SettingsActivity.class);
                     startActivity(intent);
                     return true;
                 case R.id.navigation_notifications:
-                   // intent=new Intent(MainActivity.this,ListActivity.class);
-                   // startActivity(intent);
-
+                    if(ListFragmentCheck){
+                        mListFragment=new ListFragment();
+                        ListFragmentCheck=false;
+                    }
+                    transaction.replace(R.id.content, mListFragment);
+                    transaction.commit();
                     return true;
                 case R.id.navigation_exit:
                     if (!exit) {
@@ -179,8 +183,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ActivityCollector.addActivity(this);
-        initView();
+        BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
+        navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
+        navigation.setSelectedItemId(R.id.navigation_home);
         getStore();
+        sp= PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+        mProgressView = findViewById(R.id.wait_progress);
+
     }
     @Override
     protected void onStop() {
@@ -194,347 +203,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         DeviceConnFactoryManager.closeAllPort();
-    }
-
-    public void initView(){
-        infoGoodsName=(TextView)findViewById(R.id.infoGoodsName);
-        mTextMessage = (TextView) findViewById(R.id.goodsTV);
-        mProgressView = findViewById(R.id.wait_progress);
-        BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
-        navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
-        sp=PreferenceManager.getDefaultSharedPreferences(this);
-        categoryLv=(ListView)findViewById(R.id.category);
-        mCategoryAdapter=new CategoryAdapter(MainActivity.this,R.layout.device_name,mCategoryDataList);
-        categoryLv.setAdapter(mCategoryAdapter);
-        categoryLv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                category categoryItem=(category) mCategoryAdapter.getItem(i);
-                GoodsAdapter.MyFilter mFilter=mGoodsAdapter.getFilter();
-                mFilter.setMyFilter(Utils.GOODSFILTERCATEGORYID);
-                mFilter.filter(String.valueOf(categoryItem.getCategory_id()));
-            }
-        });
-        getCategoryData();
-        mGridView=(GridView)findViewById(R.id.goods);
-        mGoodsAdapter=new GoodsAdapter(MainActivity.this,R.layout.goods,mGoodsDataList);
-        mGridView.setAdapter(mGoodsAdapter);
-        getGoodsData();
-        mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                currentGood=(Goods)adapterView.getAdapter().getItem(i);
-                infoGoodsName.setText(currentGood.getGoods_name());
-                mPrice.setPrice(currentGood.getGoods_price());
-                mSumEdit.setNum(currentGood.getGoods_price()*mWeight.getNum());
-                RequestParams params = new RequestParams();
-                params.put("goods_id",currentGood.getGoods_id());
-                IhancHttpClient.get("/index/sale/getUnitApp", params, new AsyncHttpResponseHandler() {
-                    @Override
-                    public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                        String res =new String(responseBody).trim();
-                        UnitAdapter.UnitFilter mFilter=mUnitAdapter.getFilter();
-                        if(res.length()<3){
-                            mFilter.filter(currentGood.getGoods_unit());
-                        }else
-                        mFilter.filter(currentGood.getGoods_unit()+"and"+res.substring(2,res.length()-1));
-                    }
-
-                    @Override
-                    public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                        String res =new String(responseBody).trim();
-                        Log.d("unitFail",res);
-                    }
-                });
-                int position=mUnitAdapter.getPosition(Integer.parseInt(currentGood.getGoods_unit()));
-                if(position>0)unitSpinner.setSelection(position);
-            }
-        });
-        mGoodSearchView=(SearchView)findViewById(R.id.goodsSearchView);
-        mGoodSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String s) {
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String s) {
-                if (!TextUtils.isEmpty(s)){
-                    GoodsAdapter.MyFilter mFilter=mGoodsAdapter.getFilter();
-                    mFilter.setMyFilter(Utils.GOODSFILTERSEARCHVIEW);
-                    mFilter.filter(s);
-                }else{
-                    mGridView.clearTextFilter();
-                }
-                return false;
-            }
-        });
-        mTextMessage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                GoodsAdapter.MyFilter mFilter=mGoodsAdapter.getFilter();
-                mFilter.setMyFilter(Utils.GOODSFILTERPROMOTE);
-                mFilter.filter(":");
-            }
-        });
-        memberTV=(AutoCompleteTextView)findViewById(R.id.memberTV);
-        memberAdapter=new MemberAdapter(MainActivity.this,R.layout.member,memberDataList);
-        memberTV.setAdapter(memberAdapter);
-        memberTV.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-                MemberAdapter.MemberFilter memberFilter=memberAdapter.getFilter();
-                memberFilter.filter(editable.toString());
-            }
-        });
-        getMemberData();
-        memberTV.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                hideKeyboard();
-                member memberItem=(member)adapterView.getAdapter().getItem(i);
-                memberTV.setText(memberItem.getMember_name());
-                memberTV.clearFocus();
-                addSaleTabs(memberItem);
-                //Log.d("member Click",memberItem.getMember_name());
-            }
-        });
-        memberTV.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View view, boolean b) {
-                if(b) memberTV.setText("");
-            }
-        });
-        vp=(ViewPager)findViewById(R.id.vp);
-        tl=(TabLayout)findViewById(R.id.tl);
-        mSalePagerAdapter=new SalePagerAdapter(getSupportFragmentManager(),MainActivity.this,fragmentList,memberTabsList);
-        vp.setAdapter(mSalePagerAdapter);
-        tl.setupWithViewPager(vp);
-
-        mWeight=(MyNumberEdit)findViewById(R.id.weight);
-        mPrice=(MyNumberEdit)findViewById(R.id.price);
-        mSumEdit=(MyNumberEdit)findViewById(R.id.sumEdit);
-        mWeight.setTitle("数量：");
-        mPrice.setTitle("价格：");
-        mPrice.setD(0.5);
-        mSumEdit.setTitle("金额：");
-        mSumEdit.setD(1.0);
-        mSumEdit.addTextChangedListener(new MyNumberEdit.TextChangedListener() {
-            @Override
-            public void TextChanged() {
-                if(mWeight.getNum()==0.0)
-                    return;
-                Double sum=mSumEdit.getNum()/mWeight.getNum();
-                mPrice.check=false;
-                mWeight.check=false;
-                mPrice.setNum(sum);
-            }
-        });
-        mPrice.addTextChangedListener(new MyNumberEdit.TextChangedListener() {
-            @Override
-            public void TextChanged() {
-                Double sum=mPrice.getNum()*mWeight.getNum();
-                mSumEdit.check=false;
-                mSumEdit.setNum(sum);
-            }
-        });
-        mWeight.addTextChangedListener(new MyNumberEdit.TextChangedListener() {
-            @Override
-            public void TextChanged() {
-                Double sum=mPrice.getNum()*mWeight.getNum();
-                mSumEdit.check=false;
-                mSumEdit.setNum(sum);
-            }
-        });
-        unitSpinner=(Spinner)findViewById(R.id.unitSpinner);
-        mUnitAdapter=new UnitAdapter(MainActivity.this,R.layout.unit,mUnitList);
-        unitSpinner.setAdapter(mUnitAdapter);
-       // getUnitData();
-        unitSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                UnitAdapter mAdapter=(UnitAdapter) adapterView.getAdapter();
-                Unit unitItem=mAdapter.getItem(i);
-                if(String.valueOf(unitItem.getUnit_id()).equals(currentGood.getGoods_unit())){
-                    mPrice.setPrice(currentGood.getGoods_price());
-                    mSumEdit.setNum(currentGood.getGoods_price()*mWeight.getNum());
-                }else{
-                    RequestParams params = new RequestParams();
-                    params.put("goods_id",currentGood.getGoods_id());
-                    params.put("unit_id",unitItem.getUnit_id());
-                    IhancHttpClient.get("/index/sale/getPriceApp", params, new AsyncHttpResponseHandler() {
-                        @Override
-                        public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                            String res=new String(responseBody);
-                            mPrice.setPrice(res);
-                            mSumEdit.setNum(Double.parseDouble(res)*mWeight.getNum());
-                        }
-                        @Override
-                        public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                        }
-                    });
-                };
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
-            }
-        });
-        addToSaleBtn=(Button)findViewById(R.id.addToSale);
-        addToSaleBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Log.d("saleFragment","addToSaleBtn");
-                SaleFragment mSaleFragment=(SaleFragment) mSalePagerAdapter.getItem(vp.getCurrentItem());
-                if(currentGood==null) return;
-                if(mSaleFragment!=null) {
-                    DetailGoods good = new DetailGoods(currentGood.getGoods_id(), currentGood.getGoods_name(), currentGood.getGoods_unit_id());
-                    Unit unit = mUnitAdapter.getItem(unitSpinner.getSelectedItemPosition());
-                    SaleDetail detail = new SaleDetail(good, mWeight.getNum(), mPrice.getNum(), unit.getUnit_id(), unit.getUnit_name(),(int)mSumEdit.getNum());
-                    Log.d("saleFragment","addToSaleBtn2");
-                    mSaleFragment.addSaleDetail(detail);
-                }
-            }
-        });
-
-    }
-    public void getCategoryData(){
-        RequestParams params = new RequestParams();
-        IhancHttpClient.get("/cat", params, new AsyncHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                String res = new String(responseBody);
-                try {
-                    JSONArray resArray = new JSONArray(res);
-                    for(int i=0;i<resArray.length();i++){
-                        category mItem=new category();
-                        JSONObject myjObject = resArray.getJSONObject(i);
-                        mItem.setCategory_id(myjObject.getInt("cat_id"));
-                        mItem.setCategory_name(myjObject.getString("cat_name"));
-                        mCategoryDataList.add(mItem);
-                    }
-
-                } catch (JSONException e)
-                {
-                    Log.d("JSONArray",e.toString());}
-            }
-            @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                String res = new String(responseBody);
-                // Log.d("getCategoryData Failed",res.toString());
-                for(int i=0;i<headers.length;i++){
-                    Log.d("getCategoryData Failed",headers[i].toString());
-                }
-            }
-        });
-    }
-    public void getGoodsData(){
-        RequestParams params = new RequestParams();
-        IhancHttpClient.get("/index/setting/goods", params, new AsyncHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                String res = new String(responseBody);
-                try {
-                    JSONArray resArray = new JSONArray(res);
-                    for(int i=0;i<resArray.length();i++){
-                        JSONObject myjObject = resArray.getJSONObject(i);
-                        Goods mItem=new Goods(myjObject.getInt("goods_id"),
-                                myjObject.getString("goods_name"),
-                                myjObject.getString("unit_id"),
-                                myjObject.optDouble("out_price"),
-                                myjObject.getString("goods_sn"),
-                                myjObject.getInt("cat_id"),
-                                myjObject.getString("unit_id"),
-                                myjObject.getInt("promote")
-                                );
-                        mGoodsDataList.add(mItem);
-                    }
-
-                } catch (JSONException e)
-                {
-                    Log.d("JSONArray",e.toString());}
-            }
-            @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                String res = new String(responseBody);
-                // Log.d("getCategoryData Failed",res.toString());
-                for(int i=0;i<headers.length;i++){
-                    Log.d("getGoodsData Failed",headers[i].toString());
-                }
-            }
-        });
-    }
-    public void getMemberData(){
-        RequestParams params = new RequestParams();
-        IhancHttpClient.get("/index/sale/memberAll", params, new AsyncHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                String res = new String(responseBody);
-                try {
-                    JSONArray resArray = new JSONArray(res);
-                    for(int i=0;i<resArray.length();i++){
-                        JSONObject myjObject = resArray.getJSONObject(i);
-                        member mItem=new member(myjObject.getInt("member_id"),
-                                myjObject.getString("member_name"),
-                                myjObject.getString("member_sn")
-                        );
-                        memberDataList.add(mItem);
-                    }
-
-                } catch (JSONException e)
-                {
-                    Log.d("JSONArray",e.toString());}
-            }
-
-            @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-
-            }
-        });
-
-    }
-    public void onBackPressed() {
-        Intent intent = new Intent();
-        intent.setAction(Intent.ACTION_MAIN);// "android.intent.action.MAIN"
-        intent.addCategory(Intent.CATEGORY_HOME); //"android.intent.category.HOME"
-        startActivity(intent);
-    }
-    public void addSaleTabs(member memberItem){
-        hideKeyboard();
-        memberTV.setText("");
-        if(memberTabsList.size()>5){
-            Toast.makeText(MainActivity.this,"排列中的客户不能超过5个！",Toast.LENGTH_LONG).show();
-            return;
-        }
-        for(int i=0;i<memberTabsList.size();i++){
-            if(memberItem.getMember_id()==memberTabsList.get(i).getMember_id()) {
-                vp.setCurrentItem(i);
-                return;
-            }
-        }
-          memberTabsList.add(memberItem);
-          SaleFragment mFragment=new SaleFragment();
-          mFragment.setMember(memberItem);
-          fragmentList.add(mFragment);
-          mSalePagerAdapter.notifyDataSetChanged();
-          vp.setCurrentItem(memberTabsList.size()-1);
-    }
-    public void deleteCurrentSaleTabs(){
-        int position=vp.getCurrentItem();
-        memberTabsList.remove(position);
-        fragmentList.remove(position);
-        mSalePagerAdapter.notifyDataSetChanged();
     }
     public void initPrinter(Object bitmap){
         String receiptType=sp.getString(getString(R.string.receipt_type),null);
@@ -585,6 +253,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                 String res = new String(responseBody);
+                Log.d("saleFragment",res);
                 try{
                     JSONObject myjObject=new JSONObject(res);
                     printCreditJSON=(JSONArray) myjObject.get("credit");
@@ -595,9 +264,6 @@ public class MainActivity extends AppCompatActivity {
                          ImageTask mImageTask = new ImageTask();
                          mImageTask.execute("");
                     }
-                   // System.out.print(printCreditJSON);
-
-
                 }catch (JSONException e){Log.d("json",e.toString());}
             }
 
@@ -656,7 +322,7 @@ public class MainActivity extends AppCompatActivity {
         return mergeBitmap;
     }
     @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
-    private void showProgress(final boolean show) {
+    public  void showProgress(final boolean show) {
         // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
         // for very easy animations. If available, use these APIs to fade-in
         // the progress spinner.
@@ -778,6 +444,14 @@ public class MainActivity extends AppCompatActivity {
           //      mGPrinter.print((Bitmap) bitmap);
         }
     }
+
+    public void onBackPressed() {
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_MAIN);// "android.intent.action.MAIN"
+        intent.addCategory(Intent.CATEGORY_HOME); //"android.intent.category.HOME"
+        startActivity(intent);
+    }
+
 
 
 }

@@ -5,6 +5,7 @@
     <color name="colorAccent">#FF4081</color>
     <color name="label_orange">#8191ea</color>
     <color name="white">#f3f3f5</color>
+    <color name="black">#000000</color>
     <color name="whiteAL">#b3898888</color>
     <color name="lightBlue">#c0c7f4</color>
     <color name="saveButtonBorder">#ea2383</color>

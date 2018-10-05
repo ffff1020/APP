@@ -18,6 +18,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
+import java.util.List;
 
 import cz.msebera.android.httpclient.Header;
 
@@ -29,7 +30,8 @@ public class Utils {
     public static CompanyInfo mCompanyInfo;
     public static member printMemberName;
     public static int storeId;
-    private static boolean Link;
+    public static boolean Link;
+    public static List<SaleFragment> fragmentList;
     public static UsbDevice getUsbDeviceFromName(Context context, String usbName) {
         UsbManager usbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
         HashMap<String,UsbDevice> usbDeviceList = usbManager.getDeviceList();

@@ -48,9 +48,15 @@ public class SaleDetailAdapter extends ArrayAdapter {
         viewHolder.tvNumber.setText(mSaleDetail.getNumber());
         viewHolder.tvPrice.setText(mSaleDetail.getPrice());
         viewHolder.tvSum.setText("￥"+mSaleDetail.getSum());
-        viewHolder.deleteButton.setOnClickListener(mListener);
-        viewHolder.deleteButton.setTag(position);
-        Log.d("SaleDetailAdapter",saleDetailList.size()+"");
+        if(mListener==null) {
+            //viewHolder.deleteButton.setweig(0);
+            viewHolder.deleteButton.setVisibility(View.INVISIBLE);
+        }
+        else{
+           // viewHolder.deleteButton.setVisibility(View.VISIBLE);
+            viewHolder.deleteButton.setOnClickListener(mListener);
+            viewHolder.deleteButton.setTag(position);
+        }
         return convertView;
     }
     public class ViewHolder{

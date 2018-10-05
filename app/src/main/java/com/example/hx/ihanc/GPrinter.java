@@ -378,10 +378,12 @@ public class GPrinter {
         DeviceConnFactoryManager.getDeviceConnFactoryManagers()[id].sendDataImmediately(datas);
     }
     public static String[] getStrList(String inputString, int length) {
-        int time=inputString.length()/length;
-        if(inputString.length()% length>0) time++;
+        String[] list=new String[2];
+        list[0]=substring(inputString, 0, length);
+        list[1]=substring(inputString, length, inputString.length());
+       /* int time=inputString.getBytes().length/(length*2);
+        if(inputString.getBytes().length% (length*2 )>0) time++;
         String[] list=new String[time];
-        Log.d("getStringLIST",inputString+length+time);
         for (int index = 0; index < time-1; index++) {
             String childStr = substring(inputString, index * length,
                     (index + 1) * length);
@@ -389,7 +391,7 @@ public class GPrinter {
             Log.d("getStringLIST",childStr);
         }
         time--;
-        list[time]=substring(inputString,time*length,inputString.length());
+        list[time]=substring(inputString,time*length,inputString.length()); */
         return list;
     }
     public void finishPrint(){

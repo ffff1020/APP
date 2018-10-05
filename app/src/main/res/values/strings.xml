@@ -120,4 +120,12 @@
     <string name="SaveButton">保存</string>
     <string name="deleteItem">删</string>
     <string name="title_activity_list">ListActivity</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="loading">正在加载...</string>
+    <string name="bank_name">收款银行--收款人</string>
+    <string name="bank_sum">今日收款金额合计</string>
+    <string name="footer_loading">努力加载中...</string>
+    <string name="footer_last">没有了...</string>
 </resources>

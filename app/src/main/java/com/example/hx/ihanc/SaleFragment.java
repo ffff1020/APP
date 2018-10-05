@@ -4,9 +4,12 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.Parcelable;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -32,9 +35,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONString;
 
+import java.io.Serializable;
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -67,6 +73,7 @@ public class SaleFragment extends Fragment {
     private BankAdapter mBankAdapter;
     private Spinner bankSpinner;
     private int credit_sum;
+    private SaleMainFragment mParentFragment;
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -74,10 +81,19 @@ public class SaleFragment extends Fragment {
         View view = inflater.inflate(R.layout.sale_fragment, container, false);
         title=(TextView)view.findViewById(R.id.title);
         saleDetailLV=(ListView)view.findViewById(R.id.SaleDetailListView);
+        List<Fragment>list=(List<Fragment>)SaleFragment.this.getFragmentManager().getFragments();
+        for(Fragment f:list){
+            if(f!=null&&f instanceof SaleMainFragment){
+                mParentFragment=(SaleMainFragment) f;
+                break;
+            }
+        }
         title.setOnClickListener(new View.OnClickListener() {
           @Override
           public void onClick(View view) {
+              //Log.d("saleFragment","print_credit");
               if(printAble){
+              Log.d("saleFragment","print_credit");
                   if(Utils.mCompanyInfo==null) Utils.getCompanyInfo();
                   Utils.printMemberName=member;
                   MainActivity parentActivity = (MainActivity ) getActivity();
@@ -100,8 +116,7 @@ public class SaleFragment extends Fragment {
                         @Override
                         public void onClick(DialogInterface dialog, int which)
                         {
-                            MainActivity parentActivity = (MainActivity) getActivity();
-                            parentActivity.deleteCurrentSaleTabs();
+                            mParentFragment.deleteCurrentSaleTabs();
                         }
                     });
                     builder.setNegativeButton("取消", new DialogInterface.OnClickListener()
@@ -113,8 +128,7 @@ public class SaleFragment extends Fragment {
                     });
                     builder.show();
                 }else {
-                    MainActivity parentActivity = (MainActivity) getActivity();
-                    parentActivity.deleteCurrentSaleTabs();
+                    mParentFragment.deleteCurrentSaleTabs();
                 }
             }
         });
@@ -135,6 +149,7 @@ public class SaleFragment extends Fragment {
         saveBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                saveBtn.setClickable(false);
                     String paidSum=ttlTV.getText().toString();
                     int paid_sum=0;
                     if(!paidSum.equals("")){
@@ -167,11 +182,12 @@ public class SaleFragment extends Fragment {
                                 if(mObject.getInt("result")==1){
                                     Utils.toast(mContext,"保存成功！");
                                     ttlTV.setText("");
-                                    MainActivity parentActivity = (MainActivity) getActivity();
-                                    parentActivity.deleteCurrentSaleTabs();
+                                    mParentFragment.deleteCurrentSaleTabs();
+                                   // ((SaleMainFragment)(SaleFragment.this.getParentFragment())).deleteCurrentSaleTabs();
                                 }else{
                                     Utils.toast(mContext,"保存发生错误，请重新保存！");
                                 }
+                                saveBtn.setClickable(true);
                             }catch (JSONException e){e.printStackTrace();}
                         }
 
@@ -202,8 +218,10 @@ public class SaleFragment extends Fragment {
                     Log.d("GPrinter","SaleFragment");
                     parentActivity.initPrinter(mSaleDetails,paid_sum,credit_sum);
                 } else{
+                    parentActivity.showProgress(true);
+                    ImageTask mImageTask = new ImageTask();
+                    mImageTask.execute("");
                 }
-                //parentActivity.printSaleDetails(mSaleDetails);
             }
         });
         return view;
@@ -282,7 +300,7 @@ public class SaleFragment extends Fragment {
                 b = new Bundle();
                 b.putBundle("saleFragment", savedState);
                 b.putString("credit", title.getText().toString());
-                b.putInt("show",title.getVisibility());
+                //b.putInt("show",title.getVisibility());
                 b.putInt("ttl", ttl);
                 b.putInt("credit_sum",credit_sum );
                 this.setArguments(b);
@@ -290,21 +308,37 @@ public class SaleFragment extends Fragment {
                 saved = true;
                 b.putBundle("saleFragment", savedState);
                 b.putString("credit", title.getText().toString());
-                b.putInt("show",title.getVisibility());
+                //b.putInt("show",title.getVisibility());
                 b.putInt("ttl", ttl);
                 b.putInt("credit_sum",credit_sum );
                 this.setArguments(b);
             }
         }
     }
+
+    public String getCreditBundle(){
+        if(credit_sum!=0)
+        return title.getText().toString();
+        else
+            return "";
+    }
+
+  //  public int getShow(){return title.getVisibility(); }
+    public int getTTL(){return ttl;}
+    public int getCredit_sum(){return credit_sum;}
+
     private boolean restoreStateFromArguments() {
         Bundle b = getArguments();
         if(b==null) return false;
         savedState = b.getBundle("saleFragment");
         title.setText(b.getString("credit"));
-        title.setVisibility(b.getInt("show"));
+       // title.setVisibility(b.getInt("show"));
         ttl=b.getInt("ttl");
         credit_sum=b.getInt("credit_sum");
+        if(credit_sum!=0){
+            printAble=true;
+            title.setVisibility(View.VISIBLE);
+        }
         ttlTV.setText(ttl+"");
         ttlSum.setText("合计金额：￥"+formatter.format(ttl));
         if (savedState != null) {
@@ -327,7 +361,7 @@ public class SaleFragment extends Fragment {
     //////////////////////////////
 // 保存状态数据
 //////////////////////////////
-    private Bundle saveState() {
+    public Bundle saveState() {
         Bundle state = new Bundle();
         state.putParcelableArrayList("listParcel",mSaleDetails);
         return state;
@@ -385,5 +419,66 @@ public class SaleFragment extends Fragment {
             delete = false;
         }
     };
+    private class ImageTask extends AsyncTask<String, Void, Bitmap> {
+        @Override
+        protected Bitmap doInBackground(String... params) {
+            //Log.d("bitmap","start");
+            return creatCreditImage();
+        }
+
+        @Override
+        protected void onPreExecute() {
+            //Log.d("bitmap","onPreExecute");
+            super.onPreExecute();
+            //
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            ((MainActivity ) getActivity()).showProgress(false);
+            super.onPostExecute(bitmap);
+            ((MainActivity ) getActivity()).initPrinter(bitmap);
+        }
+    }
+
+    private Bitmap creatCreditImage(){
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        ArrayList<StringBitmapParameter> title = new ArrayList<>();
+        title.add(new StringBitmapParameter(Utils.mCompanyInfo.getName(),BitmapUtil.IS_CENTER,BitmapUtil.IS_LARGE));
+        title.add(new StringBitmapParameter("销售单\n",BitmapUtil.IS_CENTER));
+        title.add(new StringBitmapParameter("客户："+Utils.printMemberName.getMember_name()));
+        String date = df.format(new Date());
+        title.add(new StringBitmapParameter("打印时间："+date));
+        title.add(new StringBitmapParameter(BitmapUtil.PRINT_LINE));
+        ArrayList<StringBitmapParameter> foot = new ArrayList<>();
+        foot.add(new StringBitmapParameter(BitmapUtil.PRINT_LINE));
+        foot.add(new StringBitmapParameter("感谢您的惠顾，欢迎下次光临!\n",BitmapUtil.IS_CENTER));
+        foot.add(new StringBitmapParameter("联系电话："+Utils.mCompanyInfo.getTel()+"\n"));
+        if(Utils.mCompanyInfo.getAddress().length>1){
+            for (int i=0;i<Utils.mCompanyInfo.getAddress().length;i++){
+                foot.add(new StringBitmapParameter("地址："+(i+1)+Utils.mCompanyInfo.getAddress()[0]+"\n"));
+            }
+        }else{
+            foot.add(new StringBitmapParameter("地址："+Utils.mCompanyInfo.getAddress()[0]+"\n"));
+        }
+        Bitmap bitmapTitle=BitmapUtil.StringListtoBitmap(mContext,title);
+        Bitmap bitmapFoot=BitmapUtil.StringListtoBitmap(mContext,foot);
+        int paid_sum=0;
+        String paidSum=ttlTV.getText().toString();
+        if(!paidSum.equals("")){
+            paid_sum=Integer.parseInt(paidSum);
+        }
+        Bitmap bitmapBody=BitmapUtil.StringListtoBitmap(mContext,mSaleDetails,paid_sum,credit_sum);
+        Bitmap mergeBitmap = BitmapUtil.addBitmapInHead(bitmapTitle, bitmapBody);
+        mergeBitmap=BitmapUtil.addBitmapInHead(mergeBitmap,bitmapFoot);
+        return mergeBitmap;
+    }
+
+    public static SaleFragment newInstance(Bundle args) {
+        SaleFragment fragment = new SaleFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
+
 
 }
