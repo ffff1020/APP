@@ -129,7 +129,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         ActivityCollector.addActivity(this);
-        blueSerialSetting();
+       // blueSerialSetting();
         mProgressView = findViewById(R.id.login_progress);
         mLoginFormView = findViewById(R.id.login_form);
         mPrefEditor = getSharedPreferences("pref_ihanc", MODE_PRIVATE).edit();
@@ -157,6 +157,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                         } catch (JSONException e) {
                             Log.d("JSONException", e.toString());
                             showProgress(false);
+                            mLoginFormView.setVisibility(View.VISIBLE);
                         }
 
                 }
@@ -169,7 +170,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             });
 
         }else
-            {showProgress(false);}
+            {
+                showProgress(false);
+                mLoginFormView.setVisibility(View.VISIBLE);
+            }
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         mCodeButtonView=(Button)findViewById(R.id.codeSendBtn);
@@ -350,6 +354,27 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                         mPrefEditor.putString("name",userName);
                         mPrefEditor.commit();
                         IhancHttpClient.setAuth(token);
+                        IhancHttpClient.get("/index/setting/info", null, new AsyncHttpResponseHandler() {
+                                    @Override
+                                    public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                                        String res = new String(responseBody);
+                                        try {
+                                            JSONObject mObject = new JSONObject(res);
+                                            String[] address = mObject.getString("cadd").split("\\+");
+                                            Utils.mCompanyInfo = new CompanyInfo(
+                                                    mObject.getString("cname"),
+                                                    mObject.getString("ctel"),
+                                                    address
+                                            );
+                                        } catch (JSONException e) {
+                                            Log.d("JSONException", e.toString());
+                                        }
+                                    }
+                                    @Override
+                                    public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+
+                                    }
+                                });
                         stopTimer();
                         Intent intent=new Intent(LoginActivity.this,MainActivity.class);
                         startActivity(intent);
@@ -400,12 +425,12 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
             int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
 
-            mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+           // mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
             mLoginFormView.animate().setDuration(shortAnimTime).alpha(
                     show ? 0 : 1).setListener(new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationEnd(Animator animation) {
-                    mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+                   // mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
                 }
             });
 
@@ -421,7 +446,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             // The ViewPropertyAnimator APIs are not available, so simply show
             // and hide the relevant UI components.
             mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-            mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
+           // mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
         }
     }
 

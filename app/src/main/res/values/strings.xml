@@ -128,4 +128,7 @@
     <string name="bank_sum">今日收款金额合计</string>
     <string name="footer_loading">努力加载中...</string>
     <string name="footer_last">没有了...</string>
+    <string name="send_to_wx">发送微信</string>
+    <string name="print">打印账单</string>
+    <string name="close">关  闭</string>
 </resources>

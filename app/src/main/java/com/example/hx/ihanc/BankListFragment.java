@@ -54,6 +54,7 @@ public class BankListFragment extends Fragment {
     private String name;
     private List<BankListItem> bankListItemList=new ArrayList<BankListItem>();
     private MyBankListRecyclerViewAdapter adpter;
+    private RecyclerView recyclerView;
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
@@ -77,7 +78,6 @@ public class BankListFragment extends Fragment {
         if (getArguments() != null) {
             mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
         }
-
         adpter=new MyBankListRecyclerViewAdapter(bankListItemList, mListener);
     }
 
@@ -86,7 +86,7 @@ public class BankListFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_banklist_list, container, false);
         context = view.getContext();
-        RecyclerView recyclerView=view.findViewById(R.id.bankListRecyclerView);
+        recyclerView=view.findViewById(R.id.bankListRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(context));
         recyclerView.setAdapter(adpter);
         swipeRefreshLayout=view.findViewById(R.id.swipeRefreshLayout);
@@ -113,7 +113,9 @@ public class BankListFragment extends Fragment {
                             &&lastVisiblePosition>=layoutManager.getItemCount()-1           //当当前屏幕最后一个加载项位置>=所有item的数量
                             &&layoutManager.getItemCount()>layoutManager.getChildCount()) { // 当当前总Item数大于可见Item数
                         swipeRefreshLayout.setRefreshing(true);
+                        recyclerView.setNestedScrollingEnabled(false);
                         getBankList();
+
                     }
                 }
             }
@@ -216,6 +218,7 @@ public class BankListFragment extends Fragment {
                    }
                    page++;
                    adpter.notifyDataSetChanged();
+                   recyclerView.setNestedScrollingEnabled(false);
                }catch (JSONException e){e.printStackTrace();}
            }
 

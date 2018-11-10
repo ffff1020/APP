@@ -53,7 +53,6 @@ public class SaleDetailDialog extends Dialog {
         mSaleDetailAdapter=new SaleDetailAdapter(getContext(),R.layout.sale_detail_item_1,mSaleDetails,null);
         listView.setAdapter(mSaleDetailAdapter);
         showProgress(true);
-
     }
 
     public void getData(){

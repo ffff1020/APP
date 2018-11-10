@@ -275,7 +275,7 @@ public class GPrinter {
                                esc.addSetAbsolutePrintPosition(PRINT_POSITION_0);
                                esc.addText("结转余额");
                                esc.addSetAbsolutePrintPosition(PRINT_POSITION_3);
-                               info = "￥" +formatter.format( mDetail.getString("ttl"))+"\n";
+                               info = "￥" + mDetail.getString("ttl")+"\n";
                                totalSum += mDetail.getInt("ttl");
                                esc.addText(info);
                                esc.addPrintAndLineFeed();

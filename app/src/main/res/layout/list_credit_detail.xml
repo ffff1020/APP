@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/linearLayout5"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="10dp"
+    >
+
+    <TextView
+        android:id="@+id/credit_detail_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="test1"
+        android:textSize="15dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        />
+
+    <TextView
+        android:id="@+id/credit_detail_goods"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="test2"
+        app:layout_constraintTop_toBottomOf="@id/credit_detail_time"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/credit_detail_summary"
+        />
+
+    <TextView
+        android:id="@+id/credit_detail_summary"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="test3"
+        app:layout_constraintTop_toBottomOf="@id/credit_detail_time"
+        app:layout_constraintLeft_toRightOf="@id/credit_detail_goods"
+        app:layout_constraintRight_toRightOf="parent"
+        />
+    <CheckBox
+        android:id="@+id/checkbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="@id/credit_detail_time"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        android:checked="false" />
+</android.support.constraint.ConstraintLayout>
+

@@ -48,6 +48,7 @@ public class saleListFragment extends Fragment {
     private List<SaleListItem> saleListItemList=new ArrayList<SaleListItem>();
     private SwipeRefreshLayout swipeRefreshLayout;
     private int mPage=1;
+    private  RecyclerView recyclerView;
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
@@ -68,10 +69,11 @@ public class saleListFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d("saleList","start");
         if (getArguments() != null) {
             mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
         }
-        getData();
+
         this.mListener=new OnListFragmentInteractionListener() {
             @Override
             public void onListFragmentInteraction(SaleListItem item) {
@@ -82,7 +84,7 @@ public class saleListFragment extends Fragment {
                 WindowManager windowManager = parentActivity.getWindowManager();
                 Display display = windowManager.getDefaultDisplay();
                 WindowManager.LayoutParams lp = dialog.getWindow().getAttributes();
-                lp.width = (int)(display.getWidth() * 0.9); //设置宽度
+                lp.width = (int)(display.getWidth() * 0.95); //设置宽度
                 WindowManager.LayoutParams dialogLP=dialog.getWindow().getAttributes();
                 if ((int)(display.getHeight() * 0.8)<dialogLP.height){
                     lp.height = (int)(display.getHeight() * 0.8);
@@ -98,7 +100,7 @@ public class saleListFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_salelist_list, container, false);
         Context context = view.getContext();
-        RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.saleListRecyclerView);
+        recyclerView = (RecyclerView) view.findViewById(R.id.saleListRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false));
         recyclerView.setAdapter(adpter);
 
@@ -111,7 +113,7 @@ public class saleListFragment extends Fragment {
             }
         });
         swipeRefreshLayout.setRefreshing(true);
-
+        getData();
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
@@ -124,6 +126,7 @@ public class saleListFragment extends Fragment {
                             &&lastVisiblePosition>=layoutManager.getItemCount()-1           //当当前屏幕最后一个加载项位置>=所有item的数量
                             &&layoutManager.getItemCount()>layoutManager.getChildCount()) { // 当当前总Item数大于可见Item数
                         swipeRefreshLayout.setRefreshing(true);
+                        recyclerView.setNestedScrollingEnabled(false);
                         getData();
                     }
                 }
@@ -140,7 +143,6 @@ public class saleListFragment extends Fragment {
         super.onAttach(context);
         mContext=context;
         parentActivity=(MainActivity ) getActivity();
-        
     }
 
     @Override
@@ -203,6 +205,7 @@ public class saleListFragment extends Fragment {
                     }
                     mPage++;
                     adpter.notifyDataSetChanged();
+                    recyclerView.setNestedScrollingEnabled(true);
                 }catch (JSONException e){
                     e.printStackTrace();
                 }
