@@ -49,6 +49,7 @@ public class saleListFragment extends Fragment {
     private SwipeRefreshLayout swipeRefreshLayout;
     private int mPage=1;
     private  RecyclerView recyclerView;
+    private SaleDetailDialog.printListener mPrintListener=null;
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
@@ -73,15 +74,28 @@ public class saleListFragment extends Fragment {
         if (getArguments() != null) {
             mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
         }
+        this.mPrintListener=new SaleDetailDialog.printListener() {
+            @Override
+            public void print(ArrayList<SaleDetail> mdetail ,int paid_sum,int credit) {
+                Log.d("saleListPrint","");
+                MainActivity parentActivity=(MainActivity)getActivity();
+                parentActivity.initPrinter(mdetail,paid_sum*(-1),credit-paid_sum);
+            }
 
+            @Override
+            public void fresh() {
+                mPage=1;
+                getData();
+            }
+        };
         this.mListener=new OnListFragmentInteractionListener() {
             @Override
             public void onListFragmentInteraction(SaleListItem item) {
-                NumberFormat format=NumberFormat.getCurrencyInstance(Locale.CHINA);
-                SaleDetailDialog dialog =new SaleDetailDialog(getContext(),item.sale_id,item.name+"--"+format.format(Integer.parseInt(item.sum)));
-                dialog.show();
+                SaleDetailDialog dialog =SaleDetailDialog.newInstance(item.sale_id,item.name,Integer.parseInt(item.sum),item.member_id,item.paid);
+                dialog.setListener(mPrintListener);
+                dialog.show(getFragmentManager(),"sale_detail");
                 // 将对话框的大小按屏幕大小的百分比设置
-                WindowManager windowManager = parentActivity.getWindowManager();
+               /* WindowManager windowManager = parentActivity.getWindowManager();
                 Display display = windowManager.getDefaultDisplay();
                 WindowManager.LayoutParams lp = dialog.getWindow().getAttributes();
                 lp.width = (int)(display.getWidth() * 0.95); //设置宽度
@@ -89,7 +103,7 @@ public class saleListFragment extends Fragment {
                 if ((int)(display.getHeight() * 0.8)<dialogLP.height){
                     lp.height = (int)(display.getHeight() * 0.8);
                 }
-                dialog.getWindow().setAttributes(lp);
+                dialog.getWindow().setAttributes(lp);*/
             }
         };
         adpter=new MysaleListRecyclerViewAdapter(saleListItemList, mListener);
@@ -199,7 +213,8 @@ public class saleListFragment extends Fragment {
                                 list.getString("time"),
                                 list.getString("member_name"),
                                 list.getString("sum"),
-                                list.getInt("finish")
+                                list.getInt("finish"),
+                                list.getInt("member_id")
                                 );
                         saleListItemList.add(item);
                     }

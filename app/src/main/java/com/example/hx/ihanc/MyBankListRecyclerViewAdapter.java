@@ -51,6 +51,7 @@ public class MyBankListRecyclerViewAdapter extends RecyclerView.Adapter<MyBankLi
             holder.mSumView.setText(mValues.get(position).sum);
         }else{
             if(isLast)  holder.mBankNameView.setText("没有了...");
+            else holder.mBankNameView.setText("努力加载中...");
         }
 
         holder.mView.setOnClickListener(new View.OnClickListener() {

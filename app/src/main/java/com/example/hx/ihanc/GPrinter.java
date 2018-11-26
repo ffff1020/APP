@@ -15,6 +15,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -161,23 +163,28 @@ public class GPrinter {
             esc.addPrintAndLineFeed();
             int totalSum=0;
             double totalNum=0;
-            NumberFormat formatter = NumberFormat.getNumberInstance(Locale.CHINA);
+            DecimalFormat formatter=new DecimalFormat(",###,####.0");
+            //NumberFormat formatter = NumberFormat.getNumberInstance(Locale.CHINA);
             // 商品信息
             if (creditJson!= null && creditJson.length() > 0) {
+                int preSale_id=0;
                for (int i = 0; i < creditJson.length(); i++) {
                    try{
                        JSONObject mDetail = creditJson.getJSONObject(i);
                        esc.addSetHorAndVerMotionUnits((byte) PRINT_UNIT, (byte) 0);
-                       String info=mDetail.getString("time").substring(5,10)+"  ";
-                       esc.addText(info);
-
+                       String info="";
                        String type=mDetail.getString("type");
                        switch (type) {
                            case "S":
+                               if(preSale_id==0||preSale_id!=mDetail.getInt("sale_id")) {
+                                   preSale_id=mDetail.getInt("sale_id");
+                                   info=mDetail.getString("time").substring(5,10)+"  ";
+                               }else info="";
+                               esc.addText(info);
                                info = mDetail.getString("goods_name");
                                String[] goodsNames = new String[]{};
                                Log.d("goodsName", info.length() + "");
-                               if (info.length() > 6) {
+                               if (info.getBytes().length > 18) {
                                    goodsNames = getStrList(info, 6);
                                }
                                esc.addSetAbsolutePrintPosition(PRINT_POSITION_0);
@@ -205,9 +212,9 @@ public class GPrinter {
 
                                // 金额
                                if(mDetail.getInt("sum")>0)
-                                  info = "￥" + formatter.format(mDetail.getInt("sum"));
+                                  info = "￥" + mDetail.getInt("sum");
                                else
-                                   info = "￥-" + formatter.format(mDetail.getInt("sum")*-1);
+                                   info = "￥-" + mDetail.getInt("sum")*-1;
                                int amountLength = info.getBytes().length;
                                short amountPosition = (short) (PRINT_POSITION_3 + 11 - amountLength * 3);
                                amountPosition = PRINT_POSITION_3;
@@ -281,6 +288,11 @@ public class GPrinter {
                                esc.addPrintAndLineFeed();
                                break;
                            case "B":
+                               if(preSale_id==0||preSale_id!=mDetail.getInt("sale_id")) {
+                                   preSale_id=mDetail.getInt("sale_id");
+                                   info=mDetail.getString("time").substring(5,10)+"  ";
+                               }else info="";
+                               esc.addText(info);
                                info = mDetail.getString("goods_name");
                                goodsNames = new String[]{};
                                Log.d("goodsName", info.length() + "");
@@ -343,10 +355,11 @@ public class GPrinter {
             String num="合计数量："+totalNum;
             esc.addText(num.substring(0,num.length())+"\n");
             if(totalSum>=0)
-            esc.addText("合计欠款：￥"+formatter.format(totalSum)+"\n");
+            esc.addText("合计金额：￥"+formatter.format(totalSum)+"\n");
             else{
-                esc.addText("合计欠款：￥-"+formatter.format(totalSum*-1)+"\n");
+                esc.addText("合计金额：￥-"+formatter.format(totalSum*-1)+"\n");
             }
+            esc.addText("现累计欠款：￥"+formatter.format(credit_sum)+"\n");
             esc.addText(PRINT_LINE);
             //公司信息
             esc.addPrintAndLineFeed();
@@ -356,7 +369,7 @@ public class GPrinter {
             esc.addText("联系电话："+Utils.mCompanyInfo.getTel()+"\n\n");
             if(Utils.mCompanyInfo.getAddress().length>1){
                 for (int i=0;i<Utils.mCompanyInfo.getAddress().length;i++){
-                    esc.addText("地址："+(i+1)+Utils.mCompanyInfo.getAddress()[0]+"\n");
+                    esc.addText("地址："+(i+1)+Utils.mCompanyInfo.getAddress()[i]+"\n");
                 }
             }else{
                 esc.addText("地址："+Utils.mCompanyInfo.getAddress()[0]+"\n\n");
@@ -379,8 +392,8 @@ public class GPrinter {
     }
     public static String[] getStrList(String inputString, int length) {
         String[] list=new String[2];
-        list[0]=substring(inputString, 0, length);
-        list[1]=substring(inputString, length, inputString.length());
+        list[0]=inputString.substring(0, length-1);
+        list[1]=inputString.substring(length-1);
        /* int time=inputString.getBytes().length/(length*2);
         if(inputString.getBytes().length% (length*2 )>0) time++;
         String[] list=new String[time];
@@ -537,6 +550,7 @@ public class GPrinter {
             esc.addPrintAndLineFeed();
             int totalSum=0;
             double totalNum=0;
+            DecimalFormat f=new DecimalFormat(",###,####.0");
             // 商品信息
             if (mSaleDetails!= null && mSaleDetails.size() > 0) {
                 for (int i = 0; i < mSaleDetails.size(); i++) {
@@ -564,7 +578,7 @@ public class GPrinter {
 
 
                     // 金额
-                    info = "￥" + detail.getSum();
+                    info = "￥" + f.format(detail.getSum());
                     esc.addSetAbsolutePrintPosition(PRINT_POSITION_6);
                     esc.addText(info);
                     totalSum += detail.getSum();
@@ -583,19 +597,20 @@ public class GPrinter {
                 esc.addText(PRINT_LINE);
             }
             NumberFormat formatter = NumberFormat.getNumberInstance(Locale.CHINA);
+
             // 总计信息
             esc.addSelectJustification(EscCommand.JUSTIFICATION.RIGHT);// 设置打印居右
-            esc.addText("合计金额：￥"+formatter.format(totalSum)+"\n");
+            esc.addText("合计金额：￥"+f.format(totalSum)+"\n");
             if(paid_sum>=0)
-            esc.addText("实收金额：￥"+formatter.format(paid_sum)+"\n");
+            esc.addText("实收金额：￥"+f.format(paid_sum)+"\n");
             else{
-                esc.addText("实收金额：￥-"+formatter.format(paid_sum*-1)+"\n");
+                esc.addText("实收金额：￥-"+f.format(paid_sum*-1)+"\n");
             }
             int ttl_credit=credit_sum+totalSum-paid_sum;
             if(ttl_credit>0)
-            esc.addText("累计欠款：￥"+formatter.format(ttl_credit)+"\n");
+            esc.addText("累计欠款：￥"+f.format(ttl_credit)+"\n");
             if(ttl_credit<0)
-                esc.addText("累计欠款：￥-"+formatter.format(ttl_credit*-1)+"\n");
+                esc.addText("累计欠款：￥-"+f.format(ttl_credit*-1)+"\n");
             esc.addText(PRINT_LINE);
             //公司信息
             esc.addPrintAndLineFeed();
@@ -605,7 +620,7 @@ public class GPrinter {
             esc.addText("联系电话："+Utils.mCompanyInfo.getTel()+"\n\n");
             if(Utils.mCompanyInfo.getAddress().length>1){
                 for (int i=0;i<Utils.mCompanyInfo.getAddress().length;i++){
-                    esc.addText("地址："+(i+1)+Utils.mCompanyInfo.getAddress()[0]+"\n");
+                    esc.addText("地址："+(i+1)+Utils.mCompanyInfo.getAddress()[i]+"\n");
                 }
             }else{
                 esc.addText("地址："+Utils.mCompanyInfo.getAddress()[0]+"\n\n");
@@ -624,5 +639,9 @@ public class GPrinter {
         Vector<Byte> datas = esc.getCommand();
         // 发送数据
         DeviceConnFactoryManager.getDeviceConnFactoryManagers()[id].sendDataImmediately(datas);
+    }
+
+    public void setCredit_sum(int sum){
+        this.credit_sum=sum;
     }
 }

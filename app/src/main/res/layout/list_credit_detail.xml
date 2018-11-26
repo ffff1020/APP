@@ -5,7 +5,9 @@
     android:id="@+id/linearLayout5"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="10dp"
+    android:paddingLeft="10dp"
+    android:paddingRight="10dp"
+    android:paddingBottom="5dp"
     >
 
     <TextView
@@ -13,7 +15,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="test1"
-        android:textSize="15dp"
+        android:textSize="12sp"
+        android:paddingTop="5dp"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         />
@@ -23,6 +26,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="test2"
+        android:textSize="12sp"
         app:layout_constraintTop_toBottomOf="@id/credit_detail_time"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toLeftOf="@id/credit_detail_summary"
@@ -32,6 +36,7 @@
         android:id="@+id/credit_detail_summary"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textSize="12sp"
         android:text="test3"
         app:layout_constraintTop_toBottomOf="@id/credit_detail_time"
         app:layout_constraintLeft_toRightOf="@id/credit_detail_goods"

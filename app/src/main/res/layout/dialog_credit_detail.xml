@@ -49,5 +49,12 @@
             android:layout_height="wrap_content"
             style="?android:attr/buttonBarButtonStyle"
             android:text="@string/print" />
+        <Button
+            android:id="@+id/payButton"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            style="?android:attr/buttonBarButtonStyle"
+            android:text="客户付款" />
     </LinearLayout>
 </android.support.constraint.ConstraintLayout>

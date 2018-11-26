@@ -3,6 +3,6 @@
     android:id="@+id/title"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:textSize="18sp"
+    android:textSize="12sp"
     android:padding="5dp"
     />

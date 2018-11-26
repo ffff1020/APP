@@ -57,6 +57,7 @@ public class SaleFragment extends Fragment {
     private TextView title;
     private Button button;
     private Button saveBtn;
+    private Button orderBtn;
     public SharedPreferences sp;
     private boolean printAble=false;
     private ArrayList<SaleDetail> mSaleDetails=new ArrayList<SaleDetail>(){};
@@ -91,14 +92,24 @@ public class SaleFragment extends Fragment {
         title.setOnClickListener(new View.OnClickListener() {
           @Override
           public void onClick(View view) {
+              CreditDetailDialog creditDetailDialog=CreditDetailDialog.newInstance(member.member_id,
+                      member.member_name+"--￥"+formatter.format(credit_sum));
+              CreditDetailDialog.OnFreshCredit onFreshCredit=new CreditDetailDialog.OnFreshCredit() {
+                  @Override
+                  public void freshCredit() {
+                      getCredit();
+                  }
+              };
+              creditDetailDialog.setOnFreshCredit(onFreshCredit);
+              creditDetailDialog.show(getFragmentManager(),"credit");
               //Log.d("saleFragment","print_credit");
-              if(printAble){
-              Log.d("saleFragment","print_credit");
+             /* if(printAble){
+                  // Log.d("saleFragment","print_credit");
                   if(Utils.mCompanyInfo==null) Utils.getCompanyInfo();
                   Utils.printMemberName=member;
                   MainActivity parentActivity = (MainActivity ) getActivity();
                   parentActivity.printDetails();
-              }
+              }*/
 
           }
       });
@@ -142,14 +153,17 @@ public class SaleFragment extends Fragment {
         });
         ttlSum=(TextView) view.findViewById(R.id.ttlSum);
         bankSpinner=(Spinner)view.findViewById(R.id.bankSpinner);
-        Log.d("saleFragment",MainActivity.mBankList.size()+"");
+        //Log.d("saleFragment",MainActivity.mBankList.size()+"");
         mBankAdapter=new BankAdapter(mContext,R.layout.unit,MainActivity.mBankList);
         bankSpinner.setAdapter(mBankAdapter);
+        bankSpinner.setSelection(0);
         saveBtn=(Button)view.findViewById(R.id.save);
         saveBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 saveBtn.setClickable(false);
+                MainActivity parentActivity = (MainActivity ) getActivity();
+                parentActivity.hideKeyboard();
                     String paidSum=ttlTV.getText().toString();
                     int paid_sum=0;
                     if(!paidSum.equals("")){
@@ -164,12 +178,13 @@ public class SaleFragment extends Fragment {
                         for (int i=0;i<size;i++){
                             details.put(i,mSaleDetails.get(i).getSaleDetailJson());
                         }
+                        data.put("member",member.getMember());
+                        data.put("ttl_sum",ttl);
                         params.put("back",1);
                         params.put("pay",pay.getPayJson());
                         params.put("data",data);
                         params.put("detail",details);
-                        data.put("member",member.getMember());
-                        data.put("ttl_sum",ttl);
+
                     }catch (JSONException e){
                         e.printStackTrace();
                     }
@@ -200,10 +215,10 @@ public class SaleFragment extends Fragment {
             }
         });
         ttlTV.setText("");
-        ttlSum.setOnClickListener(new View.OnClickListener() {
+       /* ttlSum.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.d("GPrinter","SaleFragment");
+                //Log.d("GPrinter","SaleFragment");
                 if(mSaleDetails.size()==0) return;
                 if(Utils.mCompanyInfo==null) Utils.getCompanyInfo();
                 Utils.printMemberName=member;
@@ -223,6 +238,20 @@ public class SaleFragment extends Fragment {
                     mImageTask.execute("");
                 }
             }
+        });*/
+        orderBtn=view.findViewById(R.id.orderButton);
+        orderBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                order();
+            }
+        });
+        Button printButton=view.findViewById(R.id.print);
+        printButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                print();
+            }
         });
         return view;
     }
@@ -241,7 +270,7 @@ public class SaleFragment extends Fragment {
         this.mSaleDetails.add(detail);
         this.mSaleDetailAdapter.notifyDataSetChanged();
         ttl+=detail.getSum();
-        ttlTV.setText(ttl+"");
+       // ttlTV.setText(ttl+"");
         ttlSum.setText("合计金额：￥"+formatter.format(ttl));
         delete=false;
     }
@@ -256,7 +285,7 @@ public class SaleFragment extends Fragment {
             getCredit();
             saved = false;
             ttl=0;
-            ttlTV.setText(ttl+"");
+           // ttlTV.setText(ttl+"");
             ttlSum.setText("合计金额：￥"+formatter.format(ttl));
             mSaleDetailAdapter=new SaleDetailAdapter(mContext,R.layout.sale_detail_item,mSaleDetails,mListener);
             saleDetailLV.setAdapter(mSaleDetailAdapter);
@@ -339,7 +368,7 @@ public class SaleFragment extends Fragment {
             printAble=true;
             title.setVisibility(View.VISIBLE);
         }
-        ttlTV.setText(ttl+"");
+        //ttlTV.setText(ttl+"");
         ttlSum.setText("合计金额：￥"+formatter.format(ttl));
         if (savedState != null) {
             restoreState();
@@ -379,8 +408,8 @@ public class SaleFragment extends Fragment {
                     try {
                         JSONObject object = new JSONObject(res);
                         credit_sum=object.getInt("credit");
-                        if (credit_sum > 0) {
-                            title.setText("欠款金额：￥" + formatter.format(credit_sum ));
+                        if (credit_sum != 0) {
+                            title.setText("打印欠款金额：￥" + formatter.format(credit_sum ));
                             title.setVisibility(View.VISIBLE);
                             printAble = true;
                         }
@@ -404,13 +433,18 @@ public class SaleFragment extends Fragment {
                  eHandler.sendEmptyMessageDelayed(0, 2000);
              } else {
                  ttl-=mSaleDetails.get(position).getSum();
-                 ttlTV.setText(ttl+"");
+                // ttlTV.setText(ttl+"");
                  ttlSum.setText("合计金额：￥"+formatter.format(ttl));
                  mSaleDetails.remove(position);
                  mSaleDetailAdapter.notifyDataSetChanged();
                  delete=false;
              }
-                    }
+                    };
+
+        @Override
+        public void myModifyClick(int position, View v) {
+
+        }
     };
     Handler eHandler = new Handler() {
         @Override
@@ -437,7 +471,7 @@ public class SaleFragment extends Fragment {
         protected void onPostExecute(Bitmap bitmap) {
             ((MainActivity ) getActivity()).showProgress(false);
             super.onPostExecute(bitmap);
-            ((MainActivity ) getActivity()).initPrinter(bitmap);
+            ((MainActivity ) getActivity()).initPrinter(bitmap,credit_sum);
         }
     }
 
@@ -480,5 +514,80 @@ public class SaleFragment extends Fragment {
         return fragment;
     }
 
+    public void order(){
+        orderBtn.setClickable(false);
+        String paidSum=ttlTV.getText().toString();
+        int paid_sum=0;
+        if(!paidSum.equals("")){
+            paid_sum=Integer.parseInt(paidSum);
+        }
+        Pay pay =new Pay(mBankAdapter.getItem(bankSpinner.getSelectedItemPosition()).getBank(),paid_sum);
+        JSONObject params=new JSONObject();
+        JSONObject data=new JSONObject();
+        try {
+            int size=mSaleDetails.size();
+            JSONArray details=new JSONArray();
+            for (int i=0;i<size;i++){
+                details.put(i,mSaleDetails.get(i).getSaleDetailJson());
+            }
+            data.put("member",member.getMember());
+            data.put("ttl_sum",ttl);
+            params.put("pay",pay.getPayJson());
+            params.put("data",data);
+            params.put("detail",details);
+            Date now=new Date();
+            SimpleDateFormat f=new SimpleDateFormat("yyyy-MM-dd HH:mm");
+            params.put("time",f.format(now));
+        }catch (JSONException e){
+            e.printStackTrace();
+        }
+        Log.d("order",params.toString());
+        IhancHttpClient.postJson(mContext,"/index/sale/order", params, new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                String result=new String(responseBody);
+                Log.d("order",new String(responseBody));
+                try {
+                    JSONObject mObject=new JSONObject(result);
+                    if(mObject.getInt("result")==1){
+                        Utils.toast(mContext,"保存成功！");
+                        ttlTV.setText("");
+                        mParentFragment.deleteCurrentSaleTabs();
+                        // ((SaleMainFragment)(SaleFragment.this.getParentFragment())).deleteCurrentSaleTabs();
+                    }else{
+                        Utils.toast(mContext,"保存发生错误，请重新保存！");
+                    }
+                    orderBtn.setClickable(true);
+                }catch (JSONException e){e.printStackTrace();}
+            }
 
+            @Override
+            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                Log.d("order",new String(responseBody));
+                Utils.toastLostLink(mContext);
+            }
+        });
+    }
+
+    private void print(){
+        //Log.d("GPrinter","SaleFragment");
+        if(mSaleDetails.size()==0) return;
+        if(Utils.mCompanyInfo==null) Utils.getCompanyInfo();
+        Utils.printMemberName=member;
+        String paidSum=ttlTV.getText().toString();
+        int paid_sum=0;
+        if(!paidSum.equals("")){
+            paid_sum=Integer.parseInt(paidSum);
+        }
+        final String receiptType=sp.getString(getString(R.string.receipt_type),getString(R.string.receipt_type_default));
+        MainActivity parentActivity = (MainActivity ) getActivity();
+        if(receiptType.equals(getString(R.string.receipt_type_default))) {
+            Log.d("GPrinter","SaleFragment");
+            parentActivity.initPrinter(mSaleDetails,paid_sum,credit_sum);
+        } else{
+            parentActivity.showProgress(true);
+            ImageTask mImageTask = new ImageTask();
+            mImageTask.execute("");
+        }
+    }
 }

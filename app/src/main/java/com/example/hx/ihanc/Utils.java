@@ -17,6 +17,7 @@ import com.loopj.android.http.AsyncHttpResponseHandler;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -32,6 +33,9 @@ public class Utils {
     public static int storeId;
     public static boolean Link;
     public static List<SaleFragment> fragmentList;
+    public static List<Unit> currentUnitList=new ArrayList<Unit>();
+    public static String printSaleId="";
+
     public static UsbDevice getUsbDeviceFromName(Context context, String usbName) {
         UsbManager usbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
         HashMap<String,UsbDevice> usbDeviceList = usbManager.getDeviceList();

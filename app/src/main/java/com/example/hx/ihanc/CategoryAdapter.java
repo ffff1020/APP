@@ -36,7 +36,7 @@ public class CategoryAdapter extends ArrayAdapter<category> {
             viewHolder=(ViewHolder) convertView.getTag();
         }
         viewHolder.tvTitle.setText(categoryList.get(position).getCategory_name());
-        Log.d("getViewCategoryAdapter",categoryList.size()+"");
+      //  Log.d("getViewCategoryAdapter",categoryList.size()+"");
         return convertView;
     }
     

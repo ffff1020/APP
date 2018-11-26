@@ -3,6 +3,7 @@ package com.example.hx.ihanc;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -80,18 +81,8 @@ import static com.example.hx.ihanc.DeviceConnFactoryManager.CONN_STATE_FAILED;
 
 public class MainActivity extends AppCompatActivity {
 
-    private TextView mTextMessage;
-    public SharedPreferences sp;
+    public static SharedPreferences sp;
     private GPrinter mGPrinter;
-    private ListView categoryLv;
-    private CategoryAdapter mCategoryAdapter;
-    private GridView mGridView;
-    private GoodsAdapter mGoodsAdapter;
-    private SearchView mGoodSearchView;
-    private AutoCompleteTextView memberTV;
-    private MemberAdapter memberAdapter;
-    private SalePagerAdapter mSalePagerAdapter;
-    private UnitAdapter mUnitAdapter;
     private View mProgressView;
     // Message types sent from the BluetoothChatService Handler
     public static final int MESSAGE_STATE_CHANGE = 1;
@@ -116,6 +107,7 @@ public class MainActivity extends AppCompatActivity {
     private SaleMainFragment mSaleMainFragment;
     private boolean ListFragmentCheck=true;
     private ListFragment mListFragment;
+    private int credit_sum=99999;
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
 
@@ -169,6 +161,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart(){
         super.onStart();
        // Utils.getCompanyInfo();
+        Log.d("ihanc","onStart");
         df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
         /*IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
@@ -176,6 +169,8 @@ public class MainActivity extends AppCompatActivity {
         filter.addAction(ACTION_QUERY_PRINTER_STATE);
         filter.addAction(DeviceConnFactoryManager.ACTION_CONN_STATE);
         registerReceiver(receiver, filter);*/
+
+
     }
 
     @Override
@@ -204,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         DeviceConnFactoryManager.closeAllPort();
     }
-    public void initPrinter(Object bitmap){
+    public  void initPrinter(Object bitmap,int credit_sum){
         String receiptType=sp.getString(getString(R.string.receipt_type),null);
         if(sp.getBoolean("bluetooth_printer",false)){
             String macAddress=sp.getString(getString(R.string.bluetooth_printer_address),"");
@@ -216,6 +211,7 @@ public class MainActivity extends AppCompatActivity {
                 filter.addAction(ACTION_QUERY_PRINTER_STATE);
                 filter.addAction(DeviceConnFactoryManager.ACTION_CONN_STATE);
                 mGPrinter=new GPrinter(macAddress,true);
+                mGPrinter.setCredit_sum(credit_sum);
                 registerReceiver(mGPrinter.receiver, filter);
                     if (receiptType.equals(getString(R.string.receipt_type_default)))
                         mGPrinter.print((JSONArray) bitmap);
@@ -230,6 +226,7 @@ public class MainActivity extends AppCompatActivity {
             filter.addAction(ACTION_QUERY_PRINTER_STATE);
             filter.addAction(DeviceConnFactoryManager.ACTION_CONN_STATE);
             mGPrinter=new GPrinter(IP,false);
+            mGPrinter.setCredit_sum(credit_sum);
             registerReceiver(mGPrinter.receiver, filter);
             if(receiptType.equals(getString(R.string.receipt_type_default)))
                 mGPrinter.print((JSONArray) bitmap);
@@ -246,9 +243,11 @@ public class MainActivity extends AppCompatActivity {
       }
     }
     public void printDetails(){
-        final String receiptType=sp.getString(getString(R.string.receipt_type),null);
+        final String receiptType=sp.getString(getString(R.string.receipt_type),getString(R.string.receipt_type_default));
         RequestParams params = new RequestParams();
         params.put("member_id",Utils.printMemberName.getMember_id());
+        if(!Utils.printSaleId.equals(""))
+            params.put("sale_id",Utils.printSaleId);
         IhancHttpClient.get("/index/sale/creditDetail", params, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
@@ -257,8 +256,10 @@ public class MainActivity extends AppCompatActivity {
                 try{
                     JSONObject myjObject=new JSONObject(res);
                     printCreditJSON=(JSONArray) myjObject.get("credit");
+                    Utils.printSaleId="";
+                    credit_sum=myjObject.getInt("credit_sum");
                     if(receiptType.equals(getString(R.string.receipt_type_default)))
-                        initPrinter(printCreditJSON);
+                        initPrinter(printCreditJSON,credit_sum);
                     else{
                          showProgress(true);
                          ImageTask mImageTask = new ImageTask();
@@ -291,8 +292,7 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(Bitmap bitmap) {
             showProgress(false);
             super.onPostExecute(bitmap);
-            initPrinter(bitmap);
-
+            initPrinter(bitmap,credit_sum);
         }
     }
     private Bitmap creatCreditImage() {
@@ -309,13 +309,14 @@ public class MainActivity extends AppCompatActivity {
         foot.add(new StringBitmapParameter("联系电话："+Utils.mCompanyInfo.getTel()+"\n"));
         if(Utils.mCompanyInfo.getAddress().length>1){
             for (int i=0;i<Utils.mCompanyInfo.getAddress().length;i++){
-                foot.add(new StringBitmapParameter("地址："+(i+1)+Utils.mCompanyInfo.getAddress()[0]+"\n"));
+                foot.add(new StringBitmapParameter("地址："+(i+1)+Utils.mCompanyInfo.getAddress()[i]+"\n"));
             }
         }else{
             foot.add(new StringBitmapParameter("地址："+Utils.mCompanyInfo.getAddress()[0]+"\n"));
         }
         Bitmap bitmapTitle=BitmapUtil.StringListtoBitmap(MainActivity.this,title);
         Bitmap bitmapFoot=BitmapUtil.StringListtoBitmap(MainActivity.this,foot);
+        BitmapUtil.credit_sum=credit_sum;
         Bitmap bitmapBody=BitmapUtil.StringListtoBitmap(MainActivity.this,printCreditJSON);
         Bitmap mergeBitmap = BitmapUtil.addBitmapInHead(bitmapTitle, bitmapBody);
         mergeBitmap=BitmapUtil.addBitmapInHead(mergeBitmap,bitmapFoot);
@@ -343,10 +344,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     private void getStore(){
+        Log.d("ihanc","getStore");
+        if(mBankList.size()>0) return;
         IhancHttpClient.get("/index/purchase/purchaseInfo/", null, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                 String res=new String(responseBody);
+
                 try{
                     JSONObject mObject=new JSONObject(res);
                     JSONArray unitArray=mObject.getJSONArray("units");
@@ -389,8 +393,6 @@ public class MainActivity extends AppCompatActivity {
                         bank item=new bank(myjObject.getInt("bank_id"),myjObject.getString("bank_name"));
                         mBankList.add(item);
                     }
-
-
                 }catch (JSONException e){e.printStackTrace();}
 
             }
@@ -410,10 +412,11 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    public void initPrinter(ArrayList<SaleDetail> saleDetails,int paid_sum,int credit_sum){
+    public  void initPrinter(ArrayList<SaleDetail> saleDetails,int paid_sum,int credit_sum){
         Log.d("GPrinter","initPrinter");
         String receiptType=sp.getString(getString(R.string.receipt_type),null);
         if(sp.getBoolean("bluetooth_printer",false)){
+            blueSerialSetting();
             String macAddress=sp.getString(getString(R.string.bluetooth_printer_address),"");
             if(macAddress.equals("")){
                 Toast.makeText(MainActivity.this,"请配置您的打印机！",Toast.LENGTH_LONG);
@@ -452,6 +455,41 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        IhancHttpClient.get("/index/setting/info", null, new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                String res = new String(responseBody);
+                if (res.length()<3){
+                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                    startActivity(intent);
+                    MainActivity.this.finish();
+                }
+            }
+            @Override
+            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
 
+            }
+        });
+    }
 
+    //检测设置蓝牙
+    public  void blueSerialSetting(){
+        BluetoothAdapter mBluetoothAdapter= BluetoothAdapter.getDefaultAdapter();
+        if(!mBluetoothAdapter.isEnabled()){
+            Intent intent=new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+            startActivityForResult(intent,LoginActivity.REQUEST_ENABLE);
+        }
+    }
+    //是否已经打开蓝牙
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode==LoginActivity.REQUEST_ENABLE){
+            if(resultCode!=RESULT_OK){
+                ActivityCollector.finishAll();
+            }
+        }
+    }
 }

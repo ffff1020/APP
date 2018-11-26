@@ -39,11 +39,13 @@ public class BitmapUtil {
 
     private static float x = START_LEFT, y;
     private final static int COL0=12;
-    private final static int COL1=16;
+    private final static int COL1=33;
 
     private final static String SPLIT=" ";
     private final static int COL5=79;
     public static final String PRINT_LINE = "----------------------------------------------------";
+
+    public static int credit_sum;
     /**
      * 生成图片
      */
@@ -199,16 +201,17 @@ public class BitmapUtil {
                     String goods = mDetail.getString("goods_name");
                     Log.d("bitmap time", detail.getBytes().length + "goods_length" + goods.getBytes().length);
                     String[] goodsNames = new String[]{};
-                    if (goods.getBytes().length > 10) {
-                        goodsNames = GPrinter.getStrList(goods, 5);
+                    if (goods.getBytes().length > 12) {
+                        goodsNames = GPrinter.getStrList(goods, 4);
                         detail += goodsNames[0];
                     } else {
                         detail += goods;
-                        for (int j = 0; j < COL1 - goods.getBytes().length; j++) {
+                    }
+                        for (int j = 0; j < COL1 - detail.getBytes().length; j++) {
                             detail += SPLIT;
                         }
-                    }
-                    // Log.d("bitmap goods",detail.getBytes().length+"");
+
+                     Log.d("bitmap goods",detail.getBytes().length+"");
                     int len = mDetail.getString("number").length() - 1;
                     String number = mDetail.getString("number").substring(0, len) + mDetail.getString("unit_name");
                     detail += number;
@@ -233,7 +236,7 @@ public class BitmapUtil {
                     totalSum += mDetail.getInt("sum");
                     // Log.d("bitmap sum",detail.getBytes().length+"");
                     mBreakString.add(new StringBitmapParameter(detail));
-                    if (goodsNames != null && goodsNames.length > 1) {
+                    if (goodsNames != null && goodsNames.length > 1 && goodsNames[0].length()>0) {
                         for (int j = 1; j < goodsNames.length; j++) {
                             mBreakString.add(new StringBitmapParameter("             " + goodsNames[j]));
                         }
@@ -303,8 +306,8 @@ public class BitmapUtil {
                         goods = mDetail.getString("goods_name");
                         Log.d("bitmap time", detail.getBytes().length + "goods_length" + goods.getBytes().length);
                         goodsNames = new String[]{};
-                        if (goods.getBytes().length > 10) {
-                            goodsNames = GPrinter.getStrList(goods, 5);
+                        if (goods.getBytes().length > 6) {
+                            goodsNames = GPrinter.getStrList(goods, 3);
                             detail += goodsNames[0];
                         } else {
                             detail += goods;
@@ -312,6 +315,7 @@ public class BitmapUtil {
                                 detail += SPLIT;
                             }
                         }
+                        detail += SPLIT+SPLIT;
                         // Log.d("bitmap goods",detail.getBytes().length+"");
                         len = mDetail.getString("number").length() - 1;
                         number = mDetail.getString("number").substring(0, len) + mDetail.getString("unit_name");
@@ -330,7 +334,7 @@ public class BitmapUtil {
                         }
                         //  Log.d("bitmap price",detail.getBytes().length+"");
                         sum = "￥" + mDetail.getString("sum");
-                        for (int j = 0; j < 56 - sum.getBytes().length - detail.getBytes().length; j++) {
+                        for (int j = 0; j < 52 - sum.getBytes().length - detail.getBytes().length; j++) {
                             detail += SPLIT;
                         }
                         detail += sum;
@@ -351,8 +355,8 @@ public class BitmapUtil {
         mBreakString.add(new StringBitmapParameter(PRINT_LINE));
         String num="合计数量："+totalNum;
         mBreakString.add(new StringBitmapParameter(num.substring(0,num.length()),IS_RIGHT));
-        mBreakString.add(new StringBitmapParameter("合计欠款：￥"+totalSum,IS_RIGHT));
-
+        mBreakString.add(new StringBitmapParameter("合计金额：￥"+totalSum,IS_RIGHT));
+        mBreakString.add(new StringBitmapParameter("现累计欠款：￥"+credit_sum,IS_RIGHT));
         Paint.FontMetrics fontMetrics = paint.getFontMetrics();
         int FontHeight = (int) Math.abs(fontMetrics.leading) + (int) Math.abs(fontMetrics.ascent) + (int) Math.abs(fontMetrics.descent);
         FontHeight+=12;
@@ -428,31 +432,31 @@ public class BitmapUtil {
             String goods = mDetail.getGoods_name();
             String[] goodsNames = new String[]{};
 
-            if (goods.getBytes().length > 10) {
-                goodsNames = GPrinter.getStrList(goods, 5);
-                detail += goodsNames[0]+"    ";
+            if (goods.getBytes().length > 18) {
+                goodsNames = GPrinter.getStrList(goods, 6);
+                detail += goodsNames[0];
             } else {
                 detail += goods;
-                for (int j = 0; j < 6+COL1 - goods.getBytes().length; j++) {
-                    detail += SPLIT;
-                }
             }
-
-            int len = mDetail.getNumber().length() - 1;
+            for (int j = 0; j < 21 - goods.getBytes().length; j++) {
+                detail += SPLIT;
+            }
+           // int len = mDetail.getNumber().length() - 1;
             String number = mDetail.getNumber();
             detail += number;
-            for (int j = 0; j < COL1 - number.getBytes().length; j++) {
+            for (int j = 0; j < 12 - number.getBytes().length; j++) {
                 detail += SPLIT;
             }
 
-            len = mDetail.getPrice().length() - 1;
+           // len = mDetail.getPrice().length() - 1;
             String price = mDetail.getPrice();
             detail += price;
-            for (int j = 0; j < COL1 - price.getBytes().length; j++) {
+            for (int j = 0; j < 12 - price.getBytes().length; j++) {
                 detail += SPLIT;
             }
 
             String sum = "￥" + mDetail.getSum();
+            //detail+=sum;
             for (int j = 0; j < 56 - sum.getBytes().length - detail.getBytes().length; j++) {
                 detail += SPLIT;
             }

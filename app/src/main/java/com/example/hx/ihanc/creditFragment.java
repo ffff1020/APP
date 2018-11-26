@@ -14,12 +14,18 @@ import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.Display;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.SearchView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.hx.ihanc.dummy.DummyContent;
@@ -57,6 +63,8 @@ public class creditFragment extends Fragment {
     private int page=1;
     private MycreditRecyclerViewAdapter adpter;
     private  RecyclerView recyclerView;
+    private TextView textView;
+    private String search="";
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
@@ -86,6 +94,13 @@ public class creditFragment extends Fragment {
             @Override
             public void onListFragmentInteraction(Credit item) {
               CreditDetailDialog creditDetailDialog=CreditDetailDialog.newInstance(item.getMemberId(),item.getName()+"--"+item.getCreditSum());
+              CreditDetailDialog.OnFreshCredit onFreshCredit=new CreditDetailDialog.OnFreshCredit() {
+                  @Override
+                  public void freshCredit() {
+                      page=1;initCreditData();
+                  }
+              };
+              creditDetailDialog.setOnFreshCredit(onFreshCredit);
               creditDetailDialog.show(getFragmentManager(),"credit");
             }
         };
@@ -106,6 +121,7 @@ public class creditFragment extends Fragment {
             public void onRefresh() {
                 page=1;
                 initCreditData();
+                recyclerView.scrollToPosition(0);
             }
         });
         swipeRefreshLayout.setRefreshing(true);
@@ -128,26 +144,55 @@ public class creditFragment extends Fragment {
                 }
             }
         });
+        final SearchView searchView=view.findViewById(R.id.search);
+        int id=searchView.getContext().getResources().getIdentifier("android:id/search_src_text",null,null);
+        textView=(TextView) searchView.findViewById(id);
+        textView.setTextSize(12);
+        Button button=view.findViewById(R.id.search_button);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                  search=textView.getText().toString();
+                  page=1;
+                  initCreditData();
+            }
+        });
+        textView.setOnEditorActionListener(new TextView.OnEditorActionListener(){
+            @Override
+            public boolean onEditorAction(TextView v, int actionId,
+                                          KeyEvent event) {
+                if ( actionId == 0 ) {
+                   // Log.d("searchView",actionId+":");
+                    page=1;
+                    search=textView.getText().toString();
+                    initCreditData();
+                    recyclerView.scrollToPosition(0);
+                }
+                return false;
+            }
+        });
         return view;
     }
 
     public void initCreditData(){
-        Log.d("credit","init");
         RequestParams params=new RequestParams();
         params.put("page",page);
-        params.put("search","");
-        params.put("order","");
+        params.put("search",search);
+        params.put("order","time");
         IhancHttpClient.get("/index/sale/credit", params, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                if(page==1){mCredits.clear();adpter.isLast=false;}
+                if( page== 1){ mCredits.clear(); }
                 String res=new String(responseBody);
                 swipeRefreshLayout.setRefreshing(false);
                 try {
                     JSONObject resJson=new JSONObject(res);
                     JSONArray list=resJson.getJSONArray("credit");
                     int size=resJson.getInt("total_count");
-                    if (size-list.length()-mCredits.size()<=0) adpter.isLast=true;
+                    if (list.length()>0&&list.length()%10>0) {
+                        adpter.isLast=true;
+                    }else adpter.isLast=false;
+                    Log.d("credit","size:"+size+"list.l:"+list.length()+"mCredit:"+mCredits.size());
                     for (int i = 0; i <list.length() ; i++) {
                         JSONObject itemJSON=list.getJSONObject(i);
                         Credit item=new Credit(

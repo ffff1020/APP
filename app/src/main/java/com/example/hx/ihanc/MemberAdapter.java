@@ -73,7 +73,7 @@ public class MemberAdapter extends ArrayAdapter<member> implements Filterable {
                 int k=0;
                         for (int i = 0; i < memberList.size() && k<10; i++) {
                             final member value = memberList.get(i);
-                            if (value.getMember_sn().contains(prefix)||value.getMember_name().contains(prefix) ) {
+                            if (value.getMember_sn().toLowerCase().contains(prefix.toString().toLowerCase())||value.getMember_name().contains(prefix) ) {
                                 newValues.add(value);
                                 k++;
                             }
@@ -81,7 +81,7 @@ public class MemberAdapter extends ArrayAdapter<member> implements Filterable {
                 results.values = newValues;
                 results.count = newValues.size();
             }
-            Log.d("memberAdapter",results.count+"");
+           // Log.d("memberAdapter",results.count+"");
             return results;
         }
 

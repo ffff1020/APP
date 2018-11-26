@@ -1,6 +1,13 @@
 package com.example.hx.ihanc;
 
-public class Goods {
+import android.util.Log;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.Serializable;
+
+public class Goods  {
     int goods_id;
     String goods_name;
     String goods_unit;
@@ -54,4 +61,24 @@ public class Goods {
     }
 
     public int getGoods_unit_id(){return Integer.parseInt(goods_unit);};
+
+    public String toString(){
+        JSONObject goodObject=new JSONObject();
+        String str="";
+        try{
+            goodObject.put("goods_id",goods_id);
+            goodObject.put("goods_name",goods_name);
+            goodObject.put("goods_unit",goods_unit);
+            goodObject.put("goods_price",goods_price);
+            goodObject.put("category_id",category_id);
+            goodObject.put("goods_sn",goods_sn);
+            goodObject.put("goods_unit_name",goods_unit_name);
+            goodObject.put("promote",promote);
+            str=goodObject.toString();
+        }catch (JSONException e){e.printStackTrace();}
+        Log.d("goods",str);
+        return str;
+    }
+
+
 }

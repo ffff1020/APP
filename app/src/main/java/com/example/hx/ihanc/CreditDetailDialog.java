@@ -4,8 +4,10 @@ import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.os.Bundle;
@@ -51,6 +53,12 @@ public class CreditDetailDialog extends DialogFragment {
     private CreditDetailAdpter adapter;
     private Button wxButton;
     private Button printButton;
+    private Button paymentButton;
+    private int selectedTotal=0;
+    private int selectedNum=0;
+    private String selected="";
+    private int creditSum=0;
+    private OnFreshCredit onFreshCredit;
 
     public static CreditDetailDialog newInstance(int member_id,String title) {
         CreditDetailDialog f = new CreditDetailDialog();
@@ -69,7 +77,22 @@ public class CreditDetailDialog extends DialogFragment {
         myOnCheckChangeListener=new CreditDetailAdpter.MyOnCheckChangeListener() {
             @Override
             public void myOnCheckChange(int position, CompoundButton buttonView, boolean isChecked) {
-                Log.d("creditDialog",data.get(position).getSum()+"");
+                //Log.d("creditDialog",position+":"+data.get(position).getSum()+"");
+                if(isChecked) {
+                    CreditDetail item=data.get(position);
+                    selectedTotal += item.getSum();
+                    item.selected=true;
+                    selectedNum++;
+                    if(selectedNum==0)
+                        selected+=item.getSale_id();
+                    else
+                        selected+=","+item.getSale_id();
+                }
+                else {
+                    selectedTotal -= data.get(position).getSum();
+                    selectedNum--;
+                }
+
             }
         };
         initData();
@@ -88,6 +111,8 @@ public class CreditDetailDialog extends DialogFragment {
         wxButton.setOnClickListener(getWxButtonListener());
         printButton=view.findViewById(R.id.printButton);
         printButton.setOnClickListener(getPrintButtonListener());
+        paymentButton=view.findViewById(R.id.payButton);
+        paymentButton.setOnClickListener(getPaymentButtonListener());
         return view;
     }
 
@@ -95,11 +120,19 @@ public class CreditDetailDialog extends DialogFragment {
         return new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(Utils.mCompanyInfo==null) Utils.getCompanyInfo();
-                String[] titles=title.split("--");
-                Utils.printMemberName=new member(member_id,titles[0],"");
-                MainActivity parentActivity = (MainActivity ) getActivity();
+                if(selectedNum>0) {
+                    Utils.printSaleId=selected;
+                }
+                if (Utils.mCompanyInfo == null) Utils.getCompanyInfo();
+                String[] titles = title.split("--");
+                Utils.printMemberName = new member(member_id, titles[0], "");
+                MainActivity parentActivity = (MainActivity) getActivity();
                 parentActivity.printDetails();
+                SharedPreferences sp=PreferenceManager.getDefaultSharedPreferences(getActivity());
+                final String receiptType=sp.getString(getString(R.string.receipt_type),getString(R.string.receipt_type_default));
+                if(!receiptType.equals(getString(R.string.receipt_type_default))) {
+                    dismiss();
+                }
             }
         };
     };
@@ -121,18 +154,42 @@ public class CreditDetailDialog extends DialogFragment {
                         +"客户："+titles[0]+n
                         +"打印时间："+f.format(now)+n
                         +line;
-                for (int i=0;i<data.size();i++){
-                    CreditDetail item=data.get(i);
-                    if(!item.isGroup()){
-                        if(i>0) msg+=n;
-                        msg+=item.getTime()+n;
-                        sum+=item.getSum();
+                if(selectedNum>0){
+                    boolean check=false;
+                    boolean first=true;
+                    for (int i = 0; i < data.size(); i++) {
+                        CreditDetail item = data.get(i);
+                        if(!item.isGroup()){
+                            if(item.selected){
+                                check=true;
+                                if (first){ msg += n;first=false;}
+                                msg += item.getTime() + n;
+                                sum += item.getSum();
+                                msg += item.getGoods_name() + n;
+                                String temp = item.getSummary();
+                                for (int j = 0; j < 36 - temp.getBytes().length; j++) msg += " ";
+                                msg += item.getSummary() + n;
+                            }else check=false;
+                        }else if(check){
+                            msg += item.getGoods_name() + n;
+                            String temp = item.getSummary();
+                            for (int j = 0; j < 36 - temp.getBytes().length; j++) msg += " ";
+                            msg += item.getSummary() + n;
+                        }
                     }
-                    msg+=item.getGoods_name()+n;
-                    String temp=item.getSummary();
-                    for (int j=0;j<36-temp.getBytes().length;j++) msg+=" ";
-                    msg+=item.getSummary()+n;
-
+                }else{
+                    for (int i = 0; i < data.size(); i++) {
+                        CreditDetail item = data.get(i);
+                        if (!item.isGroup()) {
+                            if (i > 0) msg += n;
+                            msg += item.getTime() + n;
+                            sum += item.getSum();
+                        }
+                        msg += item.getGoods_name() + n;
+                        String temp = item.getSummary();
+                        for (int j = 0; j < 36 - temp.getBytes().length; j++) msg += " ";
+                        msg += item.getSummary() + n;
+                    }
                 }
                 NumberFormat nf=NumberFormat.getCurrencyInstance(Locale.CHINA);
                 msg+=line+"合计金额："+nf.format(sum)+n
@@ -150,6 +207,29 @@ public class CreditDetailDialog extends DialogFragment {
         };
     }
 
+    public View.OnClickListener getPaymentButtonListener(){
+      return new View.OnClickListener() {
+          @Override
+          public void onClick(View view) {
+              PaymentDialog dialog=PaymentDialog.newInstance(member_id,title,creditSum,selectedTotal,selectedNum,selected);
+              PaymentDialog.OnPaymentSucceed onPaymentSucceed=new PaymentDialog.OnPaymentSucceed() {
+                  @Override
+                  public void PaymentSucceed() {
+                      dismiss();
+                      if(onFreshCredit!=null)onFreshCredit.freshCredit();
+                  }
+              };
+              dialog.setOnPaymentSucceed(onPaymentSucceed);
+              dialog.show(getFragmentManager(),"payment Dialog");
+          }
+      }  ;
+    };
+
+    public void setOnFreshCredit(OnFreshCredit onFreshCredit){
+        this.onFreshCredit=onFreshCredit;
+       // Log.d("onCreditDialog","setOnFreshCredit");
+    }
+
     public void initData(){
         RequestParams params=new RequestParams();
         params.put("member_id",member_id);
@@ -160,6 +240,7 @@ public class CreditDetailDialog extends DialogFragment {
                 try {
                     JSONObject resJson=new JSONObject(res);
                     JSONArray list=resJson.getJSONArray("credit");
+                    creditSum=resJson.getInt("credit_sum");
                     int sale_id=0;
                     for (int i = 0; i <list.length() ; i++) {
                         JSONObject itemJSON=list.getJSONObject(i);
@@ -210,7 +291,7 @@ public class CreditDetailDialog extends DialogFragment {
                                     sum=itemJSON.getInt("ttl");
                                     break;
                         }
-                        CreditDetail item = new CreditDetail(time,goods_name,summary,sum,group);
+                        CreditDetail item = new CreditDetail(time,goods_name,summary,sum,group,itemJSON.getInt("sale_id"));
                         data.add(item);
                         sale_id=itemJSON.getInt("sale_id");
                     }
@@ -254,5 +335,9 @@ public class CreditDetailDialog extends DialogFragment {
                 return true;
         }
         return false;
+    }
+
+    public interface OnFreshCredit{
+        void freshCredit();
     }
 }

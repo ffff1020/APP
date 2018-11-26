@@ -75,6 +75,7 @@ public class MysaleListRecyclerViewAdapter extends RecyclerView.Adapter<MysaleLi
             });
         }else{
             if(isLast)  holder.mNameView.setText("没有了...");
+            else holder.mNameView.setText("努力加载中...");
         }
     }
 

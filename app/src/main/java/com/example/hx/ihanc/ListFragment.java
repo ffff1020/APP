@@ -73,7 +73,7 @@ public class ListFragment extends Fragment {
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.remove(fragments[0]);
         fragmentTransaction.remove(fragments[1]);
-        fragmentTransaction.remove(fragments[2]).commit();
+        fragmentTransaction.remove(fragments[2]).commitAllowingStateLoss();
     }
 
 }

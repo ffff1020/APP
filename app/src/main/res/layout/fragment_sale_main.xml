@@ -10,15 +10,15 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
         <SearchView
+            android:visibility="gone"
             android:id="@+id/goodsSearchView"
             android:layout_width="match_parent"
-            android:layout_height="40dp"
+            android:layout_height="wrap_content"
             android:iconifiedByDefault="false"
             android:focusable="false"
             android:queryHint="输入产品名称或编码进行搜索"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-
             />
         <LinearLayout
             android:layout_width="match_parent"
@@ -35,7 +35,6 @@
                 android:layout_height="match_parent"
                 android:layout_weight="2"
                 android:background="@drawable/border">
-
                 <android.support.design.widget.TabLayout
                     android:id="@+id/tl"
                     android:layout_width="match_parent"
@@ -64,33 +63,37 @@
                 android:layout_height="match_parent"
                 app:layout_constraintLeft_toLeftOf="parent"
                 android:layout_weight="2">
-
                 <android.support.constraint.ConstraintLayout
                     android:id="@+id/Numbers"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     app:layout_constraintTop_toTopOf="parent"
+                    android:paddingTop="5dp"
                     >
-                    <TextView
-                        android:id="@+id/scale"
+                    <Button
+                        android:id="@+id/addMember"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="5dp"
+                        android:layout_height="0dp"
                         android:gravity="center_horizontal"
-                        android:text="@string/weight"
-                        android:textSize="30sp"
+                        android:text="新增客户"
+                        android:textSize="12sp"
+                        app:layout_constraintBottom_toBottomOf="@id/memberTV"
                         app:layout_constraintRight_toRightOf="parent"
                         app:layout_constraintTop_toTopOf="parent" />
                     <AutoCompleteTextView
                         android:id="@+id/memberTV"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:completionThreshold="2"
+                        android:completionThreshold="1"
                         android:hint="@string/memberHint"
                         android:focusedByDefault="true"
+                        android:textSize="15sp"
+                        android:singleLine="true"
+                        android:imeOptions="actionNext"
                         app:layout_constraintLeft_toLeftOf="parent"
-                        app:layout_constraintRight_toLeftOf="@id/scale"
+                        app:layout_constraintRight_toLeftOf="@id/addMember"
                         app:layout_constraintTop_toTopOf="parent" />
+
                     <LinearLayout
                         android:id="@+id/info"
                         android:layout_width="match_parent"
@@ -102,22 +105,28 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
+                            android:gravity="center"
                             >
-                            <TextView
+                            <AutoCompleteTextView
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:textSize="18sp"
+                                android:textSize="15sp"
+                                android:completionThreshold="1"
                                 android:textColor="@color/colorAccent"
-                                android:gravity="center"
+                                android:hint="产品名称"
+                                android:imeOptions="actionDone"
+                                android:singleLine="true"
                                 android:id="@+id/infoGoodsName"
                                 android:layout_weight="2"
                                 />
+
                             <Spinner
                                 android:id="@+id/unitSpinner"
                                 android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                />
+                                android:layout_height="match_parent"
+                                android:layout_marginBottom="0dp"
+                                android:layout_weight="1.5"
+                                 />
 
                         </LinearLayout>
 
@@ -128,14 +137,14 @@
                             >
                         </com.example.hx.ihanc.MyNumberEdit>
                         <com.example.hx.ihanc.MyNumberEdit
-                            android:paddingTop="10dp"
+                            android:paddingTop="5dp"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:id="@+id/price"
                             >
                         </com.example.hx.ihanc.MyNumberEdit>
                         <com.example.hx.ihanc.MyNumberEdit
-                            android:paddingTop="10dp"
+                            android:paddingTop="5dp"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:id="@+id/sumEdit"
@@ -144,11 +153,11 @@
                         <Button
                             android:id="@+id/addToSale"
                             android:layout_width="match_parent"
-                            android:layout_height="match_parent"
+                            android:layout_height="wrap_content"
                             android:gravity="center"
+                            android:minHeight="30dp"
                             android:background="@drawable/add_button"
                             android:textColor="@color/addButtonText"
-                            android:layout_margin="3dp"
                             android:text="@string/addToSale" />
 
                     </LinearLayout>

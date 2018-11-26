@@ -9,7 +9,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_weight="3"
-        android:textSize="18sp"
+        android:textSize="12sp"
         android:id="@+id/title"
         />
     <RelativeLayout
@@ -17,7 +17,7 @@
         android:layout_gravity="center"
         android:layout_weight="1"
         android:layout_width="0dp"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:background="@drawable/border"
         >
         <ImageView
@@ -32,21 +32,20 @@
         android:layout_weight="3"
         android:layout_width="0dp"
         android:background="@drawable/middle_border"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent">
         <EditText
             android:id="@+id/textView1"
-            android:paddingTop="5dp"
-            android:paddingBottom="5dp"
             android:gravity="center"
             android:background="@null"
             android:layout_centerInParent="true"
-            android:textSize="20sp"
+            android:textSize="15sp"
             android:text="0.0"
             android:ems="5"
+            android:singleLine="true"
             android:inputType="numberDecimal"
-            android:imeOptions="actionDone"
+            android:imeOptions="actionNext"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="match_parent" />
     </RelativeLayout>
 
     <RelativeLayout
@@ -55,7 +54,7 @@
         android:layout_weight="1"
         android:layout_width="0dp"
         android:background="@drawable/border"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content">
         <ImageView
             android:layout_centerInParent="true"
             android:src="@drawable/p2"

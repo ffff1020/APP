@@ -30,6 +30,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -90,6 +91,7 @@ public class SaleMainFragment extends Fragment {
     private CategoryAdapter mCategoryAdapter;
     private GridView mGridView;
     private GoodsAdapter mGoodsAdapter;
+    private GoodsAdapter mGoodsAdapter2;
     private SearchView mGoodSearchView;
     private AutoCompleteTextView memberTV;
     private MemberAdapter memberAdapter;
@@ -123,13 +125,21 @@ public class SaleMainFragment extends Fragment {
     private MyNumberEdit mWeight;
     private MyNumberEdit mPrice;
     private MyNumberEdit mSumEdit;
-    private Goods currentGood=null;
-    private TextView infoGoodsName;
+    private Goods currentGood;
+    private AutoCompleteTextView infoGoodsName;
     private Spinner unitSpinner;
     private Button addToSaleBtn;
+    private Button addMemberBtn;
     private View view;
     private MainActivity parentActivity ;
     private boolean  first = false;
+    private double weight;
+    private double sum;
+    private double price;
+    private int currentPosition=-1;
+    private boolean selectUnit=false;
+    private AddMemberDialog dialog;
+
     public SaleMainFragment() {
 
         // Required empty public constructor
@@ -161,8 +171,6 @@ public class SaleMainFragment extends Fragment {
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
         parentActivity = (MainActivity ) getActivity();
-        Log.d(TAG,"onCreate");
-
     }
 
     @Override
@@ -170,7 +178,7 @@ public class SaleMainFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         view=inflater.inflate(R.layout.fragment_sale_main, container, false);
-        Log.d("saleMainFragment","onCreateView"+fragmentList.size());
+       // Log.d("saleMainFragment","onCreateView"+fragmentList.size());
         initView();
         return view;
     }
@@ -185,23 +193,26 @@ public class SaleMainFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        mContext=context;
-        if(getArguments()==null){
+        mContext = context;
+        if (getArguments() == null) {
             getMemberData();
             getCategoryData();
             getGoodsData();
             return;
-        } ;
+        }
+        ;
         FragmentTransaction fragmentTransaction = parentActivity.getSupportFragmentManager().beginTransaction();
-       // Log.d("saleMainFragment","onAttach"+fragmentList.size());
-        first=getArguments().getBoolean("first");
-        for (int i=0;i<memberTabsList.size();i++){
-            SaleFragment fragment =SaleFragment.newInstance(getArguments().getBundle(memberTabsList.get(i).getMember_name()));
+        first = getArguments().getBoolean("first");
+        for (int i = 0; i < memberTabsList.size(); i++) {
+            SaleFragment fragment = SaleFragment.newInstance(getArguments().getBundle(memberTabsList.get(i).getMember_name()));
             fragment.setMember(memberTabsList.get(i));
-            //fragmentTransaction.add(fragment,"");
             fragmentList.add(fragment);
         }
-        Log.d("saleMainFragment","onAttach"+fragmentList.size());
+        weight = getArguments().getDouble("weight");
+        sum = getArguments().getDouble("sum");
+        Log.d("fragment", "onAttach sum:" + sum);
+        price = getArguments().getDouble("price");
+        currentPosition = getArguments().getInt("currentPosition");
     }
 
     @Override
@@ -226,9 +237,49 @@ public class SaleMainFragment extends Fragment {
     }
 
     public void initView(){
-        Log.d("saleMainFragment","initView");
+        //Log.d("saleMainFragment","initView");
+        mWeight=(MyNumberEdit)view.findViewById(R.id.weight);
         mSalePagerAdapter=null;
-        infoGoodsName=(TextView)view.findViewById(R.id.infoGoodsName);
+        mGoodsAdapter2=new GoodsAdapter(mContext,R.layout.member,mGoodsDataList);
+        infoGoodsName=(AutoCompleteTextView)view.findViewById(R.id.infoGoodsName);
+        if(currentGood!=null)infoGoodsName.setText(currentGood.getGoods_name());
+        infoGoodsName.setAdapter(mGoodsAdapter2);
+        infoGoodsName.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+                if (!TextUtils.isEmpty(editable)){
+                    GoodsAdapter.MyFilter mFilter=mGoodsAdapter.getFilter();
+                    mFilter.setMyFilter(Utils.GOODSFILTERSEARCHVIEW);
+                    mFilter.filter(editable.toString());
+                    GoodsAdapter.MyFilter mFilter2=mGoodsAdapter2.getFilter();
+                    mFilter2.setMyFilter(Utils.GOODSFILTERSEARCHVIEW);
+                    mFilter2.filter(editable.toString());
+                }else{
+                    mGridView.clearTextFilter();
+                }
+            }
+        });
+        infoGoodsName.setOnItemClickListener(new  AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                onGoodSelected(adapterView,i);
+        }
+        });
+        infoGoodsName.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean b) {
+                if(b) infoGoodsName.setText("");
+            }
+        });
         mTextMessage = (TextView) view.findViewById(R.id.goodsTV);
         sp= PreferenceManager.getDefaultSharedPreferences(mContext);
         categoryLv=(ListView)view.findViewById(R.id.category);
@@ -247,38 +298,40 @@ public class SaleMainFragment extends Fragment {
         mGridView=(GridView)view.findViewById(R.id.goods);
         mGoodsAdapter=new GoodsAdapter(mContext,R.layout.goods,mGoodsDataList);
         mGridView.setAdapter(mGoodsAdapter);
-
         mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                currentGood=(Goods)adapterView.getAdapter().getItem(i);
-                infoGoodsName.setText(currentGood.getGoods_name());
-                mPrice.setPrice(currentGood.getGoods_price());
-                mSumEdit.setNum(currentGood.getGoods_price()*mWeight.getNum());
-                RequestParams params = new RequestParams();
-                params.put("goods_id",currentGood.getGoods_id());
-                IhancHttpClient.get("/index/sale/getUnitApp", params, new AsyncHttpResponseHandler() {
-                    @Override
-                    public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                        String res =new String(responseBody).trim();
-                        UnitAdapter.UnitFilter mFilter=mUnitAdapter.getFilter();
-                        if(res.length()<3){
-                            mFilter.filter(currentGood.getGoods_unit());
-                        }else
-                            mFilter.filter(currentGood.getGoods_unit()+"and"+res.substring(2,res.length()-1));
-                    }
-
-                    @Override
-                    public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                        String res =new String(responseBody).trim();
-                        Log.d("unitFail",res);
-                    }
-                });
-                int position=mUnitAdapter.getPosition(Integer.parseInt(currentGood.getGoods_unit()));
-                if(position>0)unitSpinner.setSelection(position);
+                onGoodSelected(adapterView, i);
             }
         });
+        if(currentPosition>-1){
+            currentGood=(Goods)mGoodsAdapter.getItem(currentPosition);
+            infoGoodsName.setText(currentGood.getGoods_name());
+            RequestParams params = new RequestParams();
+            params.put("goods_id",currentGood.getGoods_id());
+            IhancHttpClient.get("/index/sale/getUnitApp", params, new AsyncHttpResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                    String res =new String(responseBody).trim();
+                    UnitAdapter.UnitFilter mFilter=mUnitAdapter.getFilter();
+                    if(res.length()<3){
+                        mFilter.filter(currentGood.getGoods_unit());
+                    }else
+                        mFilter.filter(currentGood.getGoods_unit()+"and"+res.substring(2,res.length()-1));
+                    unitSpinner.setSelection(getArguments().getInt("unitPosition"));
+                }
+                @Override
+                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                    String res =new String(responseBody).trim();
+                    Log.d("unitFail",res);
+                }
+            });
+
+        }
         mGoodSearchView=(SearchView)view.findViewById(R.id.goodsSearchView);
+        int id=mGoodSearchView.getContext().getResources().getIdentifier("android:id/search_src_text",null,null);
+        TextView textView = (TextView) mGoodSearchView.findViewById(id);
+        textView.setTextSize(12);
         mGoodSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String s) {
@@ -325,7 +378,6 @@ public class SaleMainFragment extends Fragment {
                 memberFilter.filter(editable.toString());
             }
         });
-
         memberTV.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
@@ -355,8 +407,6 @@ public class SaleMainFragment extends Fragment {
             vp.setAdapter(mSalePagerAdapter);
             tl.setupWithViewPager(vp);
         }
-
-        mWeight=(MyNumberEdit)view.findViewById(R.id.weight);
         mPrice=(MyNumberEdit)view.findViewById(R.id.price);
         mSumEdit=(MyNumberEdit)view.findViewById(R.id.sumEdit);
         mWeight.setTitle("数量：");
@@ -386,22 +436,25 @@ public class SaleMainFragment extends Fragment {
         mWeight.addTextChangedListener(new MyNumberEdit.TextChangedListener() {
             @Override
             public void TextChanged() {
+               // Log.d("fragment","mWeight listener");
                 Double sum=mPrice.getNum()*mWeight.getNum();
                 mSumEdit.check=false;
                 mSumEdit.setNum(sum);
             }
         });
+
         unitSpinner=(Spinner)view.findViewById(R.id.unitSpinner);
         mUnitAdapter=new UnitAdapter(mContext,R.layout.unit,MainActivity.mUnitList);
         unitSpinner.setAdapter(mUnitAdapter);
-
-        // getUnitData();
+        unitSpinner.setSelection(0,true);
         unitSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                if( (i==0 && !selectUnit) || currentGood==null )return;
+                selectUnit=true;
                 UnitAdapter mAdapter=(UnitAdapter) adapterView.getAdapter();
                 Unit unitItem=mAdapter.getItem(i);
-                if(currentGood==null) return;
+                //if(currentGood==null) return;
                 if(String.valueOf(unitItem.getUnit_id()).equals(currentGood.getGoods_unit())){
                     mPrice.setPrice(currentGood.getGoods_price());
                     mSumEdit.setNum(currentGood.getGoods_price()*mWeight.getNum());
@@ -413,16 +466,18 @@ public class SaleMainFragment extends Fragment {
                         @Override
                         public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                             String res=new String(responseBody);
-                            mPrice.setPrice(res);
                             if(res.length()<3){
-                                mSumEdit.setNum(0.0);
+                               // mSumEdit.setNum(0.0);
+                                return;
                             } else {
                                 res=res.substring(1,res.length()-1);
+                                mPrice.setPrice(res.trim());
                                 mSumEdit.setNum(Double.valueOf(res.trim()) * mWeight.getNum());
                             }
                         }
                         @Override
                         public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                           //Log.d("fragment onFailure",new String(responseBody));
                         }
                     });
                 };
@@ -437,22 +492,32 @@ public class SaleMainFragment extends Fragment {
         addToSaleBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.d("saleFragment","addToSaleBtn");
+               // Log.d("saleFragment","addToSaleBtn");
                 SaleFragment mSaleFragment=(SaleFragment) mSalePagerAdapter.getItem(vp.getCurrentItem());
                 if(currentGood==null) return;
                 if(mSaleFragment!=null) {
                     DetailGoods good = new DetailGoods(currentGood.getGoods_id(), currentGood.getGoods_name(), currentGood.getGoods_unit_id());
                     Unit unit = mUnitAdapter.getItem(unitSpinner.getSelectedItemPosition());
                     SaleDetail detail = new SaleDetail(good, mWeight.getNum(), mPrice.getNum(), unit.getUnit_id(), unit.getUnit_name(),(int)mSumEdit.getNum());
-                    Log.d("saleFragment","addToSaleBtn2");
                     mSaleFragment.addSaleDetail(detail);
+                    mWeight.setNum(0.0);
+                    hideKeyboard();
                 }
             }
         });
-
+        addMemberBtn=(Button)view.findViewById(R.id.addMember);
+        addMemberBtn.setOnClickListener(addMemberBtnListener());
+        AddMemberDialog.OnAddMemberSucceed onAddMemberSucceed=new AddMemberDialog.OnAddMemberSucceed() {
+            @Override
+            public void AddMemberSucceed() {
+                dialog.dismiss();
+                getMemberData();
+            }
+        };
+        dialog=AddMemberDialog.newInstance(onAddMemberSucceed);
     }
     public void getCategoryData(){
-        Log.d(TAG,"getCategoryData");
+       // Log.d(TAG,"getCategoryData");
         RequestParams params = new RequestParams();
         IhancHttpClient.get("/cat", params, new AsyncHttpResponseHandler() {
             @Override
@@ -519,6 +584,7 @@ public class SaleMainFragment extends Fragment {
         });
     }
     public void getMemberData(){
+        memberDataList.clear();
         RequestParams params = new RequestParams();
         IhancHttpClient.get("/index/sale/memberAll", params, new AsyncHttpResponseHandler() {
             @Override
@@ -574,7 +640,7 @@ public class SaleMainFragment extends Fragment {
         mSalePagerAdapter.notifyDataSetChanged();
     }
     public void hideKeyboard() {
-
+        view.clearFocus();
         InputMethodManager imm = (InputMethodManager) mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
         if (imm.isActive() && parentActivity.getCurrentFocus() != null) {
             if (parentActivity.getCurrentFocus().getWindowToken() != null) {
@@ -588,30 +654,77 @@ public class SaleMainFragment extends Fragment {
         Bundle args = new Bundle();
         args.putBoolean("first",true);
         FragmentTransaction fragmentTransaction = parentActivity.getSupportFragmentManager().beginTransaction();
-        //int size=fragmentList.size();
-        Log.d("saleMainFragment","onDestroyView"+fragmentList.size()+","+memberTabsList.size());
         Bundle b;
         for(int i=0;i<memberTabsList.size();i++){
             SaleFragment mf = fragmentList.get(i);
             b=new Bundle();
             b.putBundle("saleFragment", mf.saveState());
             b.putString("credit", mf.getCreditBundle());
-          //  b.putInt("show",mf.getShow());
             b.putInt("ttl", mf.getTTL());
             b.putInt("credit_sum",mf.getCredit_sum() );
             args.putBundle(memberTabsList.get(i).getMember_name(),b);
             fragmentTransaction.remove(fragmentList.get(i));
-            //fragmentList.remove(i);
         }
         fragmentList.clear();
         fragmentTransaction.commit();
+        args.putInt("currentPosition",currentPosition);
+        args.putDouble("weight",mWeight.getNum());
+        args.putDouble("sum",mSumEdit.getNum());
+        args.putDouble("price",mPrice.getNum());
+        args.putInt("unitPosition",unitSpinner.getSelectedItemPosition());
         setArguments(args);
-        Log.d("saleMainFragment","onDestroyView"+fragmentList.size()+"");
     }
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
+    }
+    @Override
+    public void onResume(){
+        super.onResume();
+        mWeight.setNum(weight);
+        mSumEdit.setNum(sum);
+        mPrice.setPrice(price);
+    }
+
+    private void onGoodSelected(AdapterView<?> adapterView,int i){
+        hideKeyboard();
+        currentGood=(Goods)adapterView.getAdapter().getItem(i);
+        currentPosition=mGoodsDataList.indexOf(currentGood);
+        infoGoodsName.setText(currentGood.getGoods_name());
+        mPrice.setPrice(currentGood.getGoods_price());
+        mSumEdit.setNum(currentGood.getGoods_price()*mWeight.getNum());
+        RequestParams params = new RequestParams();
+        params.put("goods_id",currentGood.getGoods_id());
+        IhancHttpClient.get("/index/sale/getUnitApp", params, new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                String res =new String(responseBody).trim();
+                UnitAdapter.UnitFilter mFilter=mUnitAdapter.getFilter();
+                if(res.length()<3){
+                    mFilter.filter(currentGood.getGoods_unit());
+                }else
+                    mFilter.filter(currentGood.getGoods_unit()+"and"+res.substring(2,res.length()-1));
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                String res =new String(responseBody).trim();
+                Log.d("unitFail",res);
+            }
+        });
+       // int position=mUnitAdapter.getPosition(Integer.parseInt(currentGood.getGoods_unit()));
+       // if(position>0)
+        unitSpinner.setSelection(0);
+    }
+
+    private View.OnClickListener addMemberBtnListener(){
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dialog.show(getFragmentManager(),"addMemberDialog");
+            }
+        };
     }
 
 }

@@ -2,6 +2,7 @@ package com.example.hx.ihanc;
 
 import android.content.Context;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.AttributeSet;
 import android.util.Log;
@@ -16,10 +17,12 @@ import android.widget.TextView;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.function.DoubleUnaryOperator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MyNumberEdit extends LinearLayout {
     private EditText textView1;
-    private Double num1;
+    private Double num1=0.0;
     private RelativeLayout add;
     private RelativeLayout minus;
     private double d=0.1;
@@ -29,7 +32,6 @@ public class MyNumberEdit extends LinearLayout {
     public boolean check=false;
     public MyNumberEdit(Context context, AttributeSet attrs){
         super(context, attrs);
-
         LayoutInflater.from(context).inflate(R.layout.my_number, this);
         add=(RelativeLayout)findViewById(R.id.iv_1);
         textView1=(EditText)findViewById(R.id.textView1);
@@ -64,8 +66,14 @@ public class MyNumberEdit extends LinearLayout {
         textView1.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View view, boolean b) {
-                if(b) {textView1.setText("");check=true;}
-                else{
+                if(b) {
+                    textView1.setText(null);
+                    check=true;
+                } else{
+                    Log.d("saleDialog",textView1.getText().toString());
+                    if(TextUtils.isEmpty(textView1.getText())) {
+                        setNum(num1);
+                    }
                     check=false;
                 }
             }
@@ -84,10 +92,12 @@ public class MyNumberEdit extends LinearLayout {
 
             @Override
             public void afterTextChanged(Editable editable) {
-                if((!textView1.getText().equals(""))&& check){
+               //Log.d("saleDialogAfterText",textView1.getText().toString());
+                if((!TextUtils.isEmpty(textView1.getText()))&& check){
                     listner.TextChanged();
                    // check=false;
                 }
+
 
             }
         });
@@ -97,15 +107,18 @@ public class MyNumberEdit extends LinearLayout {
     }
     public double getNum(){
         double number=0.0;
-        if(!textView1.getText().toString().equals(""))
-            number=Double.parseDouble(textView1.getText().toString());
+        String str=textView1.getText().toString().trim();
+        Pattern pattern = Pattern.compile("[^0-9]+(.[0-9]{1})?$");
+        Matcher matcher = pattern.matcher((CharSequence) str);
+        str=matcher.replaceAll("").trim();
+        Log.d("fragment","str:"+str+"len:"+str.length());
+        if(str.length()>0)number = Double.parseDouble(str);
         return number;
     }
-
     public void setNum(double num){
         textView1.setText(dFormat.format(num));
+        num1=num;
     }
-
     public void setTitle(String title){
         mTV.setText(title);
     }
@@ -113,12 +126,10 @@ public class MyNumberEdit extends LinearLayout {
         textView1.setText(dFormat.format(price));
     }
     public void setPrice(String price){textView1.setText(price);}
-
     public void addTextChangedListener(TextChangedListener listner){
         this.listner=listner;
     }
-
-    public static abstract  interface  TextChangedListener{
-        public abstract  void TextChanged(); //事件处理接口
+    public  interface  TextChangedListener{
+          void TextChanged(); //事件处理接口
     }
 }

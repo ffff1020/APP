@@ -9,20 +9,40 @@
     tools:context=".creditFragment"
     android:orientation="vertical"
     android:id="@+id/relativeLayout2">
-
-    <Button
-        android:id="@+id/button"
-        android:layout_width="wrap_content"
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Button"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        android:id="@+id/relativeLayout3"
+        >
+        <SearchView
+            android:id="@+id/search"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:queryHint="输入客户进行搜索"
+            android:iconifiedByDefault="false"
+            android:inputType="text"
+            android:imeOptions="actionSearch"
+            
+            app:layout_constraintLeft_toLeftOf="parent"
+            />
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:id="@+id/search_button"
+            android:text="搜索"
+            android:textSize="12sp"
+            style="?android:attr/buttonBarButtonStyle"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintLeft_toRightOf="@id/search"
+            />
+    </android.support.constraint.ConstraintLayout>
+
 
     <android.support.v4.widget.SwipeRefreshLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:id="@+id/swipeRefreshLayout"
-        app:layout_constraintTop_toBottomOf="@id/button"
+        app:layout_constraintTop_toBottomOf="@id/relativeLayout3"
         app:layout_constraintBottom_toBottomOf="parent">
         <android.support.v7.widget.RecyclerView
             android:id="@+id/creditListRecyclerView"
@@ -32,5 +52,8 @@
             android:layout_marginRight="16dp"
             />
     </android.support.v4.widget.SwipeRefreshLayout>
+
+
+
 
 </android.support.constraint.ConstraintLayout>

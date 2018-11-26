@@ -17,6 +17,7 @@ public class SaleDetailAdapter extends ArrayAdapter {
     private List<SaleDetail> saleDetailList;
     private int resource;
     private MyClickListener mListener;
+    private boolean modify=false;
 
     public SaleDetailAdapter(Context context, int resource, @NonNull List<SaleDetail> saleDetailList, MyClickListener listener){
         super(context, resource, saleDetailList);
@@ -50,13 +51,17 @@ public class SaleDetailAdapter extends ArrayAdapter {
         viewHolder.tvSum.setText("￥"+mSaleDetail.getSum());
         if(mListener==null) {
             //viewHolder.deleteButton.setweig(0);
-            viewHolder.deleteButton.setVisibility(View.INVISIBLE);
+            //viewHolder.deleteButton.setVisibility(View.INVISIBLE);
         }
         else{
            // viewHolder.deleteButton.setVisibility(View.VISIBLE);
             viewHolder.deleteButton.setOnClickListener(mListener);
             viewHolder.deleteButton.setTag(position);
         }
+        if(saleDetailList.get(position).paid)
+            viewHolder.deleteButton.setVisibility(View.GONE);
+        else
+            viewHolder.deleteButton.setVisibility(View.VISIBLE);
         return convertView;
     }
     public class ViewHolder{
@@ -70,7 +75,11 @@ public class SaleDetailAdapter extends ArrayAdapter {
     public static abstract class MyClickListener implements View.OnClickListener {
            @Override
        public void onClick(View v) {
-             myOnClick((Integer) v.getTag(), v); }
-        public abstract void myOnClick(int position, View v);
+             myOnClick((Integer) v.getTag(), v);
+             myModifyClick((Integer) v.getTag(), v);
+             Log.d("modify","adapter");
+           }
+           public abstract void myOnClick(int position, View v);
+           public abstract void myModifyClick(int position,View v);
     }
 }

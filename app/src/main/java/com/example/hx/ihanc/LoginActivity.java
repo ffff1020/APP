@@ -88,7 +88,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      * Id to identity READ_CONTACTS permission request.
      */
     private static final int REQUEST_READ_CONTACTS = 0;
-    private static final int REQUEST_ENABLE=1;
+    public static final int REQUEST_ENABLE=1;
     public  static SharedPreferences.Editor  mPrefEditor ;
     /**
      * A dummy authentication store containing known user names and passwords.
@@ -101,7 +101,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
      * Keep track of the login task to ensure we can cancel it if requested.
      */
     private UserLoginTask mAuthTask = null;
-    public BluetoothAdapter mBluetoothAdapter;
+    public static BluetoothAdapter mBluetoothAdapter;
     // UI references.
     private AutoCompleteTextView mEmailView;
     private EditText mPasswordView;
@@ -111,10 +111,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private Timer timer = null;
     private EditText mCode;
     private int getCodeCount=0;
-    private int mVersionCode=0;
+    private double mVersionCode=0;
     private ProgressDialog dialog;
     private String url="";
-    private static final String DOWNLOAD_NAME = "ihanc.apk";
+    private String DOWNLOAD_NAME = "ihanc";
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -129,12 +129,13 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         ActivityCollector.addActivity(this);
-       // blueSerialSetting();
+        blueSerialSetting();
         mProgressView = findViewById(R.id.login_progress);
         mLoginFormView = findViewById(R.id.login_form);
         mPrefEditor = getSharedPreferences("pref_ihanc", MODE_PRIVATE).edit();
         sp=getSharedPreferences("pref_ihanc",MODE_PRIVATE);
         showProgress(true);
+       // Toast.makeText(LoginActivity.this,"onCreate",Toast.LENGTH_LONG).show();
         verifyStoragePermissions(LoginActivity.this);
         if(sp.getString("name","").length()>0&&sp.getString("token","").length()>0){
             IhancHttpClient.setAuth(sp.getString("token",""));
@@ -163,9 +164,11 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 }
                 @Override
                 public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                    Log.d("Login",responseBody.toString());
+                   // Log.d("Login",new String(responseBody));
                     showProgress(false);
                     Toast.makeText(LoginActivity.this,"不能连接到服务器，请检查网络！",Toast.LENGTH_LONG).show();
+                    mLoginFormView.setVisibility(View.VISIBLE);
+                    mPrefEditor.putString("token","").commit();
                 }
             });
 
@@ -634,7 +637,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         }
     }
     //检测设置蓝牙
-    private void blueSerialSetting(){
+    public  void blueSerialSetting(){
         mBluetoothAdapter= BluetoothAdapter.getDefaultAdapter();
         if(!mBluetoothAdapter.isEnabled()){
             Intent intent=new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
@@ -685,13 +688,17 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     }
 
     public void checkVersion(){
+        //Toast.makeText(LoginActivity.this,"checkVersion",Toast.LENGTH_LONG).show();
         final Context context=LoginActivity.this;
         try {
             PackageManager manager = context.getPackageManager();
             PackageInfo info = manager.getPackageInfo(context.getPackageName(), 0);
-            mVersionCode = info.versionCode;
+            mVersionCode = Double.parseDouble(info.versionName);
+            Log.d("checkVersion","haha"+mVersionCode);
+           // Toast.makeText(LoginActivity.this,"checkVersion"+mVersionCode,Toast.LENGTH_LONG).show();
         } catch (Exception e) {
             e.printStackTrace();
+           // Toast.makeText(LoginActivity.this,"checkVersion E",Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -700,9 +707,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                 String res=new String(responseBody);
+                Log.d("updateApp",res+"");
                 try {
                     JSONObject mObject=new JSONObject(res);
-                    if(mObject.getInt("version")>mVersionCode){
+                    if(mObject.getDouble("version")>mVersionCode){
                         Log.d("updateApp",mVersionCode+"");
                         url=IhancHttpClient.HOST_URL+mObject.getString("url");
                         showProcessDialog();
@@ -718,13 +726,16 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         });
     }
     public  void verifyStoragePermissions(Activity activity) {
+        //   Toast.makeText(LoginActivity.this,"verifyStoragePermissions",Toast.LENGTH_LONG).show();
         // Check if we have write permission
         int permission = ActivityCompat.checkSelfPermission(activity,
                 Manifest.permission.WRITE_EXTERNAL_STORAGE);
         if (permission != PackageManager.PERMISSION_GRANTED) {
             // We don't have permission so prompt the user
+         //   Toast.makeText(LoginActivity.this,"verifyStoragePermissions",Toast.LENGTH_LONG).show();
             ActivityCompat.requestPermissions(activity, PERMISSIONS_STORAGE,
                     REQUEST_EXTERNAL_STORAGE);
+            Log.d("checkVersion","verifyStorage false");
         }else{
             checkVersion();
         }
@@ -749,7 +760,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
    class DownloadTask extends AsyncTask<String, Integer, String>{
        private Context context;
-
        public DownloadTask(Context context) {
            this.context = context;
        }
@@ -776,13 +786,21 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                if (Environment.getExternalStorageState().equals(
                        Environment.MEDIA_MOUNTED)) {
                    file = new File(Environment.getExternalStorageDirectory(),
-                           DOWNLOAD_NAME);
+                           DOWNLOAD_NAME+".apk");
 
                    if (!file.exists()) {
                        // 判断父文件夹是否存在
                        if (!file.getParentFile().exists()) {
                            file.getParentFile().mkdirs();
                        }
+                   }else{
+                       int i=0;
+                       while (file.exists()) {
+                           i++;
+                           file = new File(Environment.getExternalStorageDirectory(),
+                                   DOWNLOAD_NAME + i + ".apk");
+                       }
+                       DOWNLOAD_NAME+=i--;
                    }
                } else {
                    Toast.makeText(context, "sd卡未挂载",
@@ -843,17 +861,29 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
            dialog.dismiss();
            Toast.makeText(context,"下载完成！",Toast.LENGTH_LONG).show();
            Uri uri =null;
+           Intent intent = new Intent(Intent.ACTION_VIEW);
+           intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
-                uri = FileProvider.getUriForFile(context,"com.example.hx.ihanc.fileprovider",new File(""));
-                Log.d("update",uri.toString());
+                File file = new File(Environment
+                        .getExternalStorageDirectory(), DOWNLOAD_NAME+".apk");
+                //Log.d("update")
+                uri = FileProvider.getUriForFile(context,"com.example.hx.ihanc.fileProvider",file);
+                Log.d("update",uri.getEncodedPath()+file.exists());
+                //Toast.makeText(context,uri.toString(),Toast.LENGTH_LONG).show();
+               // mCodeButtonView.setText(uri.toString());
+               intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+               intent.setDataAndType(uri, "application/vnd.android.package-archive");
+               startActivity(intent);
            }else {
                 uri = Uri.fromFile(new File(Environment
-                       .getExternalStorageDirectory(), DOWNLOAD_NAME));
+                       .getExternalStorageDirectory(), DOWNLOAD_NAME+".apk"));
+               //mCodeButtonView.setText(uri.toString());
+               intent.setDataAndType(uri, "application/vnd.android.package-archive");
+               intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+               startActivity(intent);
            }
-           Intent intent = new Intent(Intent.ACTION_VIEW);
-           intent.setDataAndType(uri, "application/vnd.android.package-archive");
-           intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-           startActivity(intent);
+
+
        }
    }
 }

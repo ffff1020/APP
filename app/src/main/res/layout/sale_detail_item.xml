@@ -1,40 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="20dp"
-    android:orientation="horizontal"
-    android:paddingBottom="5dp"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="0dp"
     >
     <TextView
         android:id="@+id/saleItemName"
-        android:layout_width="0dp"
-        android:layout_weight="1.5"
-        android:lines="2"
-        android:ellipsize="end"
-        android:text="try"
-        android:layout_height="wrap_content" />
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/goods_name"
+        android:textSize="12sp"
+        android:paddingBottom="0dp"
+        android:paddingTop="0dp"
+        android:textColor="@color/colorAccent"
+        />
+    <LinearLayout
+        android:paddingTop="0dp"
+        android:paddingBottom="0dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        >
     <TextView
         android:id="@+id/saleItemNumber"
         android:layout_width="0dp"
-        android:layout_weight="1"
+        android:layout_weight="1.5"
+        android:textSize="12sp"
+        android:text="number"
         android:layout_height="wrap_content" />
     <TextView
-    android:id="@+id/saleItemPrice"
-    android:layout_width="0dp"
-    android:layout_weight="1"
-    android:layout_height="wrap_content" />
+        android:id="@+id/saleItemPrice"
+        android:layout_width="0dp"
+        android:layout_weight="1.2"
+        android:textSize="12sp"
+        android:layout_height="wrap_content" />
     <TextView
         android:id="@+id/saleItemSum"
+        android:textSize="12sp"
         android:layout_width="0dp"
-        android:layout_weight="1"
+        android:layout_weight="1.5"
         android:layout_height="wrap_content" />
     <Button
         android:layout_width="0dp"
-        android:layout_weight="1"
+        android:layout_weight="0.8"
+        android:padding="0dp"
+        android:minHeight="0dp"
+        android:textSize="12sp"
+        android:gravity="center"
         android:id="@+id/saleItemDeleteBtn"
         android:layout_height="wrap_content"
         style="?android:attr/buttonBarButtonStyle"
         android:text="@string/deleteItem"
         />
-
+    </LinearLayout>
 </LinearLayout>

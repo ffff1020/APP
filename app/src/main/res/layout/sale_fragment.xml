@@ -50,24 +50,61 @@
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="10dp"
+        android:padding="5dp"
         >
         <Spinner
             android:id="@+id/bankSpinner"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:textSize="15sp"
             />
         <EditText
             android:id="@+id/ttl"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:gravity="center"
+            android:textSize="15sp"
+            android:hint="实收金额"
             android:layout_weight="1"
+            android:singleLine="true"
             android:inputType="number"
+            android:imeOptions="actionDone"
             />
     </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:orientation="horizontal"
+            android:layout_height="wrap_content">
+            <Button
+                android:id="@+id/orderButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:minHeight="30dp"
+                android:text="保存订单"
+                android:layout_weight="1"
+                android:background="@drawable/order_button"
+                style="?android:attr/buttonBarButtonStyle"
+                android:textColor="@color/addButtonText"
+                android:layout_marginRight="3dp"
+                android:layout_marginLeft="3dp"
+                />
 
+            <Button
+                android:id="@+id/save"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:minHeight="30dp"
+                android:text="@string/SaveButton"
+                style="?android:attr/buttonBarButtonStyle"
+                android:background="@drawable/save_button"
+                android:textColor="@color/yellowText"
+                android:layout_marginBottom="5dp"
+                android:layout_marginRight="3dp"
+                android:layout_marginLeft="3dp"
+                />
+        </LinearLayout>
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -75,27 +112,29 @@
             android:gravity="center"
             >
             <Button
-                android:id="@+id/save"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:text="@string/SaveButton"
-                android:layout_weight="1"
-                android:background="@drawable/save_button"
-                style="?android:attr/buttonBarButtonStyle"
-                android:textColor="@color/saveButtonText"
-                android:layout_marginRight="3dp"
-                android:layout_marginLeft="3dp"
-                />
-            <Button
                 android:id="@+id/closeFragmentButton"
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
+                android:minHeight="30dp"
                 android:text="@string/closeSaleFragment"
                 style="?android:attr/buttonBarButtonStyle"
                 android:background="@drawable/button_border"
                 android:textColor="@color/colorPrimaryDark"
-
+                android:layout_marginRight="3dp"
+                />
+            <Button
+                android:id="@+id/print"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:minHeight="30dp"
+                android:text="打印"
+                style="?android:attr/buttonBarButtonStyle"
+                android:background="@drawable/print_button"
+                android:textColor="@color/saveButtonText"
+                android:layout_marginRight="3dp"
+                android:layout_marginLeft="3dp"
                 />
         </LinearLayout>
     </LinearLayout>

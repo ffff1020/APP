@@ -5,13 +5,15 @@ public  class SaleListItem {
     public final String time;
     public final String name;
     public final String sum;
-    public  boolean paid=false;
+    public  int  member_id;
+    public boolean paid;
 
-    public SaleListItem(int id, String time, String name, String sum,int paid) {
+    public SaleListItem(int id, String time, String name, String sum,int paid,int member_id) {
         this.time = time;
         this.name = name;
         this.sum = sum;
         this.sale_id=id;
+        this.member_id=member_id;
         this.paid=paid==1;
     }
 

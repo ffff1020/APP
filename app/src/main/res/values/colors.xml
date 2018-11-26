@@ -14,4 +14,7 @@
     <color name="addButtonBorder">#058e35</color>
     <color name="addButtonSolid">#9ce1b4</color>
     <color name="addButtonText">#056928</color>
+    <color name="yellowBorder">#bf1c03</color>
+    <color name="yellowSolid">#fa3c32</color>
+    <color name="yellowText">#ffffff</color>
 </resources>

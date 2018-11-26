@@ -38,12 +38,12 @@ public class CreditDetailAdpter extends ArrayAdapter<CreditDetail> {
             viewHolder.goods_nameTV=convertView.findViewById(R.id.credit_detail_goods);
             viewHolder.summaryTV=convertView.findViewById(R.id.credit_detail_summary);
             viewHolder.checkBox=convertView.findViewById(R.id.checkbox);
-            viewHolder.checkBox.setTag(position);
             viewHolder.checkBox.setOnCheckedChangeListener(myOnCheckChangeListener);
             convertView.setTag(viewHolder);
         }else{
             viewHolder=(ViewHolder) convertView.getTag();
         }
+        viewHolder.checkBox.setTag(position);
         viewHolder.timeTV.setText(creditDetailsList.get(position).getTime());
         viewHolder.goods_nameTV.setText(creditDetailsList.get(position).getGoods_name());
         viewHolder.summaryTV.setText(creditDetailsList.get(position).getSummary());
@@ -63,6 +63,12 @@ public class CreditDetailAdpter extends ArrayAdapter<CreditDetail> {
         TextView summaryTV;
         CheckBox checkBox;
     }
+
+    public CreditDetail getItem(int i){
+        return creditDetailsList.get(i);
+    }
+
+
 
     public static abstract class MyOnCheckChangeListener implements CompoundButton.OnCheckedChangeListener {
         @Override

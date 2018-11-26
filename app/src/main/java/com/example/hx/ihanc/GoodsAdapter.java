@@ -86,7 +86,7 @@ public class GoodsAdapter extends ArrayAdapter<Goods> {
                     case Utils.GOODSFILTERSEARCHVIEW:
                         for (int i = 0; i < mList.size(); i++) {
                             final Goods value = mList.get(i);
-                            if (value.getGoods_sn().contains(prefix)||value.getGoods_name().contains(prefix) ) {
+                            if (value.getGoods_sn().toLowerCase().contains(prefix.toString().toLowerCase())||value.getGoods_name().contains(prefix) ) {
                                 newValues.add(value);
                             }
                         }
