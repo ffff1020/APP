@@ -269,7 +269,10 @@ public class SaleFragment extends Fragment {
         if(mSaleDetails.size()>0&&detail.toString().equals(mSaleDetails.get(mSaleDetails.size()-1).toString()))return;
         this.mSaleDetails.add(detail);
         this.mSaleDetailAdapter.notifyDataSetChanged();
-        ttl+=detail.getSum();
+        ttl = 0;
+        for (SaleDetail item:mSaleDetails) {
+            ttl+=item.getSum();
+        }
        // ttlTV.setText(ttl+"");
         ttlSum.setText("合计金额：￥"+formatter.format(ttl));
         delete=false;
@@ -583,7 +586,9 @@ public class SaleFragment extends Fragment {
         MainActivity parentActivity = (MainActivity ) getActivity();
         if(receiptType.equals(getString(R.string.receipt_type_default))) {
             Log.d("GPrinter","SaleFragment");
-            parentActivity.initPrinter(mSaleDetails,paid_sum,credit_sum);
+            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String date=df.format(new Date());
+            parentActivity.initPrinter(mSaleDetails,paid_sum,credit_sum,date);
         } else{
             parentActivity.showProgress(true);
             ImageTask mImageTask = new ImageTask();

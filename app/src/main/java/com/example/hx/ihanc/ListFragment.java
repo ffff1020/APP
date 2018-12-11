@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 
 
 /**
@@ -75,5 +76,9 @@ public class ListFragment extends Fragment {
         fragmentTransaction.remove(fragments[1]);
         fragmentTransaction.remove(fragments[2]).commitAllowingStateLoss();
     }
+
+
+
+
 
 }

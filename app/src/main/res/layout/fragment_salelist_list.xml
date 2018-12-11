@@ -7,10 +7,35 @@
     android:layout_height="match_parent"
     tools:context=".saleListFragment"
     >
+    <LinearLayout
+        android:id="@+id/linearLayout"
+        android:layout_width="match_parent"
+        android:orientation="horizontal"
+        android:layout_height="wrap_content">
+    <SearchView
+        android:id="@+id/search"
+        android:iconifiedByDefault="false"
+        android:layout_width="0dp"
+        android:layout_weight="3"
+        android:queryHint="输入产品名称或编码+客户姓名或编码搜索"
+        android:layout_height="wrap_content">
+    </SearchView>
+    <Button
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:id="@+id/search_button"
+        android:text="搜索"
+        android:textSize="12sp"
+        style="?android:attr/buttonBarButtonStyle"
+
+        />
+    </LinearLayout>
 <android.support.v4.widget.SwipeRefreshLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:id="@+id/swipeRefreshLayout"
+    android:layout_below="@+id/linearLayout"
     >
     <android.support.v7.widget.RecyclerView
         android:id="@+id/saleListRecyclerView"

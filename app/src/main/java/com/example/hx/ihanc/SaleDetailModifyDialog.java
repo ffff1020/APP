@@ -63,6 +63,9 @@ public class SaleDetailModifyDialog extends DialogFragment {
         priceEdit.setTitle("价格:");
         sumEdit.setTitle("金额:");
         numberEdit.setTitle("数量:");
+        priceEdit.init=true;
+        sumEdit.init=true;
+        numberEdit.init=true;
         TextView goodTv=v.findViewById(R.id.goods);
         goodTv.setText("产品名称："+saleDetail.getGoods_name());
         sumEdit.addTextChangedListener(new MyNumberEdit.TextChangedListener() {

@@ -498,7 +498,7 @@ public class SaleMainFragment extends Fragment {
                 if(mSaleFragment!=null) {
                     DetailGoods good = new DetailGoods(currentGood.getGoods_id(), currentGood.getGoods_name(), currentGood.getGoods_unit_id());
                     Unit unit = mUnitAdapter.getItem(unitSpinner.getSelectedItemPosition());
-                    SaleDetail detail = new SaleDetail(good, mWeight.getNum(), mPrice.getNum(), unit.getUnit_id(), unit.getUnit_name(),(int)mSumEdit.getNum());
+                    SaleDetail detail = new SaleDetail(good, mWeight.getNum(), mPrice.getNum(), unit.getUnit_id(), unit.getUnit_name(),(int)Math.round(mSumEdit.getNum()));
                     mSaleFragment.addSaleDetail(detail);
                     mWeight.setNum(0.0);
                     hideKeyboard();
@@ -666,7 +666,7 @@ public class SaleMainFragment extends Fragment {
             fragmentTransaction.remove(fragmentList.get(i));
         }
         fragmentList.clear();
-        fragmentTransaction.commit();
+        fragmentTransaction.commitAllowingStateLoss();
         args.putInt("currentPosition",currentPosition);
         args.putDouble("weight",mWeight.getNum());
         args.putDouble("sum",mSumEdit.getNum());
@@ -692,30 +692,84 @@ public class SaleMainFragment extends Fragment {
         currentGood=(Goods)adapterView.getAdapter().getItem(i);
         currentPosition=mGoodsDataList.indexOf(currentGood);
         infoGoodsName.setText(currentGood.getGoods_name());
-        mPrice.setPrice(currentGood.getGoods_price());
-        mSumEdit.setNum(currentGood.getGoods_price()*mWeight.getNum());
+        mUnitAdapter.getFilter().filter("");
         RequestParams params = new RequestParams();
         params.put("goods_id",currentGood.getGoods_id());
-        IhancHttpClient.get("/index/sale/getUnitApp", params, new AsyncHttpResponseHandler() {
-            @Override
-            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                String res =new String(responseBody).trim();
-                UnitAdapter.UnitFilter mFilter=mUnitAdapter.getFilter();
-                if(res.length()<3){
-                    mFilter.filter(currentGood.getGoods_unit());
-                }else
-                    mFilter.filter(currentGood.getGoods_unit()+"and"+res.substring(2,res.length()-1));
-            }
+        SaleFragment mSaleFragment=(SaleFragment) mSalePagerAdapter.getItem(vp.getCurrentItem());
+        if(mSaleFragment!=null){
+            params.put("member_id",mSaleFragment.getMember().member_id);
+            params.put("unit_id",currentGood.getGoods_unit_id());
+            IhancHttpClient.get("/index/sale/getUnit", params, new AsyncHttpResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                    String res = new String(responseBody).trim();
+                    try {
+                        JSONObject obj=new JSONObject(res);
+                        JSONArray units=obj.getJSONArray("unit");
+                        UnitAdapter.UnitFilter mFilter = mUnitAdapter.getFilter();
+                        //mFilter.
+                        int i=0;
+                        int current_unit=currentGood.getGoods_unit_id();
+                        if(res.contains("unit_price")) {
+                            current_unit=obj.getInt("unit_price");
+                            mPrice.setPrice(obj.getDouble("result"));
+                            mSumEdit.setNum(obj.getDouble("result")*mWeight.getNum());
+                        }else{
+                            mPrice.setPrice(currentGood.getGoods_price());
+                            mSumEdit.setNum(currentGood.getGoods_price()*mWeight.getNum());
+                        }
+                        if(units.length()>1) {
+                            String st="";
+                            for (int j = 0; j < units.length(); j++) {
+                                JSONObject item=units.getJSONObject(j);
+                                Log.d("unit",item.getInt("unit_id")+":"+current_unit+"j"+j);
+                                if(j==0){
+                                    st=item.getString("unit_id");
+                                }else{
+                                    st+="and"+item.getString("unit_id");
+                                    if(item.getInt("unit_id")==current_unit)i=j;
+                                }
+                            }
+                            mFilter.filter(st);
+                            //Log.d("unit",st+"len"+unitSpinner.getAdapter().getCount());
+                            if(i>0){
+                                //unitSpinner.getAdapter().notify();
+                                unitSpinner.setSelection(i,false);}
+                        }else{
+                            mFilter.filter(currentGood.getGoods_unit());
+                        }
+                        Log.d("unit",i+"");
+                       //
+                    }catch (JSONException e){e.printStackTrace();}
+                }
 
-            @Override
-            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                String res =new String(responseBody).trim();
-                Log.d("unitFail",res);
-            }
-        });
-       // int position=mUnitAdapter.getPosition(Integer.parseInt(currentGood.getGoods_unit()));
-       // if(position>0)
-        unitSpinner.setSelection(0);
+                @Override
+                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+
+                }
+            });
+        }else {
+            mPrice.setPrice(currentGood.getGoods_price());
+            mSumEdit.setNum(currentGood.getGoods_price()*mWeight.getNum());
+            IhancHttpClient.get("/index/sale/getUnitApp", params, new AsyncHttpResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                    String res = new String(responseBody).trim();
+                    UnitAdapter.UnitFilter mFilter = mUnitAdapter.getFilter();
+                    if (res.length() < 3) {
+                        mFilter.filter(currentGood.getGoods_unit());
+                    } else
+                        mFilter.filter(currentGood.getGoods_unit() + "and" + res.substring(2, res.length() - 1));
+                }
+
+                @Override
+                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                    String res = new String(responseBody).trim();
+                    //Log.d("unitFail", res);
+                }
+            });
+            unitSpinner.setSelection(0);
+        }
     }
 
     private View.OnClickListener addMemberBtnListener(){

@@ -22,7 +22,6 @@
             android:iconifiedByDefault="false"
             android:inputType="text"
             android:imeOptions="actionSearch"
-            
             app:layout_constraintLeft_toLeftOf="parent"
             />
         <Button

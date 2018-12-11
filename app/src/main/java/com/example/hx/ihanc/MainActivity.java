@@ -412,9 +412,13 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    public  void initPrinter(ArrayList<SaleDetail> saleDetails,int paid_sum,int credit_sum){
+    public  void initPrinter(ArrayList<SaleDetail> saleDetails,int paid_sum,int credit_sum,String time){
         Log.d("GPrinter","initPrinter");
-        String receiptType=sp.getString(getString(R.string.receipt_type),null);
+        String receiptType=sp.getString(getString(R.string.receipt_type),"");
+        if(receiptType.equals("")){
+            Toast.makeText(MainActivity.this,"请配置您的打印机！",Toast.LENGTH_LONG);
+            return;
+        }
         if(sp.getBoolean("bluetooth_printer",false)){
             blueSerialSetting();
             String macAddress=sp.getString(getString(R.string.bluetooth_printer_address),"");
@@ -428,7 +432,7 @@ public class MainActivity extends AppCompatActivity {
                 mGPrinter=new GPrinter(macAddress,true);
                 registerReceiver(mGPrinter.receiver, filter);
                 if (receiptType.equals(getString(R.string.receipt_type_default)))
-                    mGPrinter.print(saleDetails,paid_sum,credit_sum);
+                    mGPrinter.print(saleDetails,paid_sum,credit_sum,time);
                // else
                     //mGPrinter.print((Bitmap) bitmap);
 
@@ -442,7 +446,7 @@ public class MainActivity extends AppCompatActivity {
             mGPrinter=new GPrinter(IP,false);
             registerReceiver(mGPrinter.receiver, filter);
             if(receiptType.equals(getString(R.string.receipt_type_default)))
-                mGPrinter.print(saleDetails,paid_sum,credit_sum);
+                mGPrinter.print(saleDetails,paid_sum,credit_sum,time);
          //   else
           //      mGPrinter.print((Bitmap) bitmap);
         }

@@ -9,9 +9,13 @@ import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
+import android.widget.SearchView;
 import android.widget.TableLayout;
 import android.widget.TextView;
 
@@ -55,6 +59,10 @@ public class BankListFragment extends Fragment {
     private List<BankListItem> bankListItemList=new ArrayList<BankListItem>();
     private MyBankListRecyclerViewAdapter adpter;
     private RecyclerView recyclerView;
+    private View view;
+    private TextView textView;
+    private String search="";
+
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
@@ -84,7 +92,7 @@ public class BankListFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_banklist_list, container, false);
+        view = inflater.inflate(R.layout.fragment_banklist_list, container, false);
         context = view.getContext();
         recyclerView=view.findViewById(R.id.bankListRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(context));
@@ -120,6 +128,37 @@ public class BankListFragment extends Fragment {
                 }
             }
         });
+        final SearchView searchView=view.findViewById(R.id.search);
+        int id=searchView.getContext().getResources().getIdentifier("android:id/search_src_text",null,null);
+        textView=(TextView) searchView.findViewById(id);
+        textView.setTextSize(12);
+        Button button=view.findViewById(R.id.search_button);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                hideKeyboard();
+                search=textView.getText().toString();
+                page=1;
+                getBankList();
+            }
+        });
+        textView.setOnEditorActionListener(new TextView.OnEditorActionListener(){
+            @Override
+            public boolean onEditorAction(TextView v, int actionId,
+                                          KeyEvent event) {
+                hideKeyboard();
+                if ( actionId == 0 ) {
+                    // Log.d("searchView",actionId+":");
+                    page=1;
+                    search=textView.getText().toString();
+                    getBankList();
+                    recyclerView.scrollToPosition(0);
+                }
+                return false;
+            }
+        });
+
+
         return view;
     }
 
@@ -194,7 +233,7 @@ public class BankListFragment extends Fragment {
        RequestParams params=new RequestParams();
        params.put("page",page);
        params.put("user",name);
-       params.put("search","");
+       params.put("search",search);
        IhancHttpClient.get("/index/finance/bankDetailSearch", params, new AsyncHttpResponseHandler() {
            @Override
            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
@@ -237,4 +276,15 @@ public class BankListFragment extends Fragment {
        getBankTable();
        getBankList();
    }
+
+    public void hideKeyboard() {
+        view.clearFocus();
+        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        MainActivity parentActivity=(MainActivity)getActivity();
+        if (imm.isActive() && parentActivity.getCurrentFocus() != null) {
+            if (parentActivity.getCurrentFocus().getWindowToken() != null) {
+                imm.hideSoftInputFromWindow(parentActivity.getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+            }
+        }
+    }
 }

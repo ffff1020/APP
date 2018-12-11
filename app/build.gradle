@@ -47,4 +47,5 @@ dependencies {
     implementation 'io.github.endreman0:java-json:0.13.0'
     implementation files('libs/json-20180130.jar')
     implementation 'com.belerweb:pinyin4j:2.5.1'
+    implementation 'jexcelapi:jxl:2.6'
 }

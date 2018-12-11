@@ -22,6 +22,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.SearchView;
@@ -65,6 +66,7 @@ public class creditFragment extends Fragment {
     private  RecyclerView recyclerView;
     private TextView textView;
     private String search="";
+    private View view;
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
@@ -109,7 +111,7 @@ public class creditFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_credit_list, container, false);
+        view = inflater.inflate(R.layout.fragment_credit_list, container, false);
         context = view.getContext();
         recyclerView = (RecyclerView) view.findViewById(R.id.creditListRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(context));
@@ -152,6 +154,7 @@ public class creditFragment extends Fragment {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                   hideKeyboard();
                   search=textView.getText().toString();
                   page=1;
                   initCreditData();
@@ -161,8 +164,9 @@ public class creditFragment extends Fragment {
             @Override
             public boolean onEditorAction(TextView v, int actionId,
                                           KeyEvent event) {
+                hideKeyboard();
                 if ( actionId == 0 ) {
-                   // Log.d("searchView",actionId+":");
+                    // Log.d("searchView",actionId+":");
                     page=1;
                     search=textView.getText().toString();
                     initCreditData();
@@ -238,6 +242,17 @@ public class creditFragment extends Fragment {
     public interface OnListFragmentInteractionListener {
         // TODO: Update argument type and name
         void onListFragmentInteraction(Credit item);
+    }
+
+    public void hideKeyboard() {
+        view.clearFocus();
+        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        MainActivity parentActivity=(MainActivity)getActivity();
+        if (imm.isActive() && parentActivity.getCurrentFocus() != null) {
+            if (parentActivity.getCurrentFocus().getWindowToken() != null) {
+                imm.hideSoftInputFromWindow(parentActivity.getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+            }
+        }
     }
 
 

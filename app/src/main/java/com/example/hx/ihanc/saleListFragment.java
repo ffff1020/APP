@@ -1,18 +1,28 @@
 package com.example.hx.ihanc;
 
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.KeyEvent;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
+import android.widget.SearchView;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.TextView;
 
 import com.google.gson.JsonArray;
 import com.loopj.android.http.AsyncHttpResponseHandler;
@@ -23,7 +33,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.NumberFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -50,6 +62,14 @@ public class saleListFragment extends Fragment {
     private int mPage=1;
     private  RecyclerView recyclerView;
     private SaleDetailDialog.printListener mPrintListener=null;
+    private TextView textView;
+    private String search="";
+    private View view;
+    private boolean check=true;
+    private int paid_sum1=0;
+    private int credit1=0;
+    private ArrayList<SaleDetail> mdetail1=new ArrayList<SaleDetail>();
+
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
@@ -76,10 +96,19 @@ public class saleListFragment extends Fragment {
         }
         this.mPrintListener=new SaleDetailDialog.printListener() {
             @Override
-            public void print(ArrayList<SaleDetail> mdetail ,int paid_sum,int credit) {
-                Log.d("saleListPrint","");
-                MainActivity parentActivity=(MainActivity)getActivity();
-                parentActivity.initPrinter(mdetail,paid_sum*(-1),credit-paid_sum);
+            public void print(ArrayList<SaleDetail> mdetail ,int paid_sum,int credit,String time) {
+                SharedPreferences sp=PreferenceManager.getDefaultSharedPreferences(getActivity());
+                final String receiptType=sp.getString(getString(R.string.receipt_type),getString(R.string.receipt_type_default));
+                if(receiptType.equals(getString(R.string.receipt_type_default))) {
+                    parentActivity.initPrinter(mdetail, paid_sum * (-1), credit - paid_sum, time);
+                }else{
+                     parentActivity.showProgress(true);
+                     paid_sum1=paid_sum;
+                     credit1=credit;
+                     mdetail1=mdetail;
+                     ImageTask mImageTask = new ImageTask();
+                     mImageTask.execute("");
+                }
             }
 
             @Override
@@ -91,19 +120,21 @@ public class saleListFragment extends Fragment {
         this.mListener=new OnListFragmentInteractionListener() {
             @Override
             public void onListFragmentInteraction(SaleListItem item) {
-                SaleDetailDialog dialog =SaleDetailDialog.newInstance(item.sale_id,item.name,Integer.parseInt(item.sum),item.member_id,item.paid);
+                SaleDetailDialog dialog =SaleDetailDialog.newInstance(item.sale_id,item.name,Integer.parseInt(item.sum),item.member_id,item.paid,item.time);
                 dialog.setListener(mPrintListener);
+                dialog.setonFreshList(new SaleDetailDialog.onFreshList() {
+                    @Override
+                    public void freshList() {
+                        swipeRefreshLayout.setRefreshing(true);
+                        hideKeyboard();
+                        mPage=1;
+                        search=textView.getText().toString();
+                        getData();
+                        recyclerView.scrollToPosition(0);
+                        view.clearFocus();
+                    }
+                });
                 dialog.show(getFragmentManager(),"sale_detail");
-                // 将对话框的大小按屏幕大小的百分比设置
-               /* WindowManager windowManager = parentActivity.getWindowManager();
-                Display display = windowManager.getDefaultDisplay();
-                WindowManager.LayoutParams lp = dialog.getWindow().getAttributes();
-                lp.width = (int)(display.getWidth() * 0.95); //设置宽度
-                WindowManager.LayoutParams dialogLP=dialog.getWindow().getAttributes();
-                if ((int)(display.getHeight() * 0.8)<dialogLP.height){
-                    lp.height = (int)(display.getHeight() * 0.8);
-                }
-                dialog.getWindow().setAttributes(lp);*/
             }
         };
         adpter=new MysaleListRecyclerViewAdapter(saleListItemList, mListener);
@@ -112,7 +143,7 @@ public class saleListFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_salelist_list, container, false);
+        view = inflater.inflate(R.layout.fragment_salelist_list, container, false);
         Context context = view.getContext();
         recyclerView = (RecyclerView) view.findViewById(R.id.saleListRecyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(context,LinearLayoutManager.VERTICAL,false));
@@ -132,6 +163,7 @@ public class saleListFragment extends Fragment {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
+                if(!check) return;
                 if (newState==RecyclerView.SCROLL_STATE_IDLE){
                     int lastVisiblePosition;
                     RecyclerView.LayoutManager layoutManager=recyclerView.getLayoutManager();
@@ -139,6 +171,7 @@ public class saleListFragment extends Fragment {
                     if (layoutManager.getChildCount()>0             //当当前显示的item数量>0
                             &&lastVisiblePosition>=layoutManager.getItemCount()-1           //当当前屏幕最后一个加载项位置>=所有item的数量
                             &&layoutManager.getItemCount()>layoutManager.getChildCount()) { // 当当前总Item数大于可见Item数
+                        //recyclerView.scrollToPosition(adpter.getItemCount()-1);
                         swipeRefreshLayout.setRefreshing(true);
                         recyclerView.setNestedScrollingEnabled(false);
                         getData();
@@ -146,8 +179,37 @@ public class saleListFragment extends Fragment {
                 }
             }
         });
-
-
+        SearchView mSearch=view.findViewById(R.id.search);
+        int id=mSearch.getContext().getResources().getIdentifier("android:id/search_src_text",null,null);
+        textView=(TextView) mSearch.findViewById(id);
+        textView.setTextSize(12);
+        textView.setOnEditorActionListener(new TextView.OnEditorActionListener(){
+            @Override
+            public boolean onEditorAction(TextView v, int actionId,
+                                          KeyEvent event) {
+                if ( actionId == 0 ) {
+                    // Log.d("searchView",actionId+":");
+                    hideKeyboard();
+                    mPage=1;
+                    search=textView.getText().toString();
+                    getData();
+                    recyclerView.scrollToPosition(0);
+                }
+                return false;
+            }
+        });
+        Button button=view.findViewById(R.id.search_button);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                hideKeyboard();
+                mPage=1;
+                search=textView.getText().toString();
+                getData();
+                recyclerView.scrollToPosition(0);
+                view.clearFocus();
+            }
+        });
         return view;
     }
 
@@ -186,12 +248,13 @@ public class saleListFragment extends Fragment {
         void onListFragmentInteraction(SaleListItem item);
     }
 
-    public void getData(){
+    public  void getData(){
+        check=false;
         RequestParams params=new RequestParams();
         params.put("page",mPage);
         params.put("edate","");
         params.put("sdate","");
-        params.put("search","");
+        params.put("search",search);
         params.put("user","");
         IhancHttpClient.get("/index/sale/saleList", params, new AsyncHttpResponseHandler() {
             @Override
@@ -221,6 +284,7 @@ public class saleListFragment extends Fragment {
                     mPage++;
                     adpter.notifyDataSetChanged();
                     recyclerView.setNestedScrollingEnabled(true);
+                    check=true;
                 }catch (JSONException e){
                     e.printStackTrace();
                 }
@@ -233,5 +297,65 @@ public class saleListFragment extends Fragment {
                 Log.d("saleListFragment",res);
             }
         });
+    }
+
+    public void hideKeyboard() {
+        view.clearFocus();
+        InputMethodManager imm = (InputMethodManager) mContext.getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm.isActive() && parentActivity.getCurrentFocus() != null) {
+            if (parentActivity.getCurrentFocus().getWindowToken() != null) {
+                imm.hideSoftInputFromWindow(parentActivity.getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+            }
+        }
+    }
+
+    private class ImageTask extends AsyncTask<String, Void, Bitmap> {
+        @Override
+        protected Bitmap doInBackground(String... params) {
+            //Log.d("bitmap","start");
+            return creatCreditImage();
+        }
+
+        @Override
+        protected void onPreExecute() {
+            //Log.d("bitmap","onPreExecute");
+            super.onPreExecute();
+            //
+        }
+
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            ((MainActivity ) getActivity()).showProgress(false);
+            super.onPostExecute(bitmap);
+            ((MainActivity ) getActivity()).initPrinter(bitmap,credit1);
+        }
+    }
+
+    private Bitmap creatCreditImage(){
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        ArrayList<StringBitmapParameter> title = new ArrayList<>();
+        title.add(new StringBitmapParameter(Utils.mCompanyInfo.getName(),BitmapUtil.IS_CENTER,BitmapUtil.IS_LARGE));
+        title.add(new StringBitmapParameter("销售单\n",BitmapUtil.IS_CENTER));
+        title.add(new StringBitmapParameter("客户："+Utils.printMemberName.getMember_name()));
+        String date = df.format(new Date());
+        title.add(new StringBitmapParameter("打印时间："+date));
+        title.add(new StringBitmapParameter(BitmapUtil.PRINT_LINE));
+        ArrayList<StringBitmapParameter> foot = new ArrayList<>();
+        foot.add(new StringBitmapParameter(BitmapUtil.PRINT_LINE));
+        foot.add(new StringBitmapParameter("感谢您的惠顾，欢迎下次光临!\n",BitmapUtil.IS_CENTER));
+        foot.add(new StringBitmapParameter("联系电话："+Utils.mCompanyInfo.getTel()+"\n"));
+        if(Utils.mCompanyInfo.getAddress().length>1){
+            for (int i=0;i<Utils.mCompanyInfo.getAddress().length;i++){
+                foot.add(new StringBitmapParameter("地址："+(i+1)+Utils.mCompanyInfo.getAddress()[0]+"\n"));
+            }
+        }else{
+            foot.add(new StringBitmapParameter("地址："+Utils.mCompanyInfo.getAddress()[0]+"\n"));
+        }
+        Bitmap bitmapTitle=BitmapUtil.StringListtoBitmap(mContext,title);
+        Bitmap bitmapFoot=BitmapUtil.StringListtoBitmap(mContext,foot);
+        Bitmap bitmapBody=BitmapUtil.StringListtoBitmap(mContext,mdetail1,paid_sum1 * (-1), credit1 - paid_sum1);
+        Bitmap mergeBitmap = BitmapUtil.addBitmapInHead(bitmapTitle, bitmapBody);
+        mergeBitmap=BitmapUtil.addBitmapInHead(mergeBitmap,bitmapFoot);
+        return mergeBitmap;
     }
 }

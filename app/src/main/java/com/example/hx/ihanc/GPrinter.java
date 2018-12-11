@@ -41,6 +41,7 @@ public class GPrinter {
     private ArrayList<SaleDetail> mSaleDetails=null;
     private int paid_sum;
     private int credit_sum;
+    private String sale_time;
 
     public static final String PRINT_LINE = "------------------------------------------------";
     public static final int PRINT_TOTAL_LENGTH = 48 * 3;
@@ -107,12 +108,13 @@ public class GPrinter {
         mHandler.obtainMessage(ORDER_PRINT).sendToTarget();
     }
 
-    public void print(ArrayList<SaleDetail> mSaleDetails,int paid_sum,int credit_sum){
+    public void print(ArrayList<SaleDetail> mSaleDetails,int paid_sum,int credit_sum,String time){
         Log.d("GPrinter","ORDER_PRINT_SALE:");
         this.mSaleDetails=mSaleDetails;
         this.paid_sum=paid_sum;
         this.credit_sum=credit_sum;
         mORDER_PRINT=true;
+        this.sale_time=time;
         mHandler.obtainMessage(ORDER_PRINT_SALE).sendToTarget();
     }
 
@@ -530,9 +532,9 @@ public class GPrinter {
             esc.addPrintAndLineFeed();
             esc.addSelectJustification(EscCommand.JUSTIFICATION.LEFT);
             esc.addText("\n客户："+Utils.printMemberName.getMember_name()+"\n");
-            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm");
             String date = df.format(new Date());
-            esc.addText("打印时间："+date+"\n");
+            esc.addText("销售时间："+sale_time+"\n");
             esc.addText(PRINT_LINE);
             // 商品头信息
             esc.addSetHorAndVerMotionUnits((byte) PRINT_UNIT, (byte) 0);
@@ -608,9 +610,9 @@ public class GPrinter {
             }
             int ttl_credit=credit_sum+totalSum-paid_sum;
             if(ttl_credit>0)
-            esc.addText("累计欠款：￥"+f.format(ttl_credit)+"\n");
+            esc.addText(date+"累计欠款：￥"+f.format(ttl_credit)+"\n");
             if(ttl_credit<0)
-                esc.addText("累计欠款：￥-"+f.format(ttl_credit*-1)+"\n");
+                esc.addText(date+"累计欠款：￥-"+f.format(ttl_credit*-1)+"\n");
             esc.addText(PRINT_LINE);
             //公司信息
             esc.addPrintAndLineFeed();

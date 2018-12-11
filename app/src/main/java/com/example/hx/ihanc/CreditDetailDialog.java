@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
@@ -29,6 +30,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
 import java.text.NumberFormat;
@@ -42,6 +48,19 @@ import java.util.ListIterator;
 import java.util.Locale;
 
 import cz.msebera.android.httpclient.Header;
+import jxl.JXLException;
+import jxl.Workbook;
+import jxl.write.Label;
+import jxl.write.WritableCellFormat;
+import jxl.write.WritableSheet;
+import jxl.write.WritableWorkbook;
+import jxl.write.WriteException;
+import jxl.write.biff.JxlWriteException;
+
+import static com.example.hx.ihanc.SaleDetailDialog.getBody;
+import static com.example.hx.ihanc.SaleDetailDialog.getFoot;
+import static com.example.hx.ihanc.SaleDetailDialog.getHeader;
+import static com.example.hx.ihanc.SaleDetailDialog.shareMsg;
 
 public class CreditDetailDialog extends DialogFragment {
     private int member_id;
@@ -141,68 +160,171 @@ public class CreditDetailDialog extends DialogFragment {
         return new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String[] titles=title.split("--");
-                String n="\n";
-                String line="--------------------------------------------\n";
+                if(Utils.mCompanyInfo==null) Utils.getCompanyInfo();
                 Date now=new Date();
                 SimpleDateFormat f=new SimpleDateFormat("yyyy-MM-dd HH:mm");
-                String tab="       ";
-                int sum=0;
-                if(Utils.mCompanyInfo==null) Utils.getCompanyInfo();
-                String msg=tab+Utils.mCompanyInfo.getName()+n
-                        +tab+tab+"对账单\n"
-                        +"客户："+titles[0]+n
-                        +"打印时间："+f.format(now)+n
-                        +line;
-                if(selectedNum>0){
-                    boolean check=false;
-                    boolean first=true;
-                    for (int i = 0; i < data.size(); i++) {
-                        CreditDetail item = data.get(i);
-                        if(!item.isGroup()){
-                            if(item.selected){
-                                check=true;
-                                if (first){ msg += n;first=false;}
-                                msg += item.getTime() + n;
-                                sum += item.getSum();
-                                msg += item.getGoods_name() + n;
-                                String temp = item.getSummary();
-                                for (int j = 0; j < 36 - temp.getBytes().length; j++) msg += " ";
-                                msg += item.getSummary() + n;
-                            }else check=false;
-                        }else if(check){
-                            msg += item.getGoods_name() + n;
-                            String temp = item.getSummary();
-                            for (int j = 0; j < 36 - temp.getBytes().length; j++) msg += " ";
-                            msg += item.getSummary() + n;
-                        }
-                    }
-                }else{
-                    for (int i = 0; i < data.size(); i++) {
-                        CreditDetail item = data.get(i);
-                        if (!item.isGroup()) {
-                            if (i > 0) msg += n;
-                            msg += item.getTime() + n;
-                            sum += item.getSum();
-                        }
-                        msg += item.getGoods_name() + n;
-                        String temp = item.getSummary();
-                        for (int j = 0; j < 36 - temp.getBytes().length; j++) msg += " ";
-                        msg += item.getSummary() + n;
-                    }
-                }
-                NumberFormat nf=NumberFormat.getCurrencyInstance(Locale.CHINA);
-                msg+=line+"合计金额："+nf.format(sum)+n
-                    +"现累计欠款："+titles[1]+n;
-                msg+=line;
-                msg+="    "+"谢谢惠顾，欢迎再次光临！"+n;
-                msg+="联系电话："+Utils.mCompanyInfo.getTel()+n;
-                if (Utils.mCompanyInfo.getAddress().length>1){
-                    for (int k=0;k<Utils.mCompanyInfo.getAddress().length;k++)
-                        msg+="地址"+(k+1)+"："+Utils.mCompanyInfo.getAddress()[k]+n;
-                }else
-                    msg+="地址："+Utils.mCompanyInfo.getAddress()[0]+n;
-                shareMsg(msg);
+                String[] titles=title.split("--");
+                String fileName="ihanc--"+Utils.mCompanyInfo.getName()+".xls";
+                File file = new File(Environment.getExternalStorageDirectory(), fileName);
+                WritableWorkbook wwb;
+                int size=data.size();
+                try{
+                    OutputStream os = new FileOutputStream(file);
+                    try {
+                        wwb = Workbook.createWorkbook(os);
+                        WritableSheet sheet = wwb.createSheet(Utils.mCompanyInfo.getName()+"对账单", 0);
+                        Label label;
+                        try {
+                            label = new Label(0, 0, Utils.mCompanyInfo.getName(), getHeader());
+                            sheet.addCell(label);
+                            sheet.setRowView(0,500);
+                            label = new Label(0, 1, "对账单", getBody());
+                            sheet.addCell(label);
+                            label = new Label(0, 2, "客户："+titles[0]);
+                            sheet.addCell(label);
+                            label = new Label(0, 3, "打印时间："+f.format(now));
+                            sheet.addCell(label);
+                            label = new Label(0, 4, "");
+                            sheet.addCell(label);
+                            sheet.mergeCells(0, 0, 4, 0);
+                            sheet.mergeCells(0, 1, 4, 0);
+                            sheet.mergeCells(0, 2, 4, 0);
+                            sheet.mergeCells(0, 3, 4, 0);
+                            sheet.mergeCells(0, 4, 4, 0);
+                            NumberFormat format=NumberFormat.getCurrencyInstance(Locale.CHINA);
+                            WritableCellFormat body=getBody();
+                            label = new Label(0, 5, "日期",body);
+                            sheet.addCell(label);
+                            label = new Label(1, 5, "商品名称",body);
+                            sheet.addCell(label);
+                            label = new Label(2, 5, "数量",body);
+                            sheet.addCell(label);
+                            label = new Label(3, 5, "价格",body);
+                            sheet.addCell(label);
+                            label = new Label(4, 5, "金额",body);
+                            sheet.addCell(label);
+                            int sum=0;
+                            int maxLen=12;
+                            if(selectedNum>0){
+                                boolean check=false;
+                                for (int i = 0; i < size; i++) {
+                                    CreditDetail item = data.get(i);
+                                    if(!item.isGroup()){
+                                        if(item.selected){
+                                            check=true;
+                                            label = new Label(0, 6+i, item.getTime().substring(5,10),body);
+                                            sheet.addCell(label);
+                                            label = new Label(1, 6+i, item.getGoods_name(),body);
+                                            if(maxLen<item.getGoods_name().getBytes().length) maxLen=item.getGoods_name().getBytes().length;
+                                            sheet.addCell(label);
+                                            String temp[] = item.getSummary().split("[*]");
+                                            if(temp.length>1) {
+                                                label = new Label(2, 6 + i, temp[0], body);
+                                                sheet.addCell(label);
+                                                temp = temp[1].split("=");
+                                                label = new Label(3, 6 + i, temp[0], body);
+                                                sheet.addCell(label);
+                                                label = new Label(4, 6 + i, temp[1], body);
+                                                sheet.addCell(label);
+                                                sum += item.getSum();
+                                            }else{
+                                                label = new Label(4, 6 + i, temp[0], body);
+                                                sheet.addCell(label);
+                                            }
+                                        }else check=false;
+                                    }else if(check){
+                                        if(maxLen<item.getGoods_name().getBytes().length) maxLen=item.getGoods_name().getBytes().length;
+                                        label = new Label(1, 6+i, item.getGoods_name(),body);
+                                        sheet.addCell(label);
+                                        String temp[] = item.getSummary().split("[*]");
+                                        if(temp.length>1) {
+                                            label = new Label(2, 6 + i, temp[0], body);
+                                            sheet.addCell(label);
+                                            temp = temp[1].split("=");
+                                            label = new Label(3, 6 + i, temp[0], body);
+                                            sheet.addCell(label);
+                                            label = new Label(4, 6 + i, temp[1], body);
+                                            sheet.addCell(label);
+                                        }else{
+                                            label = new Label(4, 6 + i, temp[0], body);
+                                            sheet.addCell(label);
+                                        }
+                                    }
+                                }
+                            }else{
+                                int j=0;
+                                for (int i = 0; i < size; i++) {
+                                    CreditDetail item = data.get(i);
+                                    if (!item.isGroup()) {
+                                        label = new Label(0, 6+i, item.getTime().substring(5,10),body);
+                                        sheet.addCell(label);
+                                        sum += item.getSum();
+                                        Log.d("shareMsg","i:"+i+"j:"+j);
+                                        if(i>0){
+                                            sheet.mergeCells(0,6+j,0,i+5);
+                                        }
+                                        j=i;
+                                    }
+                                    if(maxLen<item.getGoods_name().getBytes().length) maxLen=item.getGoods_name().getBytes().length;
+                                    label = new Label(1, 6+i, item.getGoods_name(),body);
+                                    sheet.addCell(label);
+                                    String temp[] = item.getSummary().split("[*]");
+                                    if(temp.length>1) {
+                                        label = new Label(2, 6 + i, temp[0], body);
+                                        sheet.addCell(label);
+                                        temp = temp[1].split("=");
+                                        label = new Label(3, 6 + i, temp[0], body);
+                                        sheet.addCell(label);
+                                        label = new Label(4, 6 + i, temp[1], body);
+                                        sheet.addCell(label);
+                                    }else{
+                                        label = new Label(4, 6 + i, temp[0], body);
+                                        sheet.addCell(label);
+                                    }
+                                }
+                            }
+                            sheet.setColumnView(1,maxLen);
+                            sheet.setColumnView(0,6);
+                            size+=6;
+                            label = new Label(0, size, "");
+                            sheet.addCell(label);
+                            sheet.mergeCells(0, size, 4, 0);
+                            size++;
+                            label = new Label(0, size, "合计金额:"+format.format(sum));
+                            sheet.addCell(label);
+                            sheet.mergeCells(0, size, 4, 0);
+                            size++;
+                            label = new Label(0, size, "累计应收金额:"+titles[1]);
+                            sheet.addCell(label);
+                            sheet.mergeCells(0, size, 4, 0);
+                            size++;
+                            label = new Label(0, size, "感谢您的惠顾，欢迎下次光临！",getFoot());
+                            sheet.addCell(label);
+                            sheet.mergeCells(0, size, 4, 0);
+                            size++;
+                            label = new Label(0, size, "联系电话："+Utils.mCompanyInfo.getTel());
+                            sheet.addCell(label);
+                            sheet.mergeCells(0, size, 4, 0);
+                            size++;
+                            if(Utils.mCompanyInfo.getAddress().length==1){
+                                label = new Label(0, size, "地址："+Utils.mCompanyInfo.getAddress()[0]);
+                                sheet.addCell(label);
+                                sheet.mergeCells(0, size, 4, 0);
+                                size++;
+                            }else {
+                                for (int i = 0; i < Utils.mCompanyInfo.getAddress().length; i++) {
+                                    label = new Label(0, size, "地址"+(i+1)+"：" + Utils.mCompanyInfo.getAddress()[i]);
+                                    sheet.addCell(label);
+                                    sheet.mergeCells(0, size, 4, 0);
+                                    size++;
+                                }
+                            }
+                            wwb.write();
+                            wwb.close();
+                            shareMsg(getContext(),file);
+                        }catch (WriteException e){e.printStackTrace();}
+                    }catch (IOException e){e.printStackTrace();}
+                }catch (FileNotFoundException e){e.printStackTrace();}
             }
         };
     }
@@ -304,37 +426,6 @@ public class CreditDetailDialog extends DialogFragment {
 
             }
         });
-    }
-
-    @SuppressLint("NewApi")
-    private void shareMsg(String msgText) {
-        String packageName="com.tencent.mm";
-        String activityName="com.tencent.mm.ui.tools.ShareImgUI";
-        String appname="微信";
-        Context context=getContext();
-        if (!packageName.isEmpty() && !isAvilible(context, packageName)) {// 判断APP是否存在
-            Toast.makeText(context, "请先安装" + appname, Toast.LENGTH_SHORT).show();
-            return;
-        }
-        Intent intent = new Intent("android.intent.action.SEND");
-        intent.setType("text/plain");
-        intent.putExtra(Intent.EXTRA_TEXT, msgText);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        if (!packageName.isEmpty()) {
-            intent.setComponent(new ComponentName(packageName, activityName));
-            context.startActivity(intent);
-        }
-    }
-
-    public boolean isAvilible(Context context, String packageName) {
-        PackageManager packageManager = context.getPackageManager();
-        List<PackageInfo> pinfo = packageManager.getInstalledPackages(0);
-        for (int i = 0; i < pinfo.size(); i++) {
-            if (((PackageInfo) pinfo.get(i)).packageName
-                    .equalsIgnoreCase(packageName))
-                return true;
-        }
-        return false;
     }
 
     public interface OnFreshCredit{

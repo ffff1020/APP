@@ -3,9 +3,16 @@
     <!-- These settings headers are only used on tablets. -->
 
     <header
-        android:fragment="com.example.hx.ihanc.SettingsActivity$GeneralPreferenceFragment"
-        android:icon="@drawable/ic_print_black_24dp"
-        android:title="打印机连接设置" />
-
+    android:fragment="com.example.hx.ihanc.SettingsActivity$GeneralPreferenceFragment"
+    android:icon="@drawable/ic_print_black_24dp"
+    android:title="打印机连接设置" />
+    <header
+        android:fragment="com.example.hx.ihanc.SettingsActivity$DataSyncPreferenceFragment"
+        android:icon="@drawable/ic_business_center_black_24dp"
+        android:title="公司信息设置" />
+    <header
+        android:fragment="com.example.hx.ihanc.SettingsActivity$NotificationPreferenceFragment"
+        android:icon="@drawable/ic_cloud_circle_black_24dp"
+        android:title="商品设置" />
 
 </preference-headers>

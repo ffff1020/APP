@@ -30,6 +30,7 @@ public class MyNumberEdit extends LinearLayout {
     private DecimalFormat dFormat=new DecimalFormat("0.0");
     private TextChangedListener listner=null;
     public boolean check=false;
+    public boolean init=false;
     public MyNumberEdit(Context context, AttributeSet attrs){
         super(context, attrs);
         LayoutInflater.from(context).inflate(R.layout.my_number, this);
@@ -71,7 +72,7 @@ public class MyNumberEdit extends LinearLayout {
                     check=true;
                 } else{
                     Log.d("saleDialog",textView1.getText().toString());
-                    if(TextUtils.isEmpty(textView1.getText())) {
+                    if(init&&TextUtils.isEmpty(textView1.getText())) {
                         setNum(num1);
                     }
                     check=false;

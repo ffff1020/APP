@@ -29,7 +29,15 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.google.gson.JsonObject;
+import com.loopj.android.http.AsyncHttpResponseHandler;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.List;
+
+import cz.msebera.android.httpclient.Header;
 
 /**
  * A {@link PreferenceActivity} that presents a set of application settings. On
@@ -204,7 +212,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object o) {
                     String value=o.toString();
-                    Log.d("open bl",value);
+                    //Log.d("open bl",value);
                     if(value.equals("true")){
                         Intent serverIntent = new Intent(preference.getContext(), DeviceListActivity.class);
                         startActivityForResult(serverIntent, REQUEST_CONNECT_DEVICE);
@@ -289,7 +297,57 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
             // guidelines.
-            bindPreferenceSummaryToValue(findPreference("sync_frequency"));
+           // bindPreferenceSummaryToValue(findPreference("sync_frequency"));
+            if(Utils.mCompanyInfo==null)Utils.getCompanyInfo();
+            initData();
+            Preference.OnPreferenceChangeListener listener=new Preference.OnPreferenceChangeListener() {
+                @Override
+                public boolean onPreferenceChange(Preference preference, Object o) {
+                    updateCompanyInfo(preference.getContext(),preference,o.toString());
+                    return true;
+                }
+            };
+            findPreference("cname").setOnPreferenceChangeListener(listener);
+            findPreference("ctel").setOnPreferenceChangeListener(listener);
+            findPreference("cadd").setOnPreferenceChangeListener(listener);
+
+        }
+        private void updateCompanyInfo(Context context, final Preference preference, String str){
+            JSONObject params=new JSONObject();
+            try{
+                params.put(preference.getKey(),str);
+            }catch (JSONException e){e.printStackTrace();}
+            IhancHttpClient.postJson(context, "/index/setting/editInfo", params, new AsyncHttpResponseHandler() {
+                @Override
+                public void onSuccess(int statusCode, cz.msebera.android.httpclient.Header[] headers, byte[] responseBody) {
+                    Utils.getCompanyInfo();
+                    bindPreferenceSummaryToValue(preference);
+                }
+
+                @Override
+                public void onFailure(int statusCode, cz.msebera.android.httpclient.Header[] headers, byte[] responseBody, Throwable error) {
+
+                }
+            });
+        }
+        private void initData(){
+            findPreference("cname").setSummary(Utils.mCompanyInfo.getName());
+            findPreference("cname").setDefaultValue(Utils.mCompanyInfo.getName());
+            findPreference("ctel").setSummary(Utils.mCompanyInfo.getTel());
+            findPreference("ctel").setDefaultValue(Utils.mCompanyInfo.getTel());
+            String add="";
+            String[] adds=Utils.mCompanyInfo.getAddress();
+            if (adds.length==1){
+                findPreference("cadd").setSummary(adds[0]);
+                findPreference("cadd").setDefaultValue(adds[0]);
+            }else {
+                add=adds[0];
+                for (int i = 1; i < adds.length; i++) {
+                    add +="+"+adds[i];
+                }
+                findPreference("cadd").setSummary(add);
+                findPreference("cadd").setDefaultValue(add);
+            }
         }
 
         @Override
