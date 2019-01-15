@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
@@ -31,6 +32,7 @@ public class SaleDetailModifyDialog extends DialogFragment {
     private UnitAdapter mUnitAdapter;
     private Button mSaveButton;
     private SaveListener saveListener;
+    private Button delButton;
 
     public  static  SaleDetailModifyDialog newInstance(
             String member,SaleDetail saleDetail){
@@ -135,6 +137,7 @@ public class SaleDetailModifyDialog extends DialogFragment {
         mSaveButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                mSaveButton.setClickable(false);
                 try {
                     JSONObject params = new JSONObject();
                     params.put("sale_detail_id", saleDetail.sale_detail_id);
@@ -158,6 +161,10 @@ public class SaleDetailModifyDialog extends DialogFragment {
                                 Utils.toast(getContext(), "保存成功！");
                                 saveListener.saved();
                                 dismiss();
+                            }else if(obj.getInt("result")==2) {
+                                Utils.toast(getContext(), "该单已经付款，不能修改！");
+                                saveListener.saved();
+                                dismiss();
                             }
 
                         }catch (JSONException e){e.printStackTrace();}
@@ -170,6 +177,52 @@ public class SaleDetailModifyDialog extends DialogFragment {
                 }catch (JSONException e){e.printStackTrace();}
             }
         });
+
+        delButton=v.findViewById(R.id.deleteButton);
+        delButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                delButton.setClickable(false);
+                try {
+                    JSONObject params = new JSONObject();
+                    params.put("sale_detail_id", saleDetail.sale_detail_id);
+                    params.put("sale_id", saleDetail.sale_id);
+                    params.put("info",member+":"+saleDetail.getGoods_name()+":"+saleDetail.getNumber()+"*"+saleDetail.getPrice()+"="+saleDetail.getSum());
+                    IhancHttpClient.postJson(getContext(), "/index/sale/saleDetailDelete", params, new AsyncHttpResponseHandler() {
+                        @Override
+                        public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                            String res=new String(responseBody);
+                            try{
+                                JSONObject rs=new JSONObject(res);
+                                Log.d("saleOrder",rs.getInt("result")+"");
+                                if(rs.getInt("result")==1){
+                                    Toast.makeText(getContext(),"删除成功！",Toast.LENGTH_LONG).show();
+                                    saveListener.saved();
+                                    dismiss();
+                                    return;
+                                }else if(rs.getInt("result")==2) {
+                                    Utils.toast(getContext(), "该单已经付款，不能修改！");
+                                    saveListener.saved();
+                                    dismiss();
+                                    return;
+                                }else{
+                                    Toast.makeText(getContext(),"删除失败，请联系管理员！",Toast.LENGTH_LONG).show();
+                                    saveListener.saved();
+                                    dismiss();
+                                }
+                            }catch (JSONException e){e.printStackTrace();}
+                        }
+
+                        @Override
+                        public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+
+                        }
+                    });
+
+                }catch (JSONException e){e.printStackTrace();}
+            }
+        });
+
         return v;
     }
     public interface SaveListener{

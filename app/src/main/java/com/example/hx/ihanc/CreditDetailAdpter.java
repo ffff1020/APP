@@ -12,6 +12,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 
+import java.util.HashMap;
 import java.util.List;
 
 public class CreditDetailAdpter extends ArrayAdapter<CreditDetail> {
@@ -19,17 +20,20 @@ public class CreditDetailAdpter extends ArrayAdapter<CreditDetail> {
     private List<CreditDetail> creditDetailsList;
     private int resource;
     private MyOnCheckChangeListener myOnCheckChangeListener;
-    public CreditDetailAdpter(@NonNull Context context, int resource, @NonNull List<CreditDetail> creditDetailsList,MyOnCheckChangeListener myOnCheckChangeListener){
+    private static HashMap<Integer, Boolean> isSelected = new HashMap<Integer, Boolean>();
+    private checkBoxListener mCheckBoxListener;
+    public CreditDetailAdpter(@NonNull Context context, int resource, @NonNull List<CreditDetail> creditDetailsList,checkBoxListener myOnCheckChangeListener){
         super(context, resource, creditDetailsList);
         this.mContext=context;
         this.resource=resource;
         this.creditDetailsList=creditDetailsList;
-        this.myOnCheckChangeListener=myOnCheckChangeListener;
+        this.mCheckBoxListener=myOnCheckChangeListener;
+
     }
 
     @NonNull
     @Override
-    public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+    public View getView(final int position, @Nullable View convertView, @NonNull ViewGroup parent) {
         final ViewHolder viewHolder;
         if(convertView==null){
             viewHolder=new ViewHolder();
@@ -38,12 +42,30 @@ public class CreditDetailAdpter extends ArrayAdapter<CreditDetail> {
             viewHolder.goods_nameTV=convertView.findViewById(R.id.credit_detail_goods);
             viewHolder.summaryTV=convertView.findViewById(R.id.credit_detail_summary);
             viewHolder.checkBox=convertView.findViewById(R.id.checkbox);
-            viewHolder.checkBox.setOnCheckedChangeListener(myOnCheckChangeListener);
             convertView.setTag(viewHolder);
         }else{
             viewHolder=(ViewHolder) convertView.getTag();
         }
         viewHolder.checkBox.setTag(position);
+       // viewHolder.checkBox.setOnCheckedChangeListener(myOnCheckChangeListener);
+        viewHolder.checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                //Log.d("creditDialogAdapter",b+":"+isSelected.get(position));
+                boolean myCheck=isSelected.get(position)!=b;
+                if(b)
+                {
+                    viewHolder.checkBox.setChecked(true);
+                    isSelected.put(position, true);
+                }
+                else
+                {
+                    viewHolder.checkBox.setChecked(false);
+                    isSelected.put(position, false);
+                }
+                if(myCheck)mCheckBoxListener.onCheckboxChange(position,compoundButton,b);
+            }
+        });
         viewHolder.timeTV.setText(creditDetailsList.get(position).getTime());
         viewHolder.goods_nameTV.setText(creditDetailsList.get(position).getGoods_name());
         viewHolder.summaryTV.setText(creditDetailsList.get(position).getSummary());
@@ -53,6 +75,14 @@ public class CreditDetailAdpter extends ArrayAdapter<CreditDetail> {
         }else{
             viewHolder.timeTV.setVisibility(View.VISIBLE);
             viewHolder.checkBox.setVisibility(View.VISIBLE);
+            if(isSelected.get(position))
+            {
+                viewHolder.checkBox.setChecked(true);
+            }else
+            {
+                viewHolder.checkBox.setChecked(false);
+            }
+
         }
         return convertView;
     }
@@ -62,13 +92,12 @@ public class CreditDetailAdpter extends ArrayAdapter<CreditDetail> {
         TextView goods_nameTV;
         TextView summaryTV;
         CheckBox checkBox;
+
     }
 
     public CreditDetail getItem(int i){
         return creditDetailsList.get(i);
     }
-
-
 
     public static abstract class MyOnCheckChangeListener implements CompoundButton.OnCheckedChangeListener {
         @Override
@@ -79,5 +108,16 @@ public class CreditDetailAdpter extends ArrayAdapter<CreditDetail> {
         }
         public abstract void myOnCheckChange(int position, CompoundButton buttonView,
                                              boolean isChecked);
+    }
+
+    public interface checkBoxListener{
+        void onCheckboxChange(int position, CompoundButton buttonView,
+                              boolean isChecked);
+    }
+
+    public void setIsSelected(int size){
+        for (int i = 0; i <size ; i++) {
+            isSelected.put(i,false);
+        }
     }
 }

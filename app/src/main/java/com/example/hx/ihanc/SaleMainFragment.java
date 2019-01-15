@@ -318,7 +318,7 @@ public class SaleMainFragment extends Fragment {
                         mFilter.filter(currentGood.getGoods_unit());
                     }else
                         mFilter.filter(currentGood.getGoods_unit()+"and"+res.substring(2,res.length()-1));
-                    unitSpinner.setSelection(getArguments().getInt("unitPosition"));
+                    unitSpinner.setSelection(getArguments().getInt("unitPosition"),true);
                 }
                 @Override
                 public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
@@ -515,6 +515,14 @@ public class SaleMainFragment extends Fragment {
             }
         };
         dialog=AddMemberDialog.newInstance(onAddMemberSucceed);
+        UpdateGoodsDialog.setRefreshGoodsSaleMainFragment(new UpdateGoodsDialog.refreshGoodsInterface() {
+            @Override
+            public void refresh() {
+                getGoodsData();
+                getCategoryData();
+                //Log.d("goods","update");
+            }
+        });
     }
     public void getCategoryData(){
        // Log.d(TAG,"getCategoryData");
@@ -548,6 +556,7 @@ public class SaleMainFragment extends Fragment {
         });
     }
     public void getGoodsData(){
+        mGoodsDataList.clear();
         RequestParams params = new RequestParams();
         IhancHttpClient.get("/index/setting/goods", params, new AsyncHttpResponseHandler() {
             @Override
@@ -703,6 +712,7 @@ public class SaleMainFragment extends Fragment {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                     String res = new String(responseBody).trim();
+                    Log.d("onGoodSelected",res);
                     try {
                         JSONObject obj=new JSONObject(res);
                         JSONArray units=obj.getJSONArray("unit");
@@ -722,7 +732,7 @@ public class SaleMainFragment extends Fragment {
                             String st="";
                             for (int j = 0; j < units.length(); j++) {
                                 JSONObject item=units.getJSONObject(j);
-                                Log.d("unit",item.getInt("unit_id")+":"+current_unit+"j"+j);
+                               // Log.d("unit",item.getInt("unit_id")+":"+current_unit+"j"+j);
                                 if(j==0){
                                     st=item.getString("unit_id");
                                 }else{
@@ -734,12 +744,11 @@ public class SaleMainFragment extends Fragment {
                             //Log.d("unit",st+"len"+unitSpinner.getAdapter().getCount());
                             if(i>0){
                                 //unitSpinner.getAdapter().notify();
-                                unitSpinner.setSelection(i,false);}
+                                unitSpinner.setSelection(i,true);}
                         }else{
                             mFilter.filter(currentGood.getGoods_unit());
                         }
-                        Log.d("unit",i+"");
-                       //
+                       //Log.d("onGoodSelected",currentGood.goods_name);
                     }catch (JSONException e){e.printStackTrace();}
                 }
 
@@ -768,7 +777,7 @@ public class SaleMainFragment extends Fragment {
                     //Log.d("unitFail", res);
                 }
             });
-            unitSpinner.setSelection(0);
+            unitSpinner.setSelection(0,true);
         }
     }
 

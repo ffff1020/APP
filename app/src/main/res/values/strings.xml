@@ -134,4 +134,6 @@
     <string name="save">保存</string>
     <string name="payment">实收金额：</string>
     <string name="bank">选择收款银行：</string>
+
+
 </resources>

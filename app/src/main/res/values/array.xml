@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="stockOrder">
+        <item>入库倒序</item>
+        <item>数量正序</item>
+        <item>数量倒序</item>
+        <item>金额正序</item>
+        <item>金额倒序</item>
+    </string-array>
+    <string-array name="creditOrder">
+        <item>时间正序</item>
+        <item>金额倒序</item>
+        <item>时间倒序</item>
+        <item>金额正序</item>
+    </string-array>
+    <string-array name="stockMenu">
+        <item>商品报损</item>
+        <item>商品报溢</item>
+        <item>时间倒序</item>
+        <item>金额正序</item>
+    </string-array>
+</resources>

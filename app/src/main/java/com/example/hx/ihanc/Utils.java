@@ -35,6 +35,7 @@ public class Utils {
     public static List<SaleFragment> fragmentList;
     public static List<Unit> currentUnitList=new ArrayList<Unit>();
     public static String printSaleId="";
+    public static boolean saleTypeOrder=false;
 
     public static UsbDevice getUsbDeviceFromName(Context context, String usbName) {
         UsbManager usbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);

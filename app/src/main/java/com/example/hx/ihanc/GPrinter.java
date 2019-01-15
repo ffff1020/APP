@@ -528,7 +528,10 @@ public class GPrinter {
             esc.addPrintAndLineFeed();
             command = new byte[]{29, 33, 0};
             esc.addUserCommand(command);
-            esc.addText("销售单\n");
+            if(Utils.saleTypeOrder)
+                esc.addText("订货单\n");
+            else
+                esc.addText("销售单\n");
             esc.addPrintAndLineFeed();
             esc.addSelectJustification(EscCommand.JUSTIFICATION.LEFT);
             esc.addText("\n客户："+Utils.printMemberName.getMember_name()+"\n");
@@ -609,13 +612,16 @@ public class GPrinter {
                 esc.addText("实收金额：￥-"+f.format(paid_sum*-1)+"\n");
             }
             int ttl_credit=credit_sum+totalSum-paid_sum;
-            if(ttl_credit>0)
-            esc.addText(date+"累计欠款：￥"+f.format(ttl_credit)+"\n");
-            if(ttl_credit<0)
-                esc.addText(date+"累计欠款：￥-"+f.format(ttl_credit*-1)+"\n");
-            esc.addText(PRINT_LINE);
+            if(!Utils.saleTypeOrder) {
+                if (ttl_credit > 0)
+                    esc.addText(date + "累计欠款：￥" + f.format(ttl_credit) + "\n");
+                if (ttl_credit < 0)
+                    esc.addText(date + "累计预付款：￥" + f.format(ttl_credit ) + "\n");
+                esc.addText(PRINT_LINE);
+                esc.addPrintAndLineFeed();
+            }
             //公司信息
-            esc.addPrintAndLineFeed();
+
             esc.addSelectJustification(EscCommand.JUSTIFICATION.CENTER);
             esc.addText("\n感谢您的惠顾，欢迎下次光临!\n\n");
             esc.addSelectJustification(EscCommand.JUSTIFICATION.LEFT);

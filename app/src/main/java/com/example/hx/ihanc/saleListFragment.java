@@ -50,9 +50,9 @@ import cz.msebera.android.httpclient.Header;
 public class saleListFragment extends Fragment {
 
     // TODO: Customize parameter argument names
-    private static final String ARG_COLUMN_COUNT = "column-count";
+    private static final String TYPE_ORDER = "order";
     // TODO: Customize parameters
-    private int mColumnCount = 1;
+    private boolean order = false;
     private OnListFragmentInteractionListener mListener;
     private MainActivity parentActivity;
     private Context mContext;
@@ -69,6 +69,7 @@ public class saleListFragment extends Fragment {
     private int paid_sum1=0;
     private int credit1=0;
     private ArrayList<SaleDetail> mdetail1=new ArrayList<SaleDetail>();
+    private SaleDetailDialog dialog=null;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -79,10 +80,10 @@ public class saleListFragment extends Fragment {
 
     // TODO: Customize parameter initialization
     @SuppressWarnings("unused")
-    public static saleListFragment newInstance(int columnCount) {
+    public static saleListFragment newInstance(boolean order) {
         saleListFragment fragment = new saleListFragment();
         Bundle args = new Bundle();
-        args.putInt(ARG_COLUMN_COUNT, columnCount);
+        args.putBoolean(TYPE_ORDER, order);
         fragment.setArguments(args);
         return fragment;
     }
@@ -90,9 +91,9 @@ public class saleListFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d("saleList","start");
+       // Log.d("saleList","start");
         if (getArguments() != null) {
-            mColumnCount = getArguments().getInt(ARG_COLUMN_COUNT);
+            order = getArguments().getBoolean(TYPE_ORDER,false);
         }
         this.mPrintListener=new SaleDetailDialog.printListener() {
             @Override
@@ -100,6 +101,7 @@ public class saleListFragment extends Fragment {
                 SharedPreferences sp=PreferenceManager.getDefaultSharedPreferences(getActivity());
                 final String receiptType=sp.getString(getString(R.string.receipt_type),getString(R.string.receipt_type_default));
                 if(receiptType.equals(getString(R.string.receipt_type_default))) {
+                    Utils.saleTypeOrder=order;
                     parentActivity.initPrinter(mdetail, paid_sum * (-1), credit - paid_sum, time);
                 }else{
                      parentActivity.showProgress(true);
@@ -120,12 +122,14 @@ public class saleListFragment extends Fragment {
         this.mListener=new OnListFragmentInteractionListener() {
             @Override
             public void onListFragmentInteraction(SaleListItem item) {
-                SaleDetailDialog dialog =SaleDetailDialog.newInstance(item.sale_id,item.name,Integer.parseInt(item.sum),item.member_id,item.paid,item.time);
+                if (dialog!=null&&dialog.getDialog()!=null&&dialog.getDialog().isShowing()) return;
+                dialog =SaleDetailDialog.newInstance(item.sale_id,item.name,Integer.parseInt(item.sum),item.member_id,item.paid,item.time);
+                if(order)dialog.setType(order);
                 dialog.setListener(mPrintListener);
                 dialog.setonFreshList(new SaleDetailDialog.onFreshList() {
                     @Override
                     public void freshList() {
-                        swipeRefreshLayout.setRefreshing(true);
+
                         hideKeyboard();
                         mPage=1;
                         search=textView.getText().toString();
@@ -249,6 +253,7 @@ public class saleListFragment extends Fragment {
     }
 
     public  void getData(){
+        swipeRefreshLayout.setRefreshing(true);
         check=false;
         RequestParams params=new RequestParams();
         params.put("page",mPage);
@@ -256,13 +261,13 @@ public class saleListFragment extends Fragment {
         params.put("sdate","");
         params.put("search",search);
         params.put("user","");
+        if(order) params.put("type","ORDER");
         IhancHttpClient.get("/index/sale/saleList", params, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                 if(mPage==1){saleListItemList.clear();adpter.isLast=false;}
                 String res=new String(responseBody);
                 swipeRefreshLayout.setRefreshing(false);
-                //Log.d("saleListFragment",res);
                 try {
                     JSONObject resJson=new JSONObject(res);
                     JSONArray lists=resJson.getJSONArray("lists");
@@ -276,7 +281,7 @@ public class saleListFragment extends Fragment {
                                 list.getString("time"),
                                 list.getString("member_name"),
                                 list.getString("sum"),
-                                list.getInt("finish"),
+                                order?0:list.getInt("finish"),
                                 list.getInt("member_id")
                                 );
                         saleListItemList.add(item);
@@ -335,7 +340,8 @@ public class saleListFragment extends Fragment {
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         ArrayList<StringBitmapParameter> title = new ArrayList<>();
         title.add(new StringBitmapParameter(Utils.mCompanyInfo.getName(),BitmapUtil.IS_CENTER,BitmapUtil.IS_LARGE));
-        title.add(new StringBitmapParameter("销售单\n",BitmapUtil.IS_CENTER));
+        String type=order?"订货单":"销售单\n";
+        title.add(new StringBitmapParameter(type,BitmapUtil.IS_CENTER));
         title.add(new StringBitmapParameter("客户："+Utils.printMemberName.getMember_name()));
         String date = df.format(new Date());
         title.add(new StringBitmapParameter("打印时间："+date));

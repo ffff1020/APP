@@ -1,6 +1,7 @@
 package com.example.hx.ihanc;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.FragmentManager;
 import android.content.ComponentName;
 import android.content.Context;
@@ -23,9 +24,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.SearchView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -44,6 +48,8 @@ import java.util.List;
 import java.util.Locale;
 
 import cz.msebera.android.httpclient.Header;
+
+import static java.lang.Integer.parseInt;
 
 /**
  * A fragment representing a list of Items.
@@ -67,6 +73,9 @@ public class creditFragment extends Fragment {
     private TextView textView;
     private String search="";
     private View view;
+    private String order="time";
+    private CreditDetailDialog creditDetailDialog=null;
+    private TextView ttlCredit;
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
@@ -95,7 +104,8 @@ public class creditFragment extends Fragment {
         mListener=new OnListFragmentInteractionListener() {
             @Override
             public void onListFragmentInteraction(Credit item) {
-              CreditDetailDialog creditDetailDialog=CreditDetailDialog.newInstance(item.getMemberId(),item.getName()+"--"+item.getCreditSum());
+                if(creditDetailDialog!=null&&creditDetailDialog.getDialog()!=null&&creditDetailDialog.getDialog().isShowing()) return;
+                creditDetailDialog=CreditDetailDialog.newInstance(item.getMemberId(),item.getName()+"--"+item.getCreditSum());
               CreditDetailDialog.OnFreshCredit onFreshCredit=new CreditDetailDialog.OnFreshCredit() {
                   @Override
                   public void freshCredit() {
@@ -117,6 +127,7 @@ public class creditFragment extends Fragment {
         recyclerView.setLayoutManager(new LinearLayoutManager(context));
         adpter=new MycreditRecyclerViewAdapter(mCredits, mListener);
         recyclerView.setAdapter(adpter);
+        ttlCredit=view.findViewById(R.id.ttlCredit);
         swipeRefreshLayout=view.findViewById(R.id.swipeRefreshLayout);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -175,6 +186,27 @@ public class creditFragment extends Fragment {
                 return false;
             }
         });
+        Spinner orderSpinner=view.findViewById(R.id.orderSpinner);
+        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<String>(getContext(),
+                R.layout.unit, getResources().getStringArray(R.array.creditOrder));
+        spinnerAdapter
+                .setDropDownViewResource(R.layout.unit);
+        orderSpinner.setAdapter(spinnerAdapter);
+        orderSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                order=getOrder(i);
+                page=1;
+                search=textView.getText().toString();
+                initCreditData();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
         return view;
     }
 
@@ -182,7 +214,7 @@ public class creditFragment extends Fragment {
         RequestParams params=new RequestParams();
         params.put("page",page);
         params.put("search",search);
-        params.put("order","time");
+        params.put("order",order);
         IhancHttpClient.get("/index/sale/credit", params, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
@@ -193,10 +225,10 @@ public class creditFragment extends Fragment {
                     JSONObject resJson=new JSONObject(res);
                     JSONArray list=resJson.getJSONArray("credit");
                     int size=resJson.getInt("total_count");
-                    if (list.length()>0&&list.length()%10>0) {
+                    if ((list.length()+(page-1)*10)>=size) {
                         adpter.isLast=true;
                     }else adpter.isLast=false;
-                    Log.d("credit","size:"+size+"list.l:"+list.length()+"mCredit:"+mCredits.size());
+                   // Log.d("credit","size:"+size+"list.l:"+list.length()+"mCredit:"+mCredits.size());
                     for (int i = 0; i <list.length() ; i++) {
                         JSONObject itemJSON=list.getJSONObject(i);
                         Credit item=new Credit(
@@ -214,6 +246,22 @@ public class creditFragment extends Fragment {
 
             }
         });
+        IhancHttpClient.get("/index/sale/ttlCredit", null, new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                String rs=new String(responseBody);
+                rs=rs.substring(1,rs.length());
+                int res=Integer.parseInt(rs);
+                NumberFormat f=NumberFormat.getCurrencyInstance(Locale.CHINA);
+                ttlCredit.setText("合计应收金额："+f.format(res));
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+
+            }
+        });
+
     }
 
 
@@ -247,7 +295,7 @@ public class creditFragment extends Fragment {
     public void hideKeyboard() {
         view.clearFocus();
         InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-        MainActivity parentActivity=(MainActivity)getActivity();
+        Activity parentActivity=(Activity)getActivity();
         if (imm.isActive() && parentActivity.getCurrentFocus() != null) {
             if (parentActivity.getCurrentFocus().getWindowToken() != null) {
                 imm.hideSoftInputFromWindow(parentActivity.getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
@@ -255,5 +303,19 @@ public class creditFragment extends Fragment {
         }
     }
 
-
+   public String getOrder(int position){
+        String order="time";
+        switch (position){
+            case 1:
+                order="sum desc";
+                break;
+            case 2:
+                order="time desc";
+                break;
+            case 3:
+                order="sum";
+                break;
+        }
+        return order;
+   }
 }

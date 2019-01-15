@@ -1,25 +1,32 @@
 package com.example.hx.ihanc;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -67,7 +74,7 @@ public class CreditDetailDialog extends DialogFragment {
     private String title;
     private TextView titleTV;
     private List<CreditDetail> data=new ArrayList<CreditDetail>();
-    private CreditDetailAdpter.MyOnCheckChangeListener myOnCheckChangeListener;
+    private CreditDetailAdpter.checkBoxListener myOnCheckChangeListener;
     private ListView credit_detailLT;
     private CreditDetailAdpter adapter;
     private Button wxButton;
@@ -78,6 +85,8 @@ public class CreditDetailDialog extends DialogFragment {
     private String selected="";
     private int creditSum=0;
     private OnFreshCredit onFreshCredit;
+    private ProgressBar mProgressView;
+    private TextView selectedSumTV;
 
     public static CreditDetailDialog newInstance(int member_id,String title) {
         CreditDetailDialog f = new CreditDetailDialog();
@@ -91,31 +100,13 @@ public class CreditDetailDialog extends DialogFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        selected="";
+        selectedNum=0;
         this.member_id=getArguments().getInt("member_id");
         this.title=getArguments().getString("title");
-        myOnCheckChangeListener=new CreditDetailAdpter.MyOnCheckChangeListener() {
-            @Override
-            public void myOnCheckChange(int position, CompoundButton buttonView, boolean isChecked) {
-                //Log.d("creditDialog",position+":"+data.get(position).getSum()+"");
-                if(isChecked) {
-                    CreditDetail item=data.get(position);
-                    selectedTotal += item.getSum();
-                    item.selected=true;
-                    selectedNum++;
-                    if(selectedNum==0)
-                        selected+=item.getSale_id();
-                    else
-                        selected+=","+item.getSale_id();
-                }
-                else {
-                    selectedTotal -= data.get(position).getSum();
-                    selectedNum--;
-                }
 
-            }
-        };
-        initData();
-    }
+        }
+
 
     @Nullable
     @Override
@@ -124,6 +115,38 @@ public class CreditDetailDialog extends DialogFragment {
         titleTV=view.findViewById(R.id.title_credit_detail);
         titleTV.setText(title);
         credit_detailLT=view.findViewById(R.id.credit_detail);
+        selectedSumTV=view.findViewById(R.id.selectedSumTV);
+        myOnCheckChangeListener=new CreditDetailAdpter.checkBoxListener() {
+            @Override
+            public void onCheckboxChange(int position, CompoundButton buttonView, boolean isChecked) {
+               // Log.d("creditDialog",position+""+data.get(position).getSum());
+                if (isChecked) {
+                    CreditDetail item = data.get(position);
+                    selectedTotal += item.getSum();
+                    item.selected = true;
+                    if (selectedNum == 0)
+                        selected += item.getSale_id();
+                    else
+                        selected += "," + item.getSale_id();
+                    selectedNum++;
+                } else {
+                    String str = "," + data.get(position).getSale_id();
+                    if (!selected.contains(str))
+                        str = data.get(position).getSale_id() + "";
+                    //Log.d("creditDialog",str);
+                    selected = selected.replace(str, "");
+                    selectedTotal -= data.get(position).getSum();
+                    selectedNum--;
+                }
+                if(selectedNum!=0){
+                    NumberFormat format = NumberFormat.getCurrencyInstance(Locale.CHINA);
+                    selectedSumTV.setText("已选金额合计："+format.format(selectedTotal));
+                    selectedSumTV.setVisibility(View.VISIBLE);
+                }else {
+                    selectedSumTV.setVisibility(View.GONE);
+                }
+            }
+        };
         adapter=new CreditDetailAdpter(getContext(),R.layout.list_credit_detail,data,myOnCheckChangeListener);
         credit_detailLT.setAdapter(adapter);
         wxButton=view.findViewById(R.id.wxButton);
@@ -132,6 +155,9 @@ public class CreditDetailDialog extends DialogFragment {
         printButton.setOnClickListener(getPrintButtonListener());
         paymentButton=view.findViewById(R.id.payButton);
         paymentButton.setOnClickListener(getPaymentButtonListener());
+        mProgressView=view.findViewById(R.id.loading_progress);
+        initData();
+
         return view;
     }
 
@@ -139,6 +165,7 @@ public class CreditDetailDialog extends DialogFragment {
         return new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if (data.size()<1)return;
                 if(selectedNum>0) {
                     Utils.printSaleId=selected;
                 }
@@ -160,6 +187,7 @@ public class CreditDetailDialog extends DialogFragment {
         return new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(data.size()<1) return;
                 if(Utils.mCompanyInfo==null) Utils.getCompanyInfo();
                 Date now=new Date();
                 SimpleDateFormat f=new SimpleDateFormat("yyyy-MM-dd HH:mm");
@@ -207,53 +235,67 @@ public class CreditDetailDialog extends DialogFragment {
                             int maxLen=12;
                             if(selectedNum>0){
                                 boolean check=false;
+                                int j=0;
+                                int k=0;
                                 for (int i = 0; i < size; i++) {
                                     CreditDetail item = data.get(i);
                                     if(!item.isGroup()){
                                         if(item.selected){
                                             check=true;
-                                            label = new Label(0, 6+i, item.getTime().substring(5,10),body);
+                                            label = new Label(0, 6+j, item.getTime().substring(5,10),body);
                                             sheet.addCell(label);
-                                            label = new Label(1, 6+i, item.getGoods_name(),body);
+                                            label = new Label(1, 6+j, item.getGoods_name(),body);
                                             if(maxLen<item.getGoods_name().getBytes().length) maxLen=item.getGoods_name().getBytes().length;
                                             sheet.addCell(label);
                                             String temp[] = item.getSummary().split("[*]");
                                             if(temp.length>1) {
-                                                label = new Label(2, 6 + i, temp[0], body);
+                                                label = new Label(2, 6 + j, temp[0], body);
                                                 sheet.addCell(label);
                                                 temp = temp[1].split("=");
-                                                label = new Label(3, 6 + i, temp[0], body);
+                                                label = new Label(3, 6 + j, temp[0], body);
                                                 sheet.addCell(label);
-                                                label = new Label(4, 6 + i, temp[1], body);
+                                                label = new Label(4, 6 + j, temp[1], body);
                                                 sheet.addCell(label);
                                                 sum += item.getSum();
                                             }else{
-                                                label = new Label(4, 6 + i, temp[0], body);
+                                                label = new Label(4, 6 + j, temp[0], body);
                                                 sheet.addCell(label);
                                             }
+                                            if(j>0){
+                                                sheet.mergeCells(0,6+k,0,j+5);
+                                            }
+                                            k=j;
+                                            j++;
                                         }else check=false;
                                     }else if(check){
                                         if(maxLen<item.getGoods_name().getBytes().length) maxLen=item.getGoods_name().getBytes().length;
-                                        label = new Label(1, 6+i, item.getGoods_name(),body);
+                                        label = new Label(1, 6+j, item.getGoods_name(),body);
                                         sheet.addCell(label);
                                         String temp[] = item.getSummary().split("[*]");
                                         if(temp.length>1) {
-                                            label = new Label(2, 6 + i, temp[0], body);
+                                            label = new Label(2, 6 + j, temp[0], body);
                                             sheet.addCell(label);
                                             temp = temp[1].split("=");
-                                            label = new Label(3, 6 + i, temp[0], body);
+                                            label = new Label(3, 6 + j, temp[0], body);
                                             sheet.addCell(label);
-                                            label = new Label(4, 6 + i, temp[1], body);
+                                            label = new Label(4, 6 + j, temp[1], body);
                                             sheet.addCell(label);
                                         }else{
-                                            label = new Label(4, 6 + i, temp[0], body);
+                                            label = new Label(4, 6 + j, temp[0], body);
                                             sheet.addCell(label);
                                         }
+                                        j++;
                                     }
                                 }
+                                size=j;
+                                if(j!=k)sheet.mergeCells(0,6+k,0,j+5);
                             }else{
                                 int j=0;
-                                for (int i = 0; i < size; i++) {
+                                for (int i = 0; i < size+1; i++) {
+                                    if(i==size&&j!=i){
+                                        sheet.mergeCells(0,6+j,0,i+5);
+                                        break;
+                                    }
                                     CreditDetail item = data.get(i);
                                     if (!item.isGroup()) {
                                         label = new Label(0, 6+i, item.getTime().substring(5,10),body);
@@ -353,6 +395,7 @@ public class CreditDetailDialog extends DialogFragment {
     }
 
     public void initData(){
+        showProgress(true);
         RequestParams params=new RequestParams();
         params.put("member_id",member_id);
         IhancHttpClient.get("/index/sale/creditDetail", params, new AsyncHttpResponseHandler() {
@@ -418,6 +461,22 @@ public class CreditDetailDialog extends DialogFragment {
                         sale_id=itemJSON.getInt("sale_id");
                     }
                     adapter.notifyDataSetChanged();
+                    adapter.setIsSelected(data.size());
+                    ViewGroup.LayoutParams lp = credit_detailLT.getLayoutParams();
+                    if (data.size() > 10)
+                    {
+                        WindowManager manager = getActivity().getWindowManager();
+                        DisplayMetrics outMetrics = new DisplayMetrics();
+                        manager.getDefaultDisplay().getMetrics(outMetrics);
+                        int height = outMetrics.heightPixels;
+                        lp.height = (int)(height * 0.6);
+                    }
+                    else
+                    {
+                        lp.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+                    }
+                    credit_detailLT.setLayoutParams(lp);
+                    showProgress(false);
                 }catch (JSONException e){e.printStackTrace();}
             }
 
@@ -430,5 +489,23 @@ public class CreditDetailDialog extends DialogFragment {
 
     public interface OnFreshCredit{
         void freshCredit();
+    }
+
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
+    private void showProgress(final boolean show) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+            if(getContext()==null)return;
+            int shortAnimTime = getContext().getResources().getInteger(android.R.integer.config_shortAnimTime);
+            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+            mProgressView.animate().setDuration(shortAnimTime).alpha(
+                    show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+                }
+            });
+        } else {
+            mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+        }
     }
 }

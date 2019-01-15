@@ -3,16 +3,37 @@
     <!-- These settings headers are only used on tablets. -->
 
     <header
-    android:fragment="com.example.hx.ihanc.SettingsActivity$GeneralPreferenceFragment"
-    android:icon="@drawable/ic_print_black_24dp"
-    android:title="打印机连接设置" />
+        android:fragment="com.example.hx.ihanc.SettingsActivity$GeneralPreferenceFragment"
+        android:icon="@drawable/ic_print_black_24dp"
+        android:title="打印机连接设置" />
     <header
         android:fragment="com.example.hx.ihanc.SettingsActivity$DataSyncPreferenceFragment"
         android:icon="@drawable/ic_business_center_black_24dp"
         android:title="公司信息设置" />
     <header
-        android:fragment="com.example.hx.ihanc.SettingsActivity$NotificationPreferenceFragment"
         android:icon="@drawable/ic_cloud_circle_black_24dp"
-        android:title="商品设置" />
+        android:title="商品设置" >
+        <intent
+            android:targetPackage="com.example.hx.ihanc"
+            android:targetClass="com.example.hx.ihanc.GoodsSettingActivity"
+            />
+    </header>
+    <header
+        android:icon="@drawable/ic_perm_data_setting_black_24dp"
+        android:title="初期数据设置" >
+        <intent
+            android:targetPackage="com.example.hx.ihanc"
+            android:targetClass="com.example.hx.ihanc.DataSettingActivity"
+            />
+    </header>
+    <header
+        android:icon="@drawable/ic_person_black_24dp"
+        android:title="账号密码管理" >
+        <intent
+            android:targetPackage="com.example.hx.ihanc"
+            android:targetClass="com.example.hx.ihanc.ExitActivity"
+            />
+    </header>
 
 </preference-headers>
+

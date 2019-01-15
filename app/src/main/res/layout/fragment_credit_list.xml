@@ -9,11 +9,33 @@
     tools:context=".creditFragment"
     android:orientation="vertical"
     android:id="@+id/relativeLayout2">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="@string/goods_name"
+        android:id="@+id/ttlCredit"
+        android:background="@color/lightBlue"
+        android:textColor="@color/white"
+        app:layout_constraintTop_toTopOf="parent"
+        />
     <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/relativeLayout3"
+        android:paddingTop="15dp"
+        app:layout_constraintTop_toTopOf="@id/ttlCredit"
         >
+        <Spinner
+            android:id="@+id/orderSpinner"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toLeftOf="@id/search"
+            app:layout_constraintBottom_toBottomOf="@id/search"
+            >
+        </Spinner>
         <SearchView
             android:id="@+id/search"
             android:layout_width="0dp"
@@ -22,7 +44,9 @@
             android:iconifiedByDefault="false"
             android:inputType="text"
             android:imeOptions="actionSearch"
-            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintLeft_toLeftOf="@id/orderSpinner"
+            app:layout_constraintRight_toLeftOf="@id/search_button"
+            app:layout_constraintTop_toTopOf="parent"
             />
         <Button
             android:layout_width="wrap_content"

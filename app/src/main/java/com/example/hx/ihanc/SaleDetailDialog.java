@@ -47,6 +47,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Parameter;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -72,6 +73,7 @@ public class SaleDetailDialog extends DialogFragment {
     private String time;
     private boolean paid;
     private int member_id;
+    public boolean order=false;
     private ProgressBar mProgressView;
     private TextView memberNameTv;
     private ListView listView;
@@ -84,6 +86,7 @@ public class SaleDetailDialog extends DialogFragment {
     private SaleDetailModifyDialog.SaveListener saveListener;
     private Button paymentButton;
     private onFreshList onFreshList;
+    private Button saleButton;
 
     public static SaleDetailDialog newInstance(int sale_id,
                             String member_name,int credit,
@@ -247,6 +250,38 @@ public class SaleDetailDialog extends DialogFragment {
         paymentButton.setOnClickListener(getPaymentButtonListener());
         if(paid) paymentButton.setVisibility(View.GONE);
         showProgress(true);
+        saleButton=view.findViewById(R.id.saleButton);
+        if(order) {
+            saleButton.setVisibility(View.VISIBLE);
+            saleButton.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    RequestParams params=new RequestParams();
+                    params.put("sale_id",sale_id);
+                    IhancHttpClient.get("/index/sale/orderTransToSale", params, new AsyncHttpResponseHandler() {
+                        @Override
+                        public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                            String res=new String(responseBody);
+                            try {
+                                JSONObject obj=new JSONObject(res);
+                                if(obj.getInt("result")==1){
+                                    dismiss();
+                                    Toast.makeText(getContext(),"保存成功!",Toast.LENGTH_LONG).show();
+                                    onFreshList.freshList();
+                                }
+                            }catch (JSONException e){e.printStackTrace();}
+                        }
+
+                        @Override
+                        public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+
+                        }
+                    });
+                }
+            });
+        }
+
+
     }
 
     public void getData(){
@@ -274,6 +309,20 @@ public class SaleDetailDialog extends DialogFragment {
                     memberNameTv.setText(member_name+"--"+format.format(credit));
                     mSaleDetailAdapter.notifyDataSetChanged();
                     showProgress(false);
+                    ViewGroup.LayoutParams lp = listView.getLayoutParams();
+                    if (mSaleDetails.size() > 6)
+                    {
+                        WindowManager manager = getActivity().getWindowManager();
+                        DisplayMetrics outMetrics = new DisplayMetrics();
+                        manager.getDefaultDisplay().getMetrics(outMetrics);
+                        int height = outMetrics.heightPixels;
+                        lp.height = (int)(height * 0.5);
+                    }
+                    else
+                    {
+                        lp.height = ViewGroup.LayoutParams.WRAP_CONTENT;
+                    }
+                    listView.setLayoutParams(lp);
                 }catch (JSONException e){e.printStackTrace();}
 
             }
@@ -288,6 +337,7 @@ public class SaleDetailDialog extends DialogFragment {
     @TargetApi(Build.VERSION_CODES.HONEYCOMB_MR2)
     private void showProgress(final boolean show) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB_MR2) {
+            if(getContext()==null)return;
             int shortAnimTime = getContext().getResources().getInteger(android.R.integer.config_shortAnimTime);
             mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
             mProgressView.animate().setDuration(shortAnimTime).alpha(
@@ -325,7 +375,7 @@ public class SaleDetailDialog extends DialogFragment {
                     label = new Label(0, 0, Utils.mCompanyInfo.getName(), getHeader());
                     sheet.addCell(label);
                     sheet.setRowView(0,500);
-                    label = new Label(0, 1, "销售单", getBody());
+                    label = new Label(0, 1, order?"订货单":"销售单", getBody());
                     sheet.addCell(label);
                     label = new Label(0, 2, "客户："+member_name);
                     sheet.addCell(label);
@@ -379,7 +429,7 @@ public class SaleDetailDialog extends DialogFragment {
                             sheet.mergeCells(0, size, 3, 0);
                             size++;
                     }
-                    if(credit!=0){
+                    if(credit!=0&&!order){
                         Date now=new Date();
                         SimpleDateFormat ft = new SimpleDateFormat ("yyyy-MM-dd  HH:mm");
                         label = new Label(0, size, ft.format(now)+"累计应收金额:"+f.format(credit));
@@ -521,7 +571,7 @@ public class SaleDetailDialog extends DialogFragment {
                     @Override
                     public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                         String res = new String(responseBody);
-                        Log.d("saleFragment", res);
+                       // Log.d("saleFragment", res);
                         try {
                             JSONObject object = new JSONObject(res);
                             int credit_sum=object.getInt("credit");
@@ -555,5 +605,9 @@ public class SaleDetailDialog extends DialogFragment {
     }
     public interface onFreshList{
         void freshList();
+    }
+    public void setType(boolean order){
+        this.order=order;
+
     }
 }

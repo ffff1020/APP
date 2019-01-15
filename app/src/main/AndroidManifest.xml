@@ -30,19 +30,25 @@
             android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
             android:name=".MainActivity"
             android:label="@string/title_activity_main"
-            android:windowSoftInputMode="stateHidden|adjustPan"
-            />
+            android:windowSoftInputMode="stateHidden|adjustPan" />
         <activity
             android:name=".SettingsActivity"
-            android:label="@string/title_activity_settings" />
-        <activity android:name=".DeviceListActivity" />
+            android:label="@string/title_activity_settings"
+            android:parentActivityName=".MainActivity"
+            />
+        <activity
+            android:name=".ExitActivity"
+            android:label="@string/title_activity_settings"
+            android:parentActivityName=".SettingsActivity"
+            />
+        <activity android:name=".DeviceListActivity"
+            />
 
         <provider
             android:name="android.support.v4.content.FileProvider"
@@ -53,6 +59,15 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <activity
+            android:name=".GoodsSettingActivity"
+            android:parentActivityName=".SettingsActivity"
+            android:label="产品设置" />
+        <activity android:name=".DataSettingActivity"
+            android:parentActivityName=".SettingsActivity"
+            android:label="初期数据录入"
+            />
 
     </application>
 

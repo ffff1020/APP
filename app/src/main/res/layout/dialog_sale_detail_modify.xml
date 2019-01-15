@@ -69,20 +69,30 @@
         android:paddingTop="10dp"
         >
         <Button
+            android:layout_marginLeft="10dp"
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:id="@+id/saveButton"
-            android:text="保存"
+            android:id="@+id/deleteButton"
+            android:background="@drawable/save_button"
+            android:textColor="@color/white"
+            android:text="删除"
+            android:minHeight="30dp"
+            android:layout_marginRight="10dp"
             />
         <Button
             android:layout_width="0dp"
             android:layout_weight="1"
             android:layout_height="wrap_content"
-            android:id="@+id/deleteButton"
-            android:visibility="gone"
-            android:text="删除"
+            android:id="@+id/saveButton"
+            android:background="@drawable/order_button"
+            android:textColor="@color/addButtonBorder"
+            android:minHeight="30dp"
+            android:text="保存"
+            android:layout_marginRight="10dp"
+            android:layout_marginLeft="10dp"
             />
+
     </LinearLayout>
 
 </LinearLayout>

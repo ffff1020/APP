@@ -52,6 +52,9 @@ import android.widget.Spinner;
 import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.example.hx.ihanc.store.StoreFragment;
+import com.example.hx.ihanc.store.store;
 import com.google.gson.JsonArray;
 import com.gprinter.command.EscCommand;
 import com.gprinter.command.LabelCommand;
@@ -68,7 +71,9 @@ import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 
@@ -107,7 +112,10 @@ public class MainActivity extends AppCompatActivity {
     private SaleMainFragment mSaleMainFragment;
     private boolean ListFragmentCheck=true;
     private ListFragment mListFragment;
+    private boolean StockFragmentCheck=true;
+    private StoreFragment storeFragment;
     private int credit_sum=99999;
+    public static ArrayList<store> storesArray=new ArrayList<store>();
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
 
@@ -137,22 +145,14 @@ public class MainActivity extends AppCompatActivity {
                     transaction.replace(R.id.content, mListFragment);
                     transaction.commit();
                     return true;
-                case R.id.navigation_exit:
-                    if (!exit) {
-                        exit = true;
-                        Toast.makeText(getApplicationContext(), "再按一次退出程序",
-                                Toast.LENGTH_SHORT).show();
-                        eHandler.sendEmptyMessageDelayed(0, 2000);
-                    } else {
-                        IhancHttpClient.setAuth("");
-                        LoginActivity.mPrefEditor.putString("name","");
-                        LoginActivity.mPrefEditor.putString("token","");
-                        LoginActivity.mPrefEditor.commit();
-                        finish();
-                        System.exit(0);
+                case R.id.navigation_stock:
+                    if(StockFragmentCheck){
+                        storeFragment=new StoreFragment();
+                        StockFragmentCheck=false;
                     }
-
-
+                    transaction.replace(R.id.content,storeFragment);
+                    transaction.commit();
+                    return true;
             }
             return false;
         }
@@ -161,7 +161,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onStart(){
         super.onStart();
        // Utils.getCompanyInfo();
-        Log.d("ihanc","onStart");
         df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
         /*IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
@@ -184,7 +183,6 @@ public class MainActivity extends AppCompatActivity {
         getStore();
         sp= PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
         mProgressView = findViewById(R.id.wait_progress);
-
     }
     @Override
     protected void onStop() {
@@ -201,7 +199,7 @@ public class MainActivity extends AppCompatActivity {
     }
     public  void initPrinter(Object bitmap,int credit_sum){
         String receiptType=sp.getString(getString(R.string.receipt_type),null);
-        if(sp.getBoolean("bluetooth_printer",false)){
+        if(sp.getBoolean("bluetooth_printer",false)||receiptType==null){
             String macAddress=sp.getString(getString(R.string.bluetooth_printer_address),"");
             if(macAddress.equals("")){
                 Toast.makeText(MainActivity.this,"请配置您的打印机！",Toast.LENGTH_LONG);
@@ -344,7 +342,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     private void getStore(){
-        Log.d("ihanc","getStore");
+        //Log.d("ihanc","getStore");
         if(mBankList.size()>0) return;
         IhancHttpClient.get("/index/purchase/purchaseInfo/", null, new AsyncHttpResponseHandler() {
             @Override
@@ -362,14 +360,17 @@ public class MainActivity extends AppCompatActivity {
                         mUnitList.add(mItem);
                     }
                     JSONArray storeArray=mObject.getJSONArray("store");
-                    if(storeArray.length()>1){
-                        final String[] stores=new String[storeArray.length()];
-                        final int[] storeId=new int[storeArray.length()];
+
+                    final String[] stores=new String[storeArray.length()];
+                    final int[] storeId=new int[storeArray.length()];
                        for (int i=0;i< storeArray.length();i++){
                            JSONObject myjObject = storeArray.getJSONObject(i);
                            stores[i]=myjObject.getString("store_name");
                            storeId[i]=myjObject.getInt("store_id");
+                           store item=new store(myjObject.getInt("store_id"),myjObject.getString("store_name"));
+                           storesArray.add(item);
                        }
+                    if(storeArray.length()>1){
                         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
                         builder.setTitle("请选择仓库");
                         builder.setCancelable(false);

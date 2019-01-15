@@ -17,9 +17,11 @@ import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -151,6 +153,16 @@ public class SaleFragment extends Fragment {
                 if(b) ttlTV.setText("");
             }
         });
+        ttlTV.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView textView, int i, KeyEvent keyEvent) {
+                if (i == EditorInfo.IME_ACTION_DONE) {
+                    save();
+                    return true;
+                }
+                return false;
+            }
+        });
         ttlSum=(TextView) view.findViewById(R.id.ttlSum);
         bankSpinner=(Spinner)view.findViewById(R.id.bankSpinner);
         //Log.d("saleFragment",MainActivity.mBankList.size()+"");
@@ -161,58 +173,9 @@ public class SaleFragment extends Fragment {
         saveBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                saveBtn.setClickable(false);
-                MainActivity parentActivity = (MainActivity ) getActivity();
-                parentActivity.hideKeyboard();
-                    String paidSum=ttlTV.getText().toString();
-                    int paid_sum=0;
-                    if(!paidSum.equals("")){
-                        paid_sum=Integer.parseInt(paidSum);
-                    }
-                    Pay pay =new Pay(mBankAdapter.getItem(bankSpinner.getSelectedItemPosition()).getBank(),paid_sum);
-                    JSONObject params=new JSONObject();
-                    JSONObject data=new JSONObject();
-                    try {
-                        int size=mSaleDetails.size();
-                        JSONArray details=new JSONArray();
-                        for (int i=0;i<size;i++){
-                            details.put(i,mSaleDetails.get(i).getSaleDetailJson());
-                        }
-                        data.put("member",member.getMember());
-                        data.put("ttl_sum",ttl);
-                        params.put("back",1);
-                        params.put("pay",pay.getPayJson());
-                        params.put("data",data);
-                        params.put("detail",details);
-
-                    }catch (JSONException e){
-                        e.printStackTrace();
-                    }
-                    IhancHttpClient.postJson(mContext,"/index/sale/sale", params, new AsyncHttpResponseHandler() {
-                        @Override
-                        public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                            String result=new String(responseBody);
-                            try {
-                                JSONObject mObject=new JSONObject(result);
-                                if(mObject.getInt("result")==1){
-                                    Utils.toast(mContext,"保存成功！");
-                                    ttlTV.setText("");
-                                    mParentFragment.deleteCurrentSaleTabs();
-                                   // ((SaleMainFragment)(SaleFragment.this.getParentFragment())).deleteCurrentSaleTabs();
-                                }else{
-                                    Utils.toast(mContext,"保存发生错误，请重新保存！");
-                                }
-                                saveBtn.setClickable(true);
-                            }catch (JSONException e){e.printStackTrace();}
-                        }
-
-                        @Override
-                        public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                            Log.d("saleError",new String(responseBody));
-                            Utils.toastLostLink(mContext);
-                        }
-                    });
+                save();
             }
+
         });
         ttlTV.setText("");
        /* ttlSum.setOnClickListener(new View.OnClickListener() {
@@ -372,9 +335,14 @@ public class SaleFragment extends Fragment {
             title.setVisibility(View.VISIBLE);
         }
         //ttlTV.setText(ttl+"");
-        ttlSum.setText("合计金额：￥"+formatter.format(ttl));
+
         if (savedState != null) {
             restoreState();
+            ttl=0;
+            for (int i = 0; i < mSaleDetails.size(); i++) {
+                ttl+=mSaleDetails.get(i).getSum();
+            }
+            ttlSum.setText("合计金额：￥"+formatter.format(ttl));
             return true;
         }
         return false;
@@ -407,7 +375,12 @@ public class SaleFragment extends Fragment {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                     String res = new String(responseBody);
-                    Log.d("saleFragment", res);
+                    //Log.d("saleFragment", res);
+                    if(res.contains("\"credit\":null")){
+                        title.setText("");
+                        title.setVisibility(View.GONE);
+                        return;
+                    }
                     try {
                         JSONObject object = new JSONObject(res);
                         credit_sum=object.getInt("credit");
@@ -594,5 +567,60 @@ public class SaleFragment extends Fragment {
             ImageTask mImageTask = new ImageTask();
             mImageTask.execute("");
         }
+    }
+
+    private void save(){
+        saveBtn.setClickable(false);
+        MainActivity parentActivity = (MainActivity) getActivity();
+        parentActivity.hideKeyboard();
+        String paidSum=ttlTV.getText().toString();
+        int paid_sum=0;
+        if(!paidSum.equals("")){
+            paid_sum=Integer.parseInt(paidSum);
+        }
+        Pay pay =new Pay(mBankAdapter.getItem(bankSpinner.getSelectedItemPosition()).getBank(),paid_sum);
+        JSONObject params=new JSONObject();
+        JSONObject data=new JSONObject();
+        try {
+            int size=mSaleDetails.size();
+            JSONArray details=new JSONArray();
+            for (int i=0;i<size;i++){
+                details.put(i,mSaleDetails.get(i).getSaleDetailJson());
+            }
+            data.put("member",member.getMember());
+            data.put("ttl_sum",ttl);
+            params.put("back",1);
+            params.put("pay",pay.getPayJson());
+            params.put("data",data);
+            params.put("detail",details);
+
+        }catch (JSONException e){
+            e.printStackTrace();
+        }
+        IhancHttpClient.postJson(mContext,"/index/sale/sale", params, new AsyncHttpResponseHandler() {
+            @Override
+            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                String result=new String(responseBody);
+                try {
+                    JSONObject mObject=new JSONObject(result);
+                    if(mObject.getInt("result")==1){
+                        Utils.toast(mContext,"保存成功！");
+                        ttlTV.setText("");
+                        mParentFragment.deleteCurrentSaleTabs();
+                        // ((SaleMainFragment)(SaleFragment.this.getParentFragment())).deleteCurrentSaleTabs();
+                    }else{
+                        Utils.toast(mContext,"保存发生错误，请重新保存！");
+                    }
+                    saveBtn.setClickable(true);
+                }catch (JSONException e){e.printStackTrace();}
+            }
+
+            @Override
+            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                Log.d("saleError",new String(responseBody));
+                Utils.toastLostLink(mContext);
+            }
+        });
+
     }
 }

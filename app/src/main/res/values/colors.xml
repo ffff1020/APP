@@ -17,4 +17,8 @@
     <color name="yellowBorder">#bf1c03</color>
     <color name="yellowSolid">#fa3c32</color>
     <color name="yellowText">#ffffff</color>
+    <color name="orange">#FFC125</color>
+    <color name="orangeBorder">#FF8C00</color>
+    <color name="purple">#EEAEEE</color>
+    <color name="purpleBorder">#EE799F</color>
 </resources>

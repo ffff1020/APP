@@ -43,7 +43,7 @@ public class ListFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        Log.d("listFragment","onCreateView");
+        //Log.d("listFragment","onCreateView");
         // Inflate the layout for this fragment
         setData();
         View view = inflater.inflate(R.layout.fragment_list, container, false);
@@ -58,14 +58,16 @@ public class ListFragment extends Fragment {
     }
 
     private void setData(){
-        title=new String[3];
-        fragments=new Fragment[3];
-        title[0]="历史销售单";
-        title[1]="收款明细";
-        title[2]="应收管理";
+        title=new String[4];
+        fragments=new Fragment[4];
+        title[0]="历史销售";
+        title[1]="销售订单";
+        title[2]="收款明细";
+        title[3]="应收管理";
         fragments[0]=new saleListFragment();
-        fragments[1]=new BankListFragment();
-        fragments[2]=new creditFragment();
+        fragments[1]=saleListFragment.newInstance(true);
+        fragments[2]=new BankListFragment();
+        fragments[3]=new creditFragment();
     }
 
     @Override
@@ -74,7 +76,8 @@ public class ListFragment extends Fragment {
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.remove(fragments[0]);
         fragmentTransaction.remove(fragments[1]);
-        fragmentTransaction.remove(fragments[2]).commitAllowingStateLoss();
+        fragmentTransaction.remove(fragments[2]);
+        fragmentTransaction.remove(fragments[3]).commitAllowingStateLoss();
     }
 
 
