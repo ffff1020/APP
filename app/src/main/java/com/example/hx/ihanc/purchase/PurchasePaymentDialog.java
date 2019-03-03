@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -58,7 +59,7 @@ public class PurchasePaymentDialog extends DialogFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.supply_id = getArguments().getInt("member_id");
+        this.supply_id = getArguments().getInt("supply_id");
         this.title = getArguments().getString("title");
         this.creditSum=getArguments().getInt("creditSum");
         this.selectedSum=getArguments().getInt("selectedSum");
@@ -83,6 +84,8 @@ public class PurchasePaymentDialog extends DialogFragment {
                 if(b) payment.setText("");
             }
         });
+        TextView textView=view.findViewById(R.id.titleSum);
+        textView.setText("实付金额:");
         final Button save=view.findViewById(R.id.saveButton);
         save.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -100,15 +103,17 @@ public class PurchasePaymentDialog extends DialogFragment {
                     supply.put("supply_id",supply_id);
                     String[] titles = title.split("--");
                     supply.put("supply_name",titles[0]);
-                    supply.put("sum",creditSum);
+                    supply.put("sum",creditSum+"");
                     params.put("supply",supply);
                     JSONArray JSONids=new JSONArray();
                     if(selectedNum>0){
                         String[] ids=selected.split(",");
                         for (int i=0;i<ids.length;i++)
                             if(ids[i].length()>0)JSONids.put(Integer.parseInt(ids[i]));
+
                     }
                     params.put("purchaseID",JSONids);
+                    Log.d("purchase",params.toString());
                     IhancHttpClient.postJson(getContext(), "/index/purchase/payment", params, new AsyncHttpResponseHandler() {
                         @Override
                         public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {

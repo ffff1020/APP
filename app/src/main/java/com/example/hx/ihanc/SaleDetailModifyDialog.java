@@ -36,12 +36,12 @@ public class SaleDetailModifyDialog extends DialogFragment {
 
     public  static  SaleDetailModifyDialog newInstance(
             String member,SaleDetail saleDetail){
-            SaleDetailModifyDialog fd=new SaleDetailModifyDialog();
-            Bundle args = new Bundle();
-            args.putString("member",member);
-            args.putParcelable("saleDetail",saleDetail);
-            fd.setArguments(args);
-            return fd;
+        SaleDetailModifyDialog fd=new SaleDetailModifyDialog();
+        Bundle args = new Bundle();
+        args.putString("member",member);
+        args.putParcelable("saleDetail",saleDetail);
+        fd.setArguments(args);
+        return fd;
     };
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -129,7 +129,7 @@ public class SaleDetailModifyDialog extends DialogFragment {
             @Override
             public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
                 String res =new String(responseBody).trim();
-               // Log.d("unitFail",res);
+                // Log.d("unitFail",res);
             }
         });
 
@@ -145,34 +145,34 @@ public class SaleDetailModifyDialog extends DialogFragment {
                     params.put("number", numberEdit.getNum());
                     params.put("sum", sumEdit.getNum());
                     params.put("sale_id", saleDetail.sale_id);
-                   // params.put("goods_id", saleDetail.good.getGoods_id());
+                    // params.put("goods_id", saleDetail.good.getGoods_id());
                     int selectedUnitId = mUnitAdapter.getItem(unitSpinner.getSelectedItemPosition()).getUnit_id();
                     params.put("unit_check", selectedUnitId==saleDetail.good.getUnit_id_0());
                     params.put("unit_id",selectedUnitId);
-                     System.out.print(params);
+                    System.out.print(params);
                     IhancHttpClient.postJson(getContext(),"/index/sale/saleDetailUpdate", params, new AsyncHttpResponseHandler() {
-                    @Override
-                    public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
-                        String res =new String(responseBody).trim();
-                        Log.d("modifySuccess",res);
-                        try {
-                            JSONObject obj=new JSONObject(res);
-                            if(obj.getInt("result")==1) {
-                                Utils.toast(getContext(), "保存成功！");
-                                saveListener.saved();
-                                dismiss();
-                            }else if(obj.getInt("result")==2) {
-                                Utils.toast(getContext(), "该单已经付款，不能修改！");
-                                saveListener.saved();
-                                dismiss();
-                            }
+                        @Override
+                        public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                            String res =new String(responseBody).trim();
+                            Log.d("modifySuccess",res);
+                            try {
+                                JSONObject obj=new JSONObject(res);
+                                if(obj.getInt("result")==1) {
+                                    Utils.toast(getContext(), "保存成功！");
+                                    saveListener.saved();
+                                    dismiss();
+                                }else if(obj.getInt("result")==2) {
+                                    Utils.toast(getContext(), "该单已经付款，不能修改！");
+                                    saveListener.saved();
+                                    dismiss();
+                                }
 
-                        }catch (JSONException e){e.printStackTrace();}
-                    }
-                    @Override
-                    public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-                        Log.d("modifyFailure",new String(responseBody));
-                    }
+                            }catch (JSONException e){e.printStackTrace();}
+                        }
+                        @Override
+                        public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                            Log.d("modifyFailure",new String(responseBody));
+                        }
                     });
                 }catch (JSONException e){e.printStackTrace();}
             }

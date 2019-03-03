@@ -40,44 +40,44 @@ public class SaleDetail implements Parcelable {
         this.sale_detail_id=in.readInt();
         this.sale_id=in.readInt();
     }
-     public String getGoods_name(){
+    public String getGoods_name(){
         return good.getGoods_name();
-     }
-     public String getNumber(){
+    }
+    public String getNumber(){
         String str=""+number;
         return str.substring(0,str.length())+unit_name;
-     }
-     public double getNumberDouble(){
+    }
+    public double getNumberDouble(){
         return number;
     }
-     public String getPrice(){
+    public String getPrice(){
         String str="￥"+price;
         return str.substring(0,str.length());
     }
-     public double getPriceDouble(){
+    public double getPriceDouble(){
         return price;
     }
-     public int getSum(){
+    public int getSum(){
         return sum;
     }
-     public int getGoods_id(){
+    public int getGoods_id(){
         return good.getGoods_id();
-     };
-     public int getUnit_id(){return unit_id;}
-     public String toString(){
+    };
+    public int getUnit_id(){return unit_id;}
+    public String toString(){
         return good.getGoods_id()+getNumber()+getPrice();
-     }
+    }
 
     public static final Creator<SaleDetail> CREATOR = new Creator<SaleDetail>() {
-         @Override
-         public SaleDetail createFromParcel(Parcel in) {
-                        return new SaleDetail(in);
-                   }
-                 @Override
-         public SaleDetail[] newArray(int size) {
-                         return new SaleDetail[size];
-                     }
-     };
+        @Override
+        public SaleDetail createFromParcel(Parcel in) {
+            return new SaleDetail(in);
+        }
+        @Override
+        public SaleDetail[] newArray(int size) {
+            return new SaleDetail[size];
+        }
+    };
 
     @Override
     public int describeContents() {

@@ -20,10 +20,10 @@ import org.json.JSONObject;
 import cz.msebera.android.httpclient.Header;
 
 public class UpDateCategoryDialog extends DialogFragment {
-     private int cat_id;
-     private String cat_name;
-     private OnUpdateCategorySuccess mListener=null;
-     public static UpDateCategoryDialog newInstance(int cat_id,String cat_name) {
+    private int cat_id;
+    private String cat_name;
+    private OnUpdateCategorySuccess mListener=null;
+    public static UpDateCategoryDialog newInstance(int cat_id,String cat_name) {
         Bundle args = new Bundle();
         args.putString("cat_name",cat_name);
         args.putInt("cat_id",cat_id);
@@ -34,8 +34,8 @@ public class UpDateCategoryDialog extends DialogFragment {
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-         this.cat_id=getArguments().getInt("cat_id");
-         this.cat_name=getArguments().getString("cat_name");
+        this.cat_id=getArguments().getInt("cat_id");
+        this.cat_name=getArguments().getString("cat_name");
         super.onCreate(savedInstanceState);
     }
 
@@ -122,7 +122,7 @@ public class UpDateCategoryDialog extends DialogFragment {
                 }
             }
         });
-         return v;
+        return v;
     }
 
     public void setOnUpdateCategorySuccessListener(OnUpdateCategorySuccess mListener) {
@@ -130,6 +130,6 @@ public class UpDateCategoryDialog extends DialogFragment {
     }
 
     public interface OnUpdateCategorySuccess{
-         void UpdateCategorySuccess();
+        void UpdateCategorySuccess();
     }
 }

@@ -121,6 +121,22 @@ public class PurchaseDetailDialog extends DialogFragment {
         Button paymentBtn=view.findViewById(R.id.paymentButton);
         if(paid){
             paymentBtn.setVisibility(View.GONE);
+        }else{
+            paymentBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    PurchasePaymentDialog dialog=PurchasePaymentDialog.newInstance(supply_id,supply_name+"--"+f.format(sum),0,sum,1,purchase_id+"");
+                    PurchasePaymentDialog.OnPaymentSucceed onPaymentSucceed=new PurchasePaymentDialog.OnPaymentSucceed() {
+                        @Override
+                        public void PaymentSucceed() {
+                            dismiss();
+                            listener.OnPurchaseDetailUpdated();
+                        }
+                    };
+                    dialog.setOnPaymentSucceed(onPaymentSucceed);
+                    dialog.show(getFragmentManager(),"payment Dialog");
+                }
+            });
         }
     }
     private void getData(){

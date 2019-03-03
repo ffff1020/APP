@@ -5,62 +5,63 @@
     android:orientation="vertical"
     android:padding="20dp"
     >
-    <EditText
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:focusedByDefault="true"
-        />
+  <EditText
+      android:layout_width="0dp"
+      android:layout_height="0dp"
+      android:focusedByDefault="true"
+      />
+  <TextView
+      android:gravity="center"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:id="@+id/title"
+      android:paddingBottom="10dp"
+      />
+  <LinearLayout
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      >
     <TextView
-        android:gravity="center"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/title"
-        android:paddingBottom="10dp"
-        />
-    <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
+        android:text="选择银行："
+        />
+    <Spinner
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/bankSpinner"
         >
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="选择收款银行："
-            />
-        <Spinner
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/bankSpinner"
-            >
-        </Spinner>
-    </LinearLayout>
+    </Spinner>
+  </LinearLayout>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingBottom="20dp"
-        >
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="实收金额："
-            />
-        <EditText
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:singleLine="true"
-            android:inputType="number"
-            android:imeOptions="actionDone"
-            android:id="@+id/payment"
-            android:focusedByDefault="false"
-            android:importantForAutofill="no" />
-    </LinearLayout>
-    <Button
-        android:layout_gravity="center"
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:paddingBottom="20dp"
+      >
+    <TextView
+        android:id="@+id/titleSum"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/save"
-        android:id="@+id/saveButton"
+        android:text="实收金额："
         />
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:singleLine="true"
+        android:inputType="number"
+        android:imeOptions="actionDone"
+        android:id="@+id/payment"
+        android:focusedByDefault="false"
+        android:importantForAutofill="no" />
+  </LinearLayout>
+  <Button
+      android:layout_gravity="center"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:text="@string/save"
+      android:id="@+id/saveButton"
+      />
 </LinearLayout>

@@ -97,6 +97,7 @@ public class PurchaseCreditDetailDialog extends DialogFragment {
         selectedNum=0;
         this.supply_id=getArguments().getInt("supply_id");
         this.title=getArguments().getString("title");
+        //Log.d("purchase",this.supply_id+"");
 
     }
 
@@ -147,6 +148,8 @@ public class PurchaseCreditDetailDialog extends DialogFragment {
         printButton=view.findViewById(R.id.printButton);
         printButton.setVisibility(View.GONE);
         paymentButton=view.findViewById(R.id.payButton);
+        paymentButton.setText("付款给供应商");
+        paymentButton.setWidth(500);
         paymentButton.setOnClickListener(getPaymentButtonListener());
         mProgressView=view.findViewById(R.id.loading_progress);
         initData();
@@ -350,6 +353,7 @@ public class PurchaseCreditDetailDialog extends DialogFragment {
         return new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Log.d("purchase",supply_id+"");
                 PurchasePaymentDialog dialog=PurchasePaymentDialog.newInstance(supply_id,title,creditSum,selectedTotal,selectedNum,selected);
                 PurchasePaymentDialog.OnPaymentSucceed onPaymentSucceed=new PurchasePaymentDialog.OnPaymentSucceed() {
                     @Override

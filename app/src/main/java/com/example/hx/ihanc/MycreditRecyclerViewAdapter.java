@@ -62,9 +62,9 @@ public class MycreditRecyclerViewAdapter extends RecyclerView.Adapter<MycreditRe
                 }
             });
         }else{
-        if(isLast)  holder.mNameView.setText("没有了...");
-        else holder.mNameView.setText("努力加载中...");
-    }
+            if(isLast)  holder.mNameView.setText("没有了...");
+            else holder.mNameView.setText("努力加载中...");
+        }
     }
 
     @Override

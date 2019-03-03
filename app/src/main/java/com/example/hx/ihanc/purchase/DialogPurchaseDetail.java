@@ -47,6 +47,7 @@ import java.util.regex.Pattern;
 
 import cz.msebera.android.httpclient.Header;
 
+import static com.example.hx.ihanc.App.getContext;
 import static com.example.hx.ihanc.MainActivity.storesArray;
 import static com.example.hx.ihanc.SaleMainFragment.mGoodsDataList;
 import static com.example.hx.ihanc.purchase.PurchaseDetailDialog.purchasedDetails;
@@ -193,7 +194,7 @@ public class DialogPurchaseDetail extends DialogFragment {
             public void afterTextChanged(Editable editable) {
                 if (input&&number.getText().toString().trim().length()>0
                         &&sum.getText().toString().trim().length()>0
-                        &&parseInt(number.getText().toString().trim())!=0
+                        &&getNum(number)!=0
                 ){
                     input=false;
                     double doublePrice=getNum(sum)/getNum(number);
@@ -224,7 +225,7 @@ public class DialogPurchaseDetail extends DialogFragment {
             params.put("goods_id",currentGood.getGoods_id());
             params.put("supply_id",supply_id);
             params.put("unit_id",currentGood.getGoods_unit_id());
-            Log.d("purchase",params.toString());
+            // Log.d("purchase",params.toString());
             IhancHttpClient.get("/index/purchase/getUnit", params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
@@ -255,7 +256,7 @@ public class DialogPurchaseDetail extends DialogFragment {
                     break;
                 }
             }
-            storeSpinner.setEnabled(false);
+            storeSpinner.setEnabled(purchase_id==0);
             goodsTV.setFocusable(true);
             view.clearFocus();
             delButton.setOnClickListener(new View.OnClickListener() {
@@ -276,8 +277,8 @@ public class DialogPurchaseDetail extends DialogFragment {
                             dialogInterface.dismiss();
                         }
                     });
-                   builder.setMessage("确认删除该明细？");
-                   builder.show();
+                    builder.setMessage("确认删除该明细？");
+                    builder.show();
                 }
             });
         }else{
@@ -349,30 +350,30 @@ public class DialogPurchaseDetail extends DialogFragment {
                     Utils.toast(getContext(),"请完善进货信息！");
                     return;
                 }
-                    PurchaseDetail detail = new PurchaseDetail(
-                            purchase_id,
-                            currentGood,
-                            ((Unit) unitSpinner.getSelectedItem()).getUnit_id(),
-                            ((Unit) unitSpinner.getSelectedItem()).getUnit_name(),
-                            getNum(price),
-                            getNum(number),
-                            (int) getNum(sum),
-                            purchase_detail_id,
-                            ((store) storeSpinner.getSelectedItem()).getStore_name(),
-                            ((store) storeSpinner.getSelectedItem()).getStore_id()
-                    );
-                    onUpdatePurchaseDetail.updatePurchaseDetail(position, detail);
-                    dismiss();
+                PurchaseDetail detail = new PurchaseDetail(
+                        purchase_id,
+                        currentGood,
+                        ((Unit) unitSpinner.getSelectedItem()).getUnit_id(),
+                        ((Unit) unitSpinner.getSelectedItem()).getUnit_name(),
+                        getNum(price),
+                        getNum(number),
+                        Integer.parseInt(sum.getText().toString()),
+                        purchase_detail_id,
+                        ((store) storeSpinner.getSelectedItem()).getStore_name(),
+                        ((store) storeSpinner.getSelectedItem()).getStore_id()
+                );
+                onUpdatePurchaseDetail.updatePurchaseDetail(position, detail);
+                dismiss();
             }
         };
     }
 
     public void setPurchased(int purchase_id){
-     this.purchase_id=purchase_id;
+        this.purchase_id=purchase_id;
     }
 
     public interface onUpdatePurchaseDetail{
-         void updatePurchaseDetail(int position,PurchaseDetail detail);
+        void updatePurchaseDetail(int position,PurchaseDetail detail);
     }
     public void hideKeyboard() {
         view.clearFocus();

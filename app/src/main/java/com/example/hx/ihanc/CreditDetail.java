@@ -10,7 +10,7 @@ public class CreditDetail {
     private int sale_id;
     public CreditDetail(String time,String goods_name,
                         String summary,int sum,boolean group,int sale_id
-                        ){
+    ){
         this.time=time;
         this.goods_name=goods_name;
         this.summary=summary;
