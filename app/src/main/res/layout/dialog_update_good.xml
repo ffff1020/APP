@@ -70,6 +70,7 @@
             android:layout_height="wrap_content"
             android:text="产品售价"
             android:layout_weight="1"
+            android:textColor="@color/colorAccent"
             />
         <EditText
             android:textSize="12sp"
@@ -90,6 +91,7 @@
             android:layout_height="wrap_content"
             android:text="库存单位"
             android:layout_weight="1"
+            android:textColor="@color/colorAccent"
             />
         <Spinner
             android:id="@+id/unitSpinner0"

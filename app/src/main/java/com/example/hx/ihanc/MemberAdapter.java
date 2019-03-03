@@ -40,7 +40,7 @@ public class MemberAdapter extends ArrayAdapter<member> implements Filterable {
             viewHolder=(ViewHolder) convertView.getTag();
         }
         viewHolder.tvTitle.setText(displayMemberList.get(position).getMember_name());
-        Log.d("getViewMemberAdapter",memberList.size()+"");
+       //Log.d("getViewMemberAdapter",memberList.size()+"");
         return convertView;
     }
 
@@ -60,8 +60,7 @@ public class MemberAdapter extends ArrayAdapter<member> implements Filterable {
         }
         return mFilter;
     }
-
-    class MemberFilter extends Filter {
+    public class MemberFilter extends Filter {
         @Override
         protected FilterResults performFiltering(CharSequence prefix) {
             FilterResults results = new FilterResults();

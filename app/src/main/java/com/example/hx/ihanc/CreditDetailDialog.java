@@ -192,7 +192,7 @@ public class CreditDetailDialog extends DialogFragment {
                 Date now=new Date();
                 SimpleDateFormat f=new SimpleDateFormat("yyyy-MM-dd HH:mm");
                 String[] titles=title.split("--");
-                String fileName="ihanc--"+Utils.mCompanyInfo.getName()+".xls";
+                String fileName="ihanc--"+Utils.mCompanyInfo.getName()+System.currentTimeMillis()+".xls";
                 File file = new File(Environment.getExternalStorageDirectory(), fileName);
                 WritableWorkbook wwb;
                 int size=data.size();
@@ -258,6 +258,10 @@ public class CreditDetailDialog extends DialogFragment {
                                                 sheet.addCell(label);
                                                 sum += item.getSum();
                                             }else{
+                                                label = new Label(2, 6 + j, "", body);
+                                                sheet.addCell(label);
+                                                label = new Label(3, 6 + j, "", body);
+                                                sheet.addCell(label);
                                                 label = new Label(4, 6 + j, temp[0], body);
                                                 sheet.addCell(label);
                                             }

@@ -129,7 +129,6 @@ public class saleListFragment extends Fragment {
                 dialog.setonFreshList(new SaleDetailDialog.onFreshList() {
                     @Override
                     public void freshList() {
-
                         hideKeyboard();
                         mPage=1;
                         search=textView.getText().toString();
@@ -192,7 +191,6 @@ public class saleListFragment extends Fragment {
             public boolean onEditorAction(TextView v, int actionId,
                                           KeyEvent event) {
                 if ( actionId == 0 ) {
-                    // Log.d("searchView",actionId+":");
                     hideKeyboard();
                     mPage=1;
                     search=textView.getText().toString();

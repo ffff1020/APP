@@ -3,6 +3,7 @@ package com.example.hx.ihanc.store;
 import android.app.Activity;
 import android.arch.lifecycle.Lifecycle;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -10,6 +11,7 @@ import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -28,6 +30,7 @@ import android.widget.Toast;
 import com.example.hx.ihanc.Credit;
 import com.example.hx.ihanc.IhancHttpClient;
 import com.example.hx.ihanc.R;
+import com.example.hx.ihanc.Utils;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 import com.loopj.android.http.SaxAsyncHttpResponseHandler;
@@ -55,10 +58,12 @@ public class StoreItemFragment extends Fragment {
     private String order="";
     private View view;
     private int position;
-    public static StoreItemFragment newInstance(int store_id){
+    private String store_name;
+    public static StoreItemFragment newInstance(int store_id,String store_name){
         StoreItemFragment f=new StoreItemFragment();
         Bundle args = new Bundle();
         args.putInt("store_id", store_id);
+        args.putString("store_name",store_name);
         f.setArguments(args);
         return f;
     };
@@ -67,6 +72,7 @@ public class StoreItemFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.store_id=getArguments().getInt("store_id");
+        this.store_name=getArguments().getString("store_name");
     }
 
     @Nullable
@@ -238,6 +244,7 @@ public class StoreItemFragment extends Fragment {
             @Override
             public void OnSelectUpdate(boolean loss) {
                DialogUpdateStock dialogUpdateStock=DialogUpdateStock.newInstance(loss,data.get(position).goods_name);
+               dialogUpdateStock.setOnUpDateStock(OnUpdateStockCallBack());
                dialogUpdateStock.show(getFragmentManager(),"dialogUpdateStock");
             }
 
@@ -253,7 +260,52 @@ public class StoreItemFragment extends Fragment {
 
             @Override
             public void OnDelete() {
+                final AlertDialog.Builder alertDialogBuilder=new AlertDialog.Builder(getContext());
+                alertDialogBuilder.setTitle(data.get(position).goods_name);
+                alertDialogBuilder.setMessage("确定删除该库存？");
+                alertDialogBuilder.setCancelable(false);
+                alertDialogBuilder.setNegativeButton(R.string.negative_button, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                    }
+                });
+                alertDialogBuilder.setPositiveButton("确定删除", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        stock stock=data.get(position);
+                        RequestParams params=new RequestParams();
+                        params.put("goods_id",stock.goods_id);
+                        params.put("store_id",store_id);
+                        params.put("inorder",stock.inorder);
+                        String info="删除商品发生"+(stock.number>0?"报损:":"报溢:");
+                        info+=store_name+"的"+stock.goods_name+",";
+                        info+="数量："+stock.number+stock.unit_name+",金额："+stock.sum;
+                        params.put("info",info);
+                        IhancHttpClient.get("/index/stock/delStock", params, new AsyncHttpResponseHandler() {
+                            @Override
+                            public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                                String res=new String(responseBody);
+                                try{
+                                    JSONObject obj=new JSONObject(res);
+                                    if(obj.getInt("result")==1){
+                                        Utils.toast(getContext(),"删除库存成功!");
+                                    }else
+                                    {
+                                        Utils.toast(getContext(),"删除库存失败，请重试！");
+                                    }
+                                    page=1;
+                                    initData();
+                                }catch (JSONException e){e.printStackTrace();}
+                            }
 
+                            @Override
+                            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+
+                            }
+                        });
+                    }
+                });
+                alertDialogBuilder.create().show();
             }
 
             @Override
@@ -263,7 +315,43 @@ public class StoreItemFragment extends Fragment {
 
             @Override
             public void OnDetail() {
+                DialogStockDetail dialogStockDetail=DialogStockDetail.newInstance(data.get(position).toString(),store_id);
+                dialogStockDetail.show(getFragmentManager(),"dialogStockDetail");
+            }
+        };
+    }
+    private DialogUpdateStock.OnUpdateStock OnUpdateStockCallBack(){
+        return new DialogUpdateStock.OnUpdateStock() {
+            @Override
+            public void OnUpdateStock(double number) {
+                try {
+                    JSONObject obj = new JSONObject();
+                    obj.put("stock", data.get(position).toJson());
+                    obj.put("Dstock",number);
+                    obj.put("store_id",store_id);
+                    Log.d("stock",obj.toString());
+                    IhancHttpClient.postJson(getContext(), "/index/stock/updateStock", obj, new AsyncHttpResponseHandler() {
+                        @Override
+                        public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                            String res=new String(responseBody);
+                            Log.d("stock",res);
+                            try{
+                                JSONObject result=new JSONObject(res);
+                                if(result.getInt("result")==1){
+                                    Utils.toast(getContext(),"保存成功！");
+                                    page=1;
+                                    initData();
+                                }
+                            }catch (JSONException e){e.printStackTrace();}
+                        }
 
+                        @Override
+                        public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                            String res=new String(responseBody);
+                            Log.d("stock",res);
+                        }
+                    });
+                }catch (JSONException e){e.printStackTrace();}
             }
         };
     }

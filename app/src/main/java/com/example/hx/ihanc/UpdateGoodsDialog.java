@@ -8,6 +8,7 @@ import android.support.v4.app.DialogFragment;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -50,6 +51,8 @@ public class UpdateGoodsDialog extends DialogFragment {
     private EditText unit_price2;
     private EditText price1;
     private EditText price2;
+    private int unit_price_id1=0;
+    private int unit_price_id2=0;
     private   refreshGoodsInterface  refreshGoodsSetting=null;
     private  static refreshGoodsInterface  refreshGoodsSaleMainFragment=null;
     public static UpdateGoodsDialog newInstance(String good) {
@@ -89,10 +92,20 @@ public class UpdateGoodsDialog extends DialogFragment {
         initData();
         unit_price1=v.findViewById(R.id.unit_price1);
         unit_price2=v.findViewById(R.id.unit_price2);
+
         Button save=v.findViewById(R.id.addGoodsButton);
         save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                if(good==null)
+                for (int i = 0; i <GoodsSettingActivity.mGoodsDataList.size() ; i++) {
+                    Goods good=(Goods) GoodsSettingActivity.mGoodsDataList.get(i);
+                    if(good.goods_name.equals(goods_nameET.getText().toString().trim())){
+                        Utils.toast(getContext(),"改商品已经存在，请核对！");
+                        return;
+                    }
+                }
+
                 JSONObject data=new JSONObject();
                 try{
                     int goods_id=0;
@@ -127,6 +140,7 @@ public class UpdateGoodsDialog extends DialogFragment {
                         unit_price_1.put("unit_id",unit_id_1);
                         price=price1.getText().toString().trim().length()>0?Double.parseDouble(price1.getText().toString().trim()):0.0;
                         unit_price_1.put("price",price);
+                        if(unit_price_id1!=0)unit_price_1.put("unit_price_id",unit_price_id1);
                         data.put("unit_price1",unit_price_1);
                     }
                     String fx2=unit_price2.getText().toString().trim();
@@ -140,12 +154,15 @@ public class UpdateGoodsDialog extends DialogFragment {
                         unit_price_2.put("unit_id",unit_id_2);
                         price=price2.getText().toString().trim().length()>0?Double.parseDouble(price2.getText().toString().trim()):0.0;
                         unit_price_2.put("price",price);
+                        if(unit_price_id2!=0)unit_price_2.put("unit_price_id",unit_price_id2);
                         data.put("unit_price2",unit_price_2);
                     }
+                    Log.d("goods",data.toString());
                     IhancHttpClient.postJson(getContext(), "/index/setting/goodsUpdate", data, new AsyncHttpResponseHandler() {
                         @Override
                         public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                             String str=new String(responseBody);
+                            Log.d("goods",str);
                             try {
                                 JSONObject obj = new JSONObject(str);
                                 if(obj.getInt("result")==1){
@@ -159,7 +176,7 @@ public class UpdateGoodsDialog extends DialogFragment {
 
                         @Override
                         public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-
+                            Log.d("goods",new String(responseBody));
                         }
                     });
                 }catch (JSONException e){e.printStackTrace();}
@@ -200,6 +217,20 @@ public class UpdateGoodsDialog extends DialogFragment {
         catSpinner.setAdapter(mCategoryAdapter);
         unitTv1=v.findViewById(R.id.unitTV1);
         unitTv2=v.findViewById(R.id.unitTV2);
+        price1=v.findViewById(R.id.price1);
+        price2=v.findViewById(R.id.price2);
+        unit0.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                String unit=((Unit)adapterView.getAdapter().getItem(i)).getUnit_name();
+                unitTv1.setText("1"+unit+" =");
+                unitTv2.setText("1"+unit+" =");
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
         if(good!=null){
             goods_nameET.setText(good.goods_name);
             goods_snET.setText(good.goods_sn);
@@ -224,18 +255,7 @@ public class UpdateGoodsDialog extends DialogFragment {
             unit0.setSelection(j,true);
             unitTv1.setText("1"+unit+" =");
             unitTv2.setText("1"+unit+" =");
-            unit0.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override
-                public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                    String unit=((Unit)adapterView.getAdapter().getItem(i)).getUnit_name();
-                    unitTv1.setText("1"+unit+" =");
-                    unitTv2.setText("1"+unit+" =");
-                }
-                @Override
-                public void onNothingSelected(AdapterView<?> adapterView) {
 
-                }
-            });
             unitTextView1=v.findViewById(R.id.unitTextView1);
             unitTextView2=v.findViewById(R.id.unitTextView2);
             unit1.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -263,8 +283,7 @@ public class UpdateGoodsDialog extends DialogFragment {
                 }
             });
 
-            price1=v.findViewById(R.id.price1);
-            price2=v.findViewById(R.id.price2);
+
             RequestParams params=new RequestParams();
             params.put("goods_id",good.goods_id);
             IhancHttpClient.get("/index/setting/getUnitPrice", params, new AsyncHttpResponseHandler() {
@@ -277,6 +296,7 @@ public class UpdateGoodsDialog extends DialogFragment {
                             JSONObject item1=arr.getJSONObject(0);
                             unit_price1.setText(item1.getString("fx"));
                             price1.setText(item1.getString("price"));
+                            unit_price_id1=item1.getInt("unit_price_id");
                             int j=0;
                             for ( int i =0; i <MainActivity.mUnitList.size() ; i++) {
                                 if(((Unit)MainActivity.mUnitList.get(i)).getUnit_id()==item1.getInt("unit_id")){
@@ -289,6 +309,7 @@ public class UpdateGoodsDialog extends DialogFragment {
                                 JSONObject item2=arr.getJSONObject(1);
                                 unit_price2.setText(item2.getString("fx"));
                                 price2.setText(item2.getString("price"));
+                                unit_price_id2=item2.getInt("unit_price_id");
                                 j=0;
                                 for ( int i =0; i <MainActivity.mUnitList.size() ; i++) {
                                     if(((Unit)MainActivity.mUnitList.get(i)).getUnit_id()==item2.getInt("unit_id")){

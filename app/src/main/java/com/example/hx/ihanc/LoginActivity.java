@@ -49,6 +49,9 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.alibaba.sdk.android.push.CloudPushService;
+import com.alibaba.sdk.android.push.CommonCallback;
+import com.alibaba.sdk.android.push.noonesdk.PushServiceFactory;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.loopj.android.http.AsyncHttpClient;
@@ -78,6 +81,7 @@ import java.util.regex.Pattern;
 import cz.msebera.android.httpclient.Header;
 import static android.Manifest.permission.READ_CONTACTS;
 import static com.example.hx.ihanc.ActivityCollector.removeActivity;
+
 
 /**
  * A login screen that offers login via email/password.
@@ -291,7 +295,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         mPasswordView.setError(null);
 
         // Store values at the time of the login attempt.
-        String email = mEmailView.getText().toString();
+        final String email = mEmailView.getText().toString();
         String password = mPasswordView.getText().toString();
         String code= mCode.getText().toString();
         boolean cancel = false;
@@ -384,7 +388,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                         //ActivityCollector.removeActivity(LoginActivity.this);
                         LoginActivity.this.finish();
                     }
-
                     mCode.requestFocus();
                     showProgress(false);
                 }
@@ -886,5 +889,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
        }
    }
+
 }
 

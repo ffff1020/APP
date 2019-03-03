@@ -27,6 +27,7 @@ public class ListFragment extends Fragment {
     private String[] title;
     private Fragment[] fragments;
     private FragmentManager fragmentManager;
+    private int current=0;
 
     public ListFragment() {
         // Required empty public constructor
@@ -47,13 +48,14 @@ public class ListFragment extends Fragment {
         // Inflate the layout for this fragment
         setData();
         View view = inflater.inflate(R.layout.fragment_list, container, false);
-        Log.d("listFragment","onCreateView");
+        //Log.d("listFragment","onCreateView");
         viewPager=view.findViewById(R.id.viewPager);
         tabLayout=view.findViewById(R.id.tabLayout);
         mAdapter=new ListPagerAdapter(parentActivity.getSupportFragmentManager(),mContext,title,fragments);
         viewPager.setAdapter(mAdapter);
         tabLayout.setupWithViewPager(viewPager);
         mAdapter.notifyDataSetChanged();
+        viewPager.setCurrentItem(current);
         return view;
     }
 
@@ -80,7 +82,9 @@ public class ListFragment extends Fragment {
         fragmentTransaction.remove(fragments[3]).commitAllowingStateLoss();
     }
 
-
+    public void setPushInfo(String title){
+        if(title.equals("order"))current=1;
+    }
 
 
 

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="0dp"
+    android:paddingLeft="10dp"
+    >
+    <TextView
+        android:id="@+id/goods_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/goods_name"
+        android:textSize="12sp"
+        android:paddingBottom="0dp"
+        android:paddingTop="0dp"
+        android:textColor="@color/colorAccent"
+        />
+    <LinearLayout
+        android:paddingTop="0dp"
+        android:paddingBottom="0dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingLeft="20dp"
+        >
+        <TextView
+            android:id="@+id/number"
+            android:layout_width="0dp"
+            android:layout_weight="1.2"
+            android:textSize="12sp"
+            android:text="number"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/price"
+            android:layout_width="0dp"
+            android:layout_weight="1.2"
+            android:textSize="12sp"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/sum"
+            android:textSize="12sp"
+            android:layout_width="0dp"
+            android:layout_weight="1.5"
+            android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/store"
+            android:textSize="12sp"
+            android:layout_width="0dp"
+            android:layout_weight="0.8"
+            android:layout_height="wrap_content" />
+        <Button
+            android:layout_width="0dp"
+            android:layout_weight="0.8"
+            android:padding="0dp"
+            android:minHeight="30dp"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:id="@+id/update_button"
+            android:layout_height="wrap_content"
+            style="?android:attr/buttonBarButtonStyle"
+            android:text="修改"
+            />
+    </LinearLayout>
+</LinearLayout>

@@ -52,7 +52,7 @@ public class UnitAdapter extends ArrayAdapter<Unit> implements SpinnerAdapter {
             viewHolder=(ViewHolder) convertView.getTag();
         }
         viewHolder.tvTitle.setText(displayUnitList.get(position).getUnit_name());
-      //  Log.d("unitAdapter",displayUnitList.get(position).getUnit_name());
+        //  Log.d("unitAdapter",displayUnitList.get(position).getUnit_name());
         return convertView;
     }
 
@@ -75,7 +75,7 @@ public class UnitAdapter extends ArrayAdapter<Unit> implements SpinnerAdapter {
     public int getPosition(int unitId){
         Log.d("modifyGetPosition",displayUnitList.size()+"");
         for(int i=0;i<displayUnitList.size();i++){
-           if(displayUnitList.get(i).getUnit_id()==unitId){
+            if(displayUnitList.get(i).getUnit_id()==unitId){
                 return i;
             }
         }
@@ -126,12 +126,12 @@ public class UnitAdapter extends ArrayAdapter<Unit> implements SpinnerAdapter {
                 final ArrayList<Unit> newValues=new ArrayList<>();
                 String[] units=charSequence.toString().split("and");
                 for(int i=0;i<units.length;i++){
-                  for(int j=0;j<unitList.size();j++){
-                      //Log.d("unit",unitList.get(j).getUnit_id()+"");
-                      if(units[i].trim().equals(String.valueOf(unitList.get(j).getUnit_id()))){
-                          newValues.add(unitList.get(j));
-                      }
-                  }
+                    for(int j=0;j<unitList.size();j++){
+                        //Log.d("unit",unitList.get(j).getUnit_id()+"");
+                        if(units[i].trim().equals(String.valueOf(unitList.get(j).getUnit_id()))){
+                            newValues.add(unitList.get(j));
+                        }
+                    }
                 }
                 results.values = newValues;
                 results.count = newValues.size();
@@ -141,7 +141,7 @@ public class UnitAdapter extends ArrayAdapter<Unit> implements SpinnerAdapter {
         protected void publishResults(CharSequence constraint,
                                       FilterResults results) {
             displayUnitList = (List<Unit>) results.values;
-           // Utils.currentUnitList=(List<Unit>) results.values;
+            // Utils.currentUnitList=(List<Unit>) results.values;
             if (results.count > 0) {
                 notifyDataSetChanged();
             } else {

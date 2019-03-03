@@ -34,7 +34,7 @@ public class GoodsSettingActivity extends AppCompatActivity {
     public static List mCategoryDataList=new ArrayList<category>();
     private GridView mGridView;
     private GoodsAdapter mGoodsAdapter;
-    private List mGoodsDataList=new ArrayList<Goods>();
+    public static ArrayList mGoodsDataList=new ArrayList<Goods>();
     private View lastCategoryView=null;
     private UpDateCategoryDialog dialog=null;
     @Override

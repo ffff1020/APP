@@ -194,7 +194,7 @@ public class BankListFragment extends Fragment {
         int size=bankTableLayout.getChildCount();
        for (int i=1;i<size;i++){
            bankTableLayout.removeViewAt(1);
-           //Log.d("banklist",bankTableLayout.getChildCount()+"");
+           Log.d("banklist",bankTableLayout.getChildCount()+"");
        }
        Date currentTime = new Date();
        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
@@ -224,7 +224,6 @@ public class BankListFragment extends Fragment {
            }
            @Override
            public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-
            }
        });
    }

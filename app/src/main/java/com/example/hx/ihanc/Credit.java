@@ -7,7 +7,7 @@ public class Credit {
     private String name;
     private int sum;
     private int id;
-    Credit(String name,int sum,int id){
+    public Credit(String name,int sum,int id){
         this.name=name;
         this.sum=sum;
         this.id=id;

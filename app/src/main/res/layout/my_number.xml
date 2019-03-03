@@ -42,7 +42,7 @@
             android:text="0.0"
             android:ems="5"
             android:singleLine="true"
-            android:inputType="numberDecimal"
+            android:inputType="numberSigned|numberDecimal"
             android:imeOptions="actionNext"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />

@@ -60,7 +60,7 @@ public class GoodsAdapter extends ArrayAdapter<Goods> {
         }
         return mFilter;
     }
-    class MyFilter extends Filter {
+    public class MyFilter extends Filter {
         private  String filterType;
         public void setMyFilter(String mFilterType){
             this.filterType=mFilterType;

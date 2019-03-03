@@ -102,31 +102,35 @@ public class DialogMenu extends DialogFragment {
         transferButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                dismiss();
                 mListener.OnTransfer();
-
             }
         });
         exchangeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                dismiss();
                 mListener.OnExchange();
             }
         });
         deleteButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                dismiss();
                 mListener.OnDelete();
             }
         });
         carryButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                dismiss();
                 mListener.OnCarry();
             }
         });
         detailButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                dismiss();
                 mListener.OnDetail();
             }
         });

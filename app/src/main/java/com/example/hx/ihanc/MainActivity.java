@@ -15,6 +15,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
+import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -53,6 +54,10 @@ import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.alibaba.sdk.android.push.CloudPushService;
+import com.alibaba.sdk.android.push.CommonCallback;
+import com.alibaba.sdk.android.push.noonesdk.PushServiceFactory;
+import com.example.hx.ihanc.purchase.PurchaseMainFragment;
 import com.example.hx.ihanc.store.StoreFragment;
 import com.example.hx.ihanc.store.store;
 import com.google.gson.JsonArray;
@@ -98,9 +103,6 @@ public class MainActivity extends AppCompatActivity {
     // Key names received from the BluetoothChatService Handler
     public static final String DEVICE_NAME = "device_name";
     public static final String TOAST = "toast";
-    // Intent request codes
-    private static final int REQUEST_CONNECT_DEVICE = 1;
-    private static final int REQUEST_ENABLE_BT = 2;
     public static List mUnitList=new ArrayList<Unit>();
     public static List<bank> mBankList=new ArrayList<bank>();
     private SimpleDateFormat df;
@@ -113,9 +115,14 @@ public class MainActivity extends AppCompatActivity {
     private boolean ListFragmentCheck=true;
     private ListFragment mListFragment;
     private boolean StockFragmentCheck=true;
+    private boolean PurchaseMainFragmentCheck=true;
+    private PurchaseMainFragment PurchaseMainFragment;
     private StoreFragment storeFragment;
     private int credit_sum=99999;
     public static ArrayList<store> storesArray=new ArrayList<store>();
+
+    private static final String TAG = "AppApplication";
+
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
             = new BottomNavigationView.OnNavigationItemSelectedListener() {
 
@@ -153,6 +160,14 @@ public class MainActivity extends AppCompatActivity {
                     transaction.replace(R.id.content,storeFragment);
                     transaction.commit();
                     return true;
+                case R.id.navigation_purchase:
+                    if(PurchaseMainFragmentCheck){
+                        PurchaseMainFragment=new PurchaseMainFragment();
+                        PurchaseMainFragmentCheck=false;
+                    }
+                    transaction.replace(R.id.content,PurchaseMainFragment);
+                    transaction.commit();
+                    return true;
             }
             return false;
         }
@@ -163,18 +178,12 @@ public class MainActivity extends AppCompatActivity {
        // Utils.getCompanyInfo();
         df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-        /*IntentFilter filter = new IntentFilter(ACTION_USB_PERMISSION);
-        filter.addAction(ACTION_USB_DEVICE_DETACHED);
-        filter.addAction(ACTION_QUERY_PRINTER_STATE);
-        filter.addAction(DeviceConnFactoryManager.ACTION_CONN_STATE);
-        registerReceiver(receiver, filter);*/
-
-
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d("ihanc","MainActivity onCreate");
         setContentView(R.layout.activity_main);
         ActivityCollector.addActivity(this);
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
@@ -183,6 +192,21 @@ public class MainActivity extends AppCompatActivity {
         getStore();
         sp= PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
         mProgressView = findViewById(R.id.wait_progress);
+        Intent intent =getIntent();
+        String text =intent.getStringExtra("title");
+        if(text!=null){
+            navigation.setSelectedItemId(R.id.navigation_notifications);
+            if(ListFragmentCheck){
+                mListFragment=new ListFragment();
+                ListFragmentCheck=false;
+            }
+            mListFragment.setPushInfo("order");
+            fragmentManager = getSupportFragmentManager();
+            transaction = fragmentManager.beginTransaction();
+            transaction.replace(R.id.content, mListFragment);
+            transaction.commit();
+        }
+
     }
     @Override
     protected void onStop() {
@@ -405,14 +429,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
-    Handler eHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            exit = false;
-        }
-    };
-
     public  void initPrinter(ArrayList<SaleDetail> saleDetails,int paid_sum,int credit_sum,String time){
         Log.d("GPrinter","initPrinter");
         String receiptType=sp.getString(getString(R.string.receipt_type),"");
@@ -452,7 +468,6 @@ public class MainActivity extends AppCompatActivity {
           //      mGPrinter.print((Bitmap) bitmap);
         }
     }
-
     public void onBackPressed() {
         Intent intent = new Intent();
         intent.setAction(Intent.ACTION_MAIN);// "android.intent.action.MAIN"
@@ -497,4 +512,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
+
 }

@@ -25,6 +25,7 @@
         android:paddingBottom="0dp">
 
         <TextView
+            android:layout_gravity="center"
             android:id="@+id/saleItemNumber"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -32,12 +33,14 @@
             android:paddingLeft="20dp" />
 
         <TextView
+            android:layout_gravity="center"
             android:id="@+id/saleItemPrice"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1" />
 
         <TextView
+            android:layout_gravity="center"
             android:id="@+id/saleItemSum"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -49,7 +52,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="0.5"
-            android:minHeight="0dp"
+            android:minHeight="40dp"
             android:padding="0dp"
             android:text="修改"
             android:textSize="12sp" />

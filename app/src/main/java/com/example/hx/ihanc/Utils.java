@@ -1,12 +1,18 @@
 package com.example.hx.ihanc;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
+import android.os.Build;
+import android.support.v4.app.FragmentManager;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
 import android.widget.ListView;
@@ -23,6 +29,9 @@ import java.util.List;
 
 import cz.msebera.android.httpclient.Header;
 
+import static com.example.hx.ihanc.App.bindPushAlias;
+import static com.example.hx.ihanc.App.getContext;
+
 public class Utils {
     private static Toast toast;
     public static final String GOODSFILTERCATEGORYID="GOODSFILTERCATEGORYID";
@@ -36,6 +45,8 @@ public class Utils {
     public static List<Unit> currentUnitList=new ArrayList<Unit>();
     public static String printSaleId="";
     public static boolean saleTypeOrder=false;
+    public static Loading loading=null;
+
 
     public static UsbDevice getUsbDeviceFromName(Context context, String usbName) {
         UsbManager usbManager = (UsbManager) context.getSystemService(Context.USB_SERVICE);
@@ -75,7 +86,7 @@ public class Utils {
                             mObject.getString("ctel"),
                             address
                     );
-
+                    bindPushAlias(mObject.getString("ctel"));
                 }catch (JSONException e){
                     Log.d("JSONException",e.toString());
                 }
@@ -89,5 +100,22 @@ public class Utils {
         });
     }
 
+    public static void hideKeyboard(View view, Activity parentActivity){
+        InputMethodManager imm = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm.isActive() && parentActivity.getCurrentFocus() != null) {
+            if (parentActivity.getCurrentFocus().getWindowToken() != null) {
+                imm.hideSoftInputFromWindow(parentActivity.getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+            }
+        }
+    }
 
+    public static void showProgress(FragmentManager fm, final boolean show) {
+        if(loading==null){
+            loading=new Loading();
+        }
+        if(show)
+            loading.show(fm,"loading");
+        else
+            loading.dismiss();
+    }
 }

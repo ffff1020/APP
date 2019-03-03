@@ -71,7 +71,6 @@
             android:text="客户付款" />
     </LinearLayout>
     <ProgressBar
-
         android:id="@+id/loading_progress"
         style="?android:attr/progressBarStyleSmall"
         android:layout_width="wrap_content"

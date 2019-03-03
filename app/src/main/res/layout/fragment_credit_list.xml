@@ -44,7 +44,7 @@
             android:iconifiedByDefault="false"
             android:inputType="text"
             android:imeOptions="actionSearch"
-            app:layout_constraintLeft_toLeftOf="@id/orderSpinner"
+            app:layout_constraintLeft_toRightOf="@id/orderSpinner"
             app:layout_constraintRight_toLeftOf="@id/search_button"
             app:layout_constraintTop_toTopOf="parent"
             />

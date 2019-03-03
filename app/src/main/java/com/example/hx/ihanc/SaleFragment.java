@@ -104,15 +104,6 @@ public class SaleFragment extends Fragment {
               };
               creditDetailDialog.setOnFreshCredit(onFreshCredit);
               creditDetailDialog.show(getFragmentManager(),"credit");
-              //Log.d("saleFragment","print_credit");
-             /* if(printAble){
-                  // Log.d("saleFragment","print_credit");
-                  if(Utils.mCompanyInfo==null) Utils.getCompanyInfo();
-                  Utils.printMemberName=member;
-                  MainActivity parentActivity = (MainActivity ) getActivity();
-                  parentActivity.printDetails();
-              }*/
-
           }
       });
         button=(Button)view.findViewById(R.id.closeFragmentButton);
@@ -178,30 +169,7 @@ public class SaleFragment extends Fragment {
 
         });
         ttlTV.setText("");
-       /* ttlSum.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                //Log.d("GPrinter","SaleFragment");
-                if(mSaleDetails.size()==0) return;
-                if(Utils.mCompanyInfo==null) Utils.getCompanyInfo();
-                Utils.printMemberName=member;
-                String paidSum=ttlTV.getText().toString();
-                int paid_sum=0;
-                if(!paidSum.equals("")){
-                    paid_sum=Integer.parseInt(paidSum);
-                }
-                final String receiptType=sp.getString(getString(R.string.receipt_type),getString(R.string.receipt_type_default));
-                MainActivity parentActivity = (MainActivity ) getActivity();
-                if(receiptType.equals(getString(R.string.receipt_type_default))) {
-                    Log.d("GPrinter","SaleFragment");
-                    parentActivity.initPrinter(mSaleDetails,paid_sum,credit_sum);
-                } else{
-                    parentActivity.showProgress(true);
-                    ImageTask mImageTask = new ImageTask();
-                    mImageTask.execute("");
-                }
-            }
-        });*/
+
         orderBtn=view.findViewById(R.id.orderButton);
         orderBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -284,6 +252,8 @@ public class SaleFragment extends Fragment {
         super.onStart();
         mSaleDetailAdapter.notifyDataSetChanged();
         delete=false;
+        bankSpinner.setSelection(0);
+        ttlTV.setText("");
     }
     private void saveStateToArguments() {
         if(mSaleDetails.size()>0) {
@@ -295,7 +265,6 @@ public class SaleFragment extends Fragment {
                 b = new Bundle();
                 b.putBundle("saleFragment", savedState);
                 b.putString("credit", title.getText().toString());
-                //b.putInt("show",title.getVisibility());
                 b.putInt("ttl", ttl);
                 b.putInt("credit_sum",credit_sum );
                 this.setArguments(b);
@@ -303,7 +272,6 @@ public class SaleFragment extends Fragment {
                 saved = true;
                 b.putBundle("saleFragment", savedState);
                 b.putString("credit", title.getText().toString());
-                //b.putInt("show",title.getVisibility());
                 b.putInt("ttl", ttl);
                 b.putInt("credit_sum",credit_sum );
                 this.setArguments(b);
@@ -369,6 +337,8 @@ public class SaleFragment extends Fragment {
 
     private void getCredit() {
         if (this.member != null) {
+            title.setText("");
+            title.setVisibility(View.GONE);
             RequestParams params = new RequestParams();
             params.put("member_id", this.member.getMember_id());
             IhancHttpClient.get("/index/sale/getMemberCredit", params, new AsyncHttpResponseHandler() {
@@ -377,8 +347,8 @@ public class SaleFragment extends Fragment {
                     String res = new String(responseBody);
                     //Log.d("saleFragment", res);
                     if(res.contains("\"credit\":null")){
-                        title.setText("");
-                        title.setVisibility(View.GONE);
+                        //title.setText("");
+                        //title.setVisibility(View.GONE);
                         return;
                     }
                     try {

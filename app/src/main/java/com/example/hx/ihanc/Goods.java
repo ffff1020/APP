@@ -1,5 +1,6 @@
 package com.example.hx.ihanc;
 
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import org.json.JSONException;
@@ -16,6 +17,7 @@ public class Goods  {
     int category_id;
     String goods_unit_name;
     int promote;
+    public int is_order=0;
     public Goods(int goods_id,String goods_name,String goods_unit_id,Double goods_price,
                  String goods_sn,int category_id,String goods_unit_name,int promote){
         this.goods_id=goods_id;
@@ -76,8 +78,35 @@ public class Goods  {
             goodObject.put("promote",promote);
             str=goodObject.toString();
         }catch (JSONException e){e.printStackTrace();}
-        Log.d("goods",str);
         return str;
+    }
+    public JSONObject toJSONObject(){
+        JSONObject goodObject=new JSONObject();
+        try{
+            goodObject.put("goods_id",goods_id);
+            goodObject.put("goods_name",goods_name);
+            goodObject.put("goods_unit",goods_unit);
+            goodObject.put("goods_price",goods_price);
+            goodObject.put("category_id",category_id);
+            goodObject.put("goods_sn",goods_sn);
+            goodObject.put("goods_unit_name",goods_unit_name);
+            goodObject.put("promote",promote);
+        }catch (JSONException e){e.printStackTrace();}
+        return goodObject;
+    }
+    @Nullable
+    public static Goods toGoods(JSONObject goodObject){
+        try{
+        return new Goods(goodObject.getInt("goods_id"),
+        goodObject.getString("goods_name"),
+        goodObject.getString("goods_unit"),
+        goodObject.getDouble("goods_price"),
+        goodObject.getString("goods_sn"),
+        goodObject.getInt("category_id"),
+        goodObject.getString("goods_unit_name"),
+        goodObject.getInt("promote"));
+        }catch (JSONException e){e.printStackTrace();}
+        return null;
     }
 
 

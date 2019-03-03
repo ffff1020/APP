@@ -361,7 +361,7 @@ public class SaleDetailDialog extends DialogFragment {
 
     public void sendWx(int payment,int credit){
         if(Utils.mCompanyInfo==null) Utils.getCompanyInfo();
-        String fileName="ihanc--"+Utils.mCompanyInfo.getName()+".xls";
+        String fileName="ihanc--"+Utils.mCompanyInfo.getName()+System.currentTimeMillis()+".xls";
         File file = new File(Environment.getExternalStorageDirectory(), fileName);
         WritableWorkbook wwb;
         int size=mSaleDetails.size();

@@ -91,7 +91,7 @@ public class SaleMainFragment extends Fragment {
     private CategoryAdapter mCategoryAdapter;
     private GridView mGridView;
     private GoodsAdapter mGoodsAdapter;
-    private GoodsAdapter mGoodsAdapter2;
+    public static GoodsAdapter mGoodsAdapter2;
     private SearchView mGoodSearchView;
     private AutoCompleteTextView memberTV;
     private MemberAdapter memberAdapter;
@@ -112,7 +112,7 @@ public class SaleMainFragment extends Fragment {
     private static final int REQUEST_CONNECT_DEVICE = 1;
     private static final int REQUEST_ENABLE_BT = 2;
     private List mCategoryDataList=new ArrayList<category>();
-    private List mGoodsDataList=new ArrayList<Goods>();
+    public static List mGoodsDataList=new ArrayList<Goods>();
     private List memberDataList=new ArrayList<member>();
     private List<SaleFragment> fragmentList=new ArrayList<SaleFragment>();
     private List<SaleFragment> secondFragmentList=new ArrayList<SaleFragment>();
@@ -326,30 +326,7 @@ public class SaleMainFragment extends Fragment {
                     Log.d("unitFail",res);
                 }
             });
-
         }
-        mGoodSearchView=(SearchView)view.findViewById(R.id.goodsSearchView);
-        int id=mGoodSearchView.getContext().getResources().getIdentifier("android:id/search_src_text",null,null);
-        TextView textView = (TextView) mGoodSearchView.findViewById(id);
-        textView.setTextSize(12);
-        mGoodSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String s) {
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String s) {
-                if (!TextUtils.isEmpty(s)){
-                    GoodsAdapter.MyFilter mFilter=mGoodsAdapter.getFilter();
-                    mFilter.setMyFilter(Utils.GOODSFILTERSEARCHVIEW);
-                    mFilter.filter(s);
-                }else{
-                    mGridView.clearTextFilter();
-                }
-                return false;
-            }
-        });
         mTextMessage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -575,6 +552,7 @@ public class SaleMainFragment extends Fragment {
                                 myjObject.getString("unit_id"),
                                 myjObject.getInt("promote")
                         );
+                        mItem.is_order=myjObject.getInt("is_order");
                         mGoodsDataList.add(mItem);
                     }
 
@@ -686,7 +664,6 @@ public class SaleMainFragment extends Fragment {
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-
     }
     @Override
     public void onResume(){
@@ -698,6 +675,7 @@ public class SaleMainFragment extends Fragment {
 
     private void onGoodSelected(AdapterView<?> adapterView,int i){
         hideKeyboard();
+        addToSaleBtn.setClickable(false);
         currentGood=(Goods)adapterView.getAdapter().getItem(i);
         currentPosition=mGoodsDataList.indexOf(currentGood);
         infoGoodsName.setText(currentGood.getGoods_name());
@@ -711,8 +689,9 @@ public class SaleMainFragment extends Fragment {
             IhancHttpClient.get("/index/sale/getUnit", params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                    addToSaleBtn.setClickable(true);
                     String res = new String(responseBody).trim();
-                    Log.d("onGoodSelected",res);
+                    //Log.d("onGoodSelected",res);
                     try {
                         JSONObject obj=new JSONObject(res);
                         JSONArray units=obj.getJSONArray("unit");
@@ -754,7 +733,9 @@ public class SaleMainFragment extends Fragment {
 
                 @Override
                 public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
-
+                    Utils.toast(getContext(),"不能连接到网络，请检查网络");
+                    currentGood=null;
+                    infoGoodsName.setText("");
                 }
             });
         }else {

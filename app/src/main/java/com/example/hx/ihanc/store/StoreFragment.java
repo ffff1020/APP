@@ -7,19 +7,13 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
-import com.example.hx.ihanc.BankListFragment;
 import com.example.hx.ihanc.ListPagerAdapter;
 import com.example.hx.ihanc.MainActivity;
 import com.example.hx.ihanc.R;
-import com.example.hx.ihanc.creditFragment;
-import com.example.hx.ihanc.saleListFragment;
 
-import java.util.Map;
 
 public class StoreFragment extends Fragment {
     private ViewPager viewPager;
@@ -46,7 +40,7 @@ public class StoreFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        Log.d("storeFragment","onCreateView");
+        //Log.d("storeFragment","onCreateView");
         // Inflate the layout for this fragment
         setData();
         View view = inflater.inflate(R.layout.fragment_list, container, false);
@@ -66,7 +60,7 @@ public class StoreFragment extends Fragment {
         for (int i = 0; i < size; i++) {
             store item=MainActivity.storesArray.get(i);
             title[i]=item.getStore_name();
-            fragments[i]=StoreItemFragment.newInstance(item.getStore_id());
+            fragments[i]=StoreItemFragment.newInstance(item.getStore_id(),item.getStore_name());
         }
     }
 

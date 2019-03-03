@@ -109,7 +109,7 @@ public class MyNumberEdit extends LinearLayout {
     public double getNum(){
         double number=0.0;
         String str=textView1.getText().toString().trim();
-        Pattern pattern = Pattern.compile("[^0-9]+(.[0-9]{1})?$");
+        Pattern pattern = Pattern.compile("-?[^0-9]+(.[0-9]{2})?$");
         Matcher matcher = pattern.matcher((CharSequence) str);
         str=matcher.replaceAll("").trim();
         Log.d("fragment","str:"+str+"len:"+str.length());

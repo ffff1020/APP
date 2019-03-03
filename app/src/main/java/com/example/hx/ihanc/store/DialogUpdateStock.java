@@ -17,6 +17,8 @@ public class DialogUpdateStock extends DialogFragment {
     private boolean loss;
     private View view;
     private String goods_name;
+    private OnUpdateStock mListener;
+    private TextView tv;
     public static DialogUpdateStock newInstance(boolean loss,String goods_name){
         DialogUpdateStock d=new DialogUpdateStock();
         Bundle bundle=new Bundle();
@@ -40,6 +42,7 @@ public class DialogUpdateStock extends DialogFragment {
         TextView textView=view.findViewById(R.id.goods_name);
         Button saveButton=view.findViewById(R.id.saveButton);
         Button cancelButton=view.findViewById(R.id.cancelButton);
+        tv=view.findViewById(R.id.number);
         String info;
         if (loss){
             info=goods_name+"报损";
@@ -58,6 +61,23 @@ public class DialogUpdateStock extends DialogFragment {
                 dismiss();
             }
         });
+        saveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                dismiss();
+                double number=Double.parseDouble(tv.getText().toString().trim());
+                if(loss)number=(-1)*number;
+                mListener.OnUpdateStock(number);
+            }
+        });
         return view;
+    }
+
+    public void setOnUpDateStock(OnUpdateStock mListener){
+        this.mListener=mListener;
+    }
+
+    public interface OnUpdateStock{
+        void OnUpdateStock(double number);
     }
 }

@@ -46,4 +46,18 @@ public class stock {
         }catch (JSONException e){e.printStackTrace();}
         return rs;
     }
+    public JSONObject toJson(){
+        JSONObject res=new JSONObject();
+        try {
+            res.put("stock_id",stock_id);
+            res.put("goods_id",goods_id);
+            res.put("goods_name",goods_name);
+            res.put("inorder",inorder);
+            res.put("sum",sum);
+            res.put("number",number);
+            res.put("unit_id",unit_id);
+            res.put("unit_name",unit_name);
+        }catch (JSONException e){e.printStackTrace();}
+        return res;
+    }
 }
