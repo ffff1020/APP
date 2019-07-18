@@ -121,6 +121,10 @@ public class creditFragment extends Fragment {
   @Override
   public View onCreateView(LayoutInflater inflater, ViewGroup container,
                            Bundle savedInstanceState) {
+    if(!Utils.role&&!Utils.auth.containsKey("mcredit")){
+      Utils.toast(getContext(),"sorry啊，您没有查看应收款的权限！");
+      return null;
+    }
     view = inflater.inflate(R.layout.fragment_credit_list, container, false);
     context = view.getContext();
     recyclerView = (RecyclerView) view.findViewById(R.id.creditListRecyclerView);

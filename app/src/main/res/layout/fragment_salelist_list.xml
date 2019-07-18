@@ -7,11 +7,11 @@
     android:layout_height="match_parent"
     tools:context=".saleListFragment"
     >
-    <LinearLayout
-        android:id="@+id/linearLayout"
-        android:layout_width="match_parent"
-        android:orientation="horizontal"
-        android:layout_height="wrap_content">
+  <LinearLayout
+      android:id="@+id/linearLayout"
+      android:layout_width="match_parent"
+      android:orientation="horizontal"
+      android:layout_height="wrap_content">
     <SearchView
         android:id="@+id/search"
         android:iconifiedByDefault="false"
@@ -30,13 +30,13 @@
         style="?android:attr/buttonBarButtonStyle"
 
         />
-    </LinearLayout>
-<android.support.v4.widget.SwipeRefreshLayout
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:id="@+id/swipeRefreshLayout"
-    android:layout_below="@+id/linearLayout"
-    >
+  </LinearLayout>
+  <android.support.v4.widget.SwipeRefreshLayout
+      android:layout_width="match_parent"
+      android:layout_height="match_parent"
+      android:id="@+id/swipeRefreshLayout"
+      android:layout_below="@+id/linearLayout"
+      >
     <android.support.v7.widget.RecyclerView
         android:id="@+id/saleListRecyclerView"
         android:layout_width="match_parent"
@@ -44,5 +44,5 @@
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
         />
-</android.support.v4.widget.SwipeRefreshLayout>
+  </android.support.v4.widget.SwipeRefreshLayout>
 </RelativeLayout>

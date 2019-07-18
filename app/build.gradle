@@ -15,7 +15,7 @@ android {
         minSdkVersion 14
         targetSdkVersion 27
         versionCode 2
-        versionName "2.2"
+        versionName "2.3"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
 
@@ -52,5 +52,4 @@ dependencies {
     implementation files('libs/json-20180130.jar')
     implementation 'com.belerweb:pinyin4j:2.5.1'
     implementation 'jexcelapi:jxl:2.6'
-
 }

@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.hx.ihanc">
-
     <!-- To access Google+ APIs: -->
-    <uses-permission android:name="android.permission.INTERNET" />
-
-    <!-- To auto-complete the email text field in the login form with the user's emails -->
+    <uses-permission android:name="android.permission.INTERNET" /> <!-- To auto-complete the email text field in the login form with the user's emails -->
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.READ_PROFILE" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
@@ -18,16 +15,23 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.CALL_PHONE" />
 
     <application
         android:name=".App"
         android:allowBackup="true"
         android:icon="@mipmap/ihanc"
         android:label="@string/app_name"
+        android:persistent="true"
         android:roundIcon="@mipmap/ihanc_round"
         android:supportsRtl="true"
-        android:persistent="true"
         android:theme="@style/AppTheme">
+        <activity
+            android:name=".LogActivity"
+            android:label="系统日志"
+            android:parentActivityName=".SettingsActivity"
+            >
+        </activity>
         <activity
             android:name=".LoginActivity"
             android:label="@string/app_name">
@@ -70,27 +74,43 @@
             android:label="初期数据录入"
             android:parentActivityName=".SettingsActivity" />
 
-    <receiver
-        android:name=".MyMessageReceiver"
-        android:exported="false"> <!-- 为保证receiver安全，建议设置不可导出，如需对其他应用开放可通过android：permission进行限制 -->
-        <intent-filter>
-            <action android:name="com.alibaba.push2.action.NOTIFICATION_OPENED" />
-        </intent-filter>
-        <intent-filter>
-            <action android:name="com.alibaba.push2.action.NOTIFICATION_REMOVED" />
-        </intent-filter>
-        <intent-filter>
-            <action android:name="com.alibaba.sdk.android.push.RECEIVE" />
-        </intent-filter>
-    </receiver>
+        <receiver
+            android:name=".MyMessageReceiver"
+            android:exported="false"> <!-- 为保证receiver安全，建议设置不可导出，如需对其他应用开放可通过android：permission进行限制 -->
+            <intent-filter>
+                <action android:name="com.alibaba.push2.action.NOTIFICATION_OPENED" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.alibaba.push2.action.NOTIFICATION_REMOVED" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.alibaba.sdk.android.push.RECEIVE" />
+            </intent-filter>
+        </receiver>
+
         <service
             android:name="com.taobao.accs.internal.AccsJobService"
             android:permission="android.permission.BIND_JOB_SERVICE"
-            android:process=":channel"/>
-        <!-- V3.0.7及以上版本需配置 -->
-        <service android:name="com.alibaba.sdk.android.push.channel.KeepChannelService"
+            android:priority="1000"
+            android:process=":channel" /> <!-- V3.0.7及以上版本需配置 -->
+        <service
+            android:name="com.alibaba.sdk.android.push.channel.KeepChannelService"
             android:permission="android.permission.BIND_JOB_SERVICE"
+            android:priority="1000"
             android:process=":channel" />
-
+        <service
+            android:name=".MyMessageIntentService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.alibaba.push2.action.NOTIFICATION_OPENED" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.alibaba.push2.action.NOTIFICATION_REMOVED" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="com.alibaba.sdk.android.push.RECEIVE" />
+            </intent-filter>
+        </service>
     </application>
+
 </manifest>

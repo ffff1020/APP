@@ -17,47 +17,47 @@ import com.example.hx.ihanc.ViewHolder;
 import java.util.List;
 
 public class InorderAdapter extends ArrayAdapter<String> implements SpinnerAdapter {
-    private int resource;
-    private Context mContext;
-    private List<String> data;
-    public InorderAdapter(Context context, int resource, @NonNull List<String> objects){
-        super(context,resource,objects);
-        this.resource=resource;
-        mContext=context;
-        data=objects;
-    }
+  private int resource;
+  private Context mContext;
+  private List<String> data;
+  public InorderAdapter(Context context, int resource, @NonNull List<String> objects){
+    super(context,resource,objects);
+    this.resource=resource;
+    mContext=context;
+    data=objects;
+  }
 
-    @NonNull
-    @Override
-    public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-        final ViewHolder viewHolder;
-        if(convertView==null){
-            viewHolder=new ViewHolder();
-            convertView= LayoutInflater.from(mContext).inflate(resource,null);
-            viewHolder.tvTitle=convertView.findViewById(R.id.unit);
-            convertView.setTag(viewHolder);
-            viewHolder.tvTitle.setTextColor(Color.RED);
-        }else{
-            viewHolder=(ViewHolder) convertView.getTag();
-        }
-        viewHolder.tvTitle.setText(data.get(position));
-        return convertView;
+  @NonNull
+  @Override
+  public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+    final ViewHolder viewHolder;
+    if(convertView==null){
+      viewHolder=new ViewHolder();
+      convertView= LayoutInflater.from(mContext).inflate(resource,null);
+      viewHolder.tvTitle=convertView.findViewById(R.id.unit);
+      convertView.setTag(viewHolder);
+      viewHolder.tvTitle.setTextColor(Color.RED);
+    }else{
+      viewHolder=(ViewHolder) convertView.getTag();
     }
+    if(data.size()>0)viewHolder.tvTitle.setText(data.get(position));
+    return convertView;
+  }
 
-    @Override
-    public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-        final ViewHolder viewHolder;
-        if(convertView==null){
-            viewHolder=new ViewHolder();
-            convertView= LayoutInflater.from(mContext).inflate(resource,null);
-            viewHolder.tvTitle=convertView.findViewById(R.id.unit);
-            convertView.setTag(viewHolder);
-            viewHolder.tvTitle.setTextColor(Color.RED);
-        }else{
-            viewHolder=(ViewHolder) convertView.getTag();
-        }
-        viewHolder.tvTitle.setText(data.get(position));
-        //  Log.d("unitAdapter",displayUnitList.get(position).getUnit_name());
-        return convertView;
+  @Override
+  public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+    final ViewHolder viewHolder;
+    if(convertView==null){
+      viewHolder=new ViewHolder();
+      convertView= LayoutInflater.from(mContext).inflate(resource,null);
+      viewHolder.tvTitle=convertView.findViewById(R.id.unit);
+      convertView.setTag(viewHolder);
+      viewHolder.tvTitle.setTextColor(Color.RED);
+    }else{
+      viewHolder=(ViewHolder) convertView.getTag();
     }
+    viewHolder.tvTitle.setText(data.get(position));
+    //  Log.d("unitAdapter",displayUnitList.get(position).getUnit_name());
+    return convertView;
+  }
 }

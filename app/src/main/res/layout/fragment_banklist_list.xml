@@ -11,7 +11,9 @@
         android:id="@+id/linearLayout"
         android:orientation="horizontal"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        >
         <SearchView
             android:id="@+id/search"
             android:layout_width="0dp"
@@ -31,7 +33,6 @@
             android:textSize="12sp"
             style="?android:attr/buttonBarButtonStyle"
             />
-
     </LinearLayout>
 
     <android.support.v4.widget.SwipeRefreshLayout

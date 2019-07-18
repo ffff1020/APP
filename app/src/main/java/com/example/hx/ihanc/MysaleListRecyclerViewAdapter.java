@@ -56,6 +56,12 @@ public class MysaleListRecyclerViewAdapter extends RecyclerView.Adapter<MysaleLi
             holder.mTimeView.setText(mValues.get(position).time);
             holder.mNameView.setText(mValues.get(position).name);
             holder.mSumView.setText(format.format(Integer.parseInt(mValues.get(position).sum)));
+            if(mValues.get(position).remark.length()>0) {
+                holder.mRemarkView.setText("备注："+mValues.get(position).remark);
+                holder.mRemarkView.setVisibility(View.VISIBLE);
+            }else{
+                holder.mRemarkView.setVisibility(View.GONE);
+            }
             if (!mValues.get(position).paid) {
                 holder.mTimeView.setTextColor(view.getResources().getColor(R.color.colorAccent));
                 holder.mNameView.setTextColor(view.getResources().getColor(R.color.colorAccent));
@@ -96,6 +102,7 @@ public class MysaleListRecyclerViewAdapter extends RecyclerView.Adapter<MysaleLi
         public final TextView mTimeView;
         public final TextView mNameView;
         public final TextView mSumView;
+        public final TextView mRemarkView;
         public SaleListItem mItem;
 
         public ViewHolder(View view,int viewType) {
@@ -105,10 +112,12 @@ public class MysaleListRecyclerViewAdapter extends RecyclerView.Adapter<MysaleLi
                 mTimeView = (TextView) view.findViewById(R.id.item_time);
                 mNameView = (TextView) view.findViewById(R.id.item_name);
                 mSumView = (TextView) view.findViewById(R.id.item_sum);
+                mRemarkView=(TextView) view.findViewById(R.id.remark);
             }else{
                 mTimeView = null;
                 mNameView = (TextView) view.findViewById(R.id.footer);
                 mSumView = null;
+                mRemarkView=null;
             }
 
         }

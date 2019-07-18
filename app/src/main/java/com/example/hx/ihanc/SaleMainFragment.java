@@ -318,6 +318,7 @@ public class SaleMainFragment extends Fragment {
                         mFilter.filter(currentGood.getGoods_unit());
                     }else
                         mFilter.filter(currentGood.getGoods_unit()+"and"+res.substring(2,res.length()-1));
+                    selectUnit=true;
                     unitSpinner.setSelection(getArguments().getInt("unitPosition"),true);
                 }
                 @Override
@@ -423,18 +424,55 @@ public class SaleMainFragment extends Fragment {
         unitSpinner=(Spinner)view.findViewById(R.id.unitSpinner);
         mUnitAdapter=new UnitAdapter(mContext,R.layout.unit,MainActivity.mUnitList);
         unitSpinner.setAdapter(mUnitAdapter);
+        selectUnit=true;
         unitSpinner.setSelection(0,true);
         unitSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                if( (i==0 && !selectUnit) || currentGood==null )return;
+                if( selectUnit || currentGood==null ){selectUnit=false; return;}
                 selectUnit=true;
                 UnitAdapter mAdapter=(UnitAdapter) adapterView.getAdapter();
                 Unit unitItem=mAdapter.getItem(i);
-                //if(currentGood==null) return;
-                if(String.valueOf(unitItem.getUnit_id()).equals(currentGood.getGoods_unit())){
+                RequestParams params = new RequestParams();
+                params.put("goods_id",currentGood.getGoods_id());
+                params.put("unit_id",unitItem.getUnit_id());
+                SaleFragment mSaleFragment=(SaleFragment) mSalePagerAdapter.getItem(vp.getCurrentItem());
+                int member_id=0;
+                if (mSaleFragment!=null)  member_id=mSaleFragment.getMember().member_id;
+                else if(i==0) {
                     mPrice.setPrice(currentGood.getGoods_price());
                     mSumEdit.setNum(currentGood.getGoods_price()*mWeight.getNum());
+                    selectUnit=false;
+                    return;
+                }
+                params.put("member_id",member_id);
+                Utils.showProgress(getFragmentManager(),true);
+                IhancHttpClient.get("/index/sale/getPriceTab", params, new AsyncHttpResponseHandler() {
+                    @Override
+                    public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                        String res=new String(responseBody);
+                        try {
+                            JSONObject price=new JSONObject(res);
+                            mPrice.setPrice(price.getDouble("result"));
+                            mSumEdit.setNum(price.getDouble("result") * mWeight.getNum());
+                        }catch (JSONException e){e.printStackTrace();}
+                        selectUnit=false;
+                        Utils.showProgress(getFragmentManager(),false);
+                    }
+
+                    @Override
+                    public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+                        selectUnit=false;
+                    }
+                });
+
+
+
+
+              /*  if(String.valueOf(unitItem.getUnit_id()).equals(currentGood.getGoods_unit())){
+                    mPrice.setPrice(currentGood.getGoods_price());
+                    mSumEdit.setNum(currentGood.getGoods_price()*mWeight.getNum());
+                    selectUnit=false;
                 }else{
                     RequestParams params = new RequestParams();
                     params.put("goods_id",currentGood.getGoods_id());
@@ -451,13 +489,14 @@ public class SaleMainFragment extends Fragment {
                                 mPrice.setPrice(res.trim());
                                 mSumEdit.setNum(Double.valueOf(res.trim()) * mWeight.getNum());
                             }
+                            selectUnit=false;
                         }
                         @Override
                         public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
                            //Log.d("fragment onFailure",new String(responseBody));
                         }
                     });
-                };
+                };*/
             }
 
             @Override
@@ -583,7 +622,8 @@ public class SaleMainFragment extends Fragment {
                         JSONObject myjObject = resArray.getJSONObject(i);
                         member mItem=new member(myjObject.getInt("member_id"),
                                 myjObject.getString("member_name"),
-                                myjObject.getString("member_sn")
+                                myjObject.getString("member_sn"),
+                                myjObject.getString("member_phone")
                         );
                         memberDataList.add(mItem);
                     }
@@ -603,6 +643,7 @@ public class SaleMainFragment extends Fragment {
     public void addSaleTabs(member memberItem){
         hideKeyboard();
         memberTV.setText("");
+        addMemberBtn.setText("修改客户");
         if(memberTabsList.size()>5){
             Toast.makeText(mContext,"排列中的客户不能超过5个！",Toast.LENGTH_LONG).show();
             return;
@@ -625,6 +666,7 @@ public class SaleMainFragment extends Fragment {
         memberTabsList.remove(position);
         fragmentList.remove(position);
         mSalePagerAdapter.notifyDataSetChanged();
+        if(fragmentList.size()==0) addMemberBtn.setText("新增客户");
     }
     public void hideKeyboard() {
         view.clearFocus();
@@ -675,6 +717,7 @@ public class SaleMainFragment extends Fragment {
 
     private void onGoodSelected(AdapterView<?> adapterView,int i){
         hideKeyboard();
+
         addToSaleBtn.setClickable(false);
         currentGood=(Goods)adapterView.getAdapter().getItem(i);
         currentPosition=mGoodsDataList.indexOf(currentGood);
@@ -683,17 +726,24 @@ public class SaleMainFragment extends Fragment {
         RequestParams params = new RequestParams();
         params.put("goods_id",currentGood.getGoods_id());
         SaleFragment mSaleFragment=(SaleFragment) mSalePagerAdapter.getItem(vp.getCurrentItem());
+        if(mSaleFragment!=null) Log.d("price",mSaleFragment.getMember().member_name);
+        else Log.d("price","null");
         if(mSaleFragment!=null){
+            Utils.showProgress(getFragmentManager(),true);
             params.put("member_id",mSaleFragment.getMember().member_id);
             params.put("unit_id",currentGood.getGoods_unit_id());
             IhancHttpClient.get("/index/sale/getUnit", params, new AsyncHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                     addToSaleBtn.setClickable(true);
+                    Utils.showProgress(getFragmentManager(),false);
                     String res = new String(responseBody).trim();
                     //Log.d("onGoodSelected",res);
                     try {
                         JSONObject obj=new JSONObject(res);
+                        mPrice.setPrice(obj.getDouble("result"));
+                        Log.d("price",obj.getDouble("result")+"");
+                        mSumEdit.setNum(obj.getDouble("result")*mWeight.getNum());
                         JSONArray units=obj.getJSONArray("unit");
                         UnitAdapter.UnitFilter mFilter = mUnitAdapter.getFilter();
                         //mFilter.
@@ -701,11 +751,9 @@ public class SaleMainFragment extends Fragment {
                         int current_unit=currentGood.getGoods_unit_id();
                         if(res.contains("unit_price")) {
                             current_unit=obj.getInt("unit_price");
-                            mPrice.setPrice(obj.getDouble("result"));
-                            mSumEdit.setNum(obj.getDouble("result")*mWeight.getNum());
                         }else{
-                            mPrice.setPrice(currentGood.getGoods_price());
-                            mSumEdit.setNum(currentGood.getGoods_price()*mWeight.getNum());
+                             //mPrice.setPrice(currentGood.getGoods_price());
+                             //mSumEdit.setNum(currentGood.getGoods_price()*mWeight.getNum());
                         }
                         if(units.length()>1) {
                             String st="";
@@ -720,14 +768,12 @@ public class SaleMainFragment extends Fragment {
                                 }
                             }
                             mFilter.filter(st);
-                            //Log.d("unit",st+"len"+unitSpinner.getAdapter().getCount());
                             if(i>0){
-                                //unitSpinner.getAdapter().notify();
+                                selectUnit=true;
                                 unitSpinner.setSelection(i,true);}
                         }else{
                             mFilter.filter(currentGood.getGoods_unit());
                         }
-                       //Log.d("onGoodSelected",currentGood.goods_name);
                     }catch (JSONException e){e.printStackTrace();}
                 }
 
@@ -739,6 +785,7 @@ public class SaleMainFragment extends Fragment {
                 }
             });
         }else {
+            Utils.toast(getContext(),"价格为系统设置售价!");
             mPrice.setPrice(currentGood.getGoods_price());
             mSumEdit.setNum(currentGood.getGoods_price()*mWeight.getNum());
             IhancHttpClient.get("/index/sale/getUnitApp", params, new AsyncHttpResponseHandler() {
@@ -758,6 +805,7 @@ public class SaleMainFragment extends Fragment {
                     //Log.d("unitFail", res);
                 }
             });
+            selectUnit=true;
             unitSpinner.setSelection(0,true);
         }
     }
@@ -766,6 +814,15 @@ public class SaleMainFragment extends Fragment {
         return new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                SaleFragment mSaleFragment=(SaleFragment) mSalePagerAdapter.getItem(vp.getCurrentItem());
+                if(mSaleFragment==null || fragmentList.size()==0)
+                { dialog.member=null;
+                  Log.d("dialog","null");
+                }
+                else
+                {dialog.member=mSaleFragment.getMember();
+                Log.d("dialog",dialog.member.member_name);
+                }
                 dialog.show(getFragmentManager(),"addMemberDialog");
             }
         };

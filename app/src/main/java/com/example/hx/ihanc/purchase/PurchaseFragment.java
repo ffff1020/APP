@@ -80,6 +80,10 @@ public class PurchaseFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        if(!Utils.role && !Utils.auth.containsKey("purchase")){
+            Utils.toast(getContext(),"Sorry啊，您没有进货的权限！");
+            return null;
+        }
         getSupplyData();
         parentActivity = (MainActivity ) getActivity();
         view = inflater.inflate(R.layout.fragment_purchase, container, false);
@@ -183,6 +187,7 @@ public class PurchaseFragment extends Fragment {
         }
     }
     private void getInOrder(){
+        inorder.clear();
         IhancHttpClient.get("/index/purchase/getInOrder", null, new AsyncHttpResponseHandler() {
             @Override
             public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {

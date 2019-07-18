@@ -81,6 +81,7 @@ public class SaleFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
        // saved = false;
+
         View view = inflater.inflate(R.layout.sale_fragment, container, false);
         title=(TextView)view.findViewById(R.id.title);
         saleDetailLV=(ListView)view.findViewById(R.id.SaleDetailListView);

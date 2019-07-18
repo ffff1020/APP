@@ -7,10 +7,12 @@ public class member {
     int member_id;
     String member_name;
     String member_sn;
-    public member(int member_id,String member_name,String member_sn){
+    String tel;
+    public member(int member_id,String member_name,String member_sn,String tel){
         this.member_id=member_id;
         this.member_name=member_name;
         this.member_sn=member_sn;
+        this.tel=tel;
     }
 
     public int getMember_id() {
@@ -23,6 +25,10 @@ public class member {
 
     public String getMember_name() {
         return member_name;
+    }
+
+    public String getTel() {
+        return tel;
     }
 
     public JSONObject getMember(){

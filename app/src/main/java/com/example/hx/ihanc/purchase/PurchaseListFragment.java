@@ -46,7 +46,11 @@ public class PurchaseListFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        Log.d("purchaseList","onCreateView");
+        Log.d("purchaseCredit","onCreateView");
+        if(!Utils.role && !Utils.auth.containsKey("purchase_list")){
+            Utils.toast(getContext(),"Sorry啊，您没有查看进货列表的权限！");
+            return null;
+        }
         view = inflater.inflate(R.layout.fragment_salelist_list, container, false);
         Context context = view.getContext();
         recyclerView = (RecyclerView) view.findViewById(R.id.saleListRecyclerView);
@@ -75,7 +79,8 @@ public class PurchaseListFragment extends Fragment {
                 getData();
             }
         });
-
+        mPage=1;
+        getData();
         SearchView mSearch=view.findViewById(R.id.search);
         int id=mSearch.getContext().getResources().getIdentifier("android:id/search_src_text",null,null);
         textView=(TextView) mSearch.findViewById(id);
@@ -133,16 +138,27 @@ public class PurchaseListFragment extends Fragment {
 
 
     @Override
-    public void onResume() {
-        super.onResume();
-        Log.d("purchaseList","onResume");
-        swipeRefreshLayout.setRefreshing(true);
-        getData();
+    public void onActivityCreated(Bundle savedInstanceState) {
+        // 配置setUserVisibleHint（）方法
+        setUserVisibleHint(true);
+        super.onActivityCreated(savedInstanceState);
     }
 
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+        //可见的并且是初始化之后才加载
+        if (swipeRefreshLayout!=null && isVisibleToUser) {
+            mPage=1;
+            getData();
+        }
+    }
+
+
     private void getData(){
+        Log.d("purchaseCredit","getData");
         if(!check) return;
-        swipeRefreshLayout.setRefreshing(true);
+        if(swipeRefreshLayout!=null)swipeRefreshLayout.setRefreshing(true);
         check=false;
         RequestParams params=new RequestParams();
         params.put("page",mPage);

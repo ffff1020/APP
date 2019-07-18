@@ -124,6 +124,7 @@ public class saleListFragment extends Fragment {
             public void onListFragmentInteraction(SaleListItem item) {
                 if (dialog!=null&&dialog.getDialog()!=null&&dialog.getDialog().isShowing()) return;
                 dialog =SaleDetailDialog.newInstance(item.sale_id,item.name,Integer.parseInt(item.sum),item.member_id,item.paid,item.time);
+                dialog.remark=item.remark;
                 if(order)dialog.setType(order);
                 dialog.setListener(mPrintListener);
                 dialog.setonFreshList(new SaleDetailDialog.onFreshList() {
@@ -146,6 +147,10 @@ public class saleListFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        if(!Utils.role&&!Utils.auth.containsKey("sale_list")){
+            Utils.toast(getContext(),"sorry啊，您没有查看销售列表的权限！");
+            return null;
+        }
         view = inflater.inflate(R.layout.fragment_salelist_list, container, false);
         Context context = view.getContext();
         recyclerView = (RecyclerView) view.findViewById(R.id.saleListRecyclerView);
@@ -276,12 +281,13 @@ public class saleListFragment extends Fragment {
                         //Log.d("saleListFragment",list.getString("member_name"));
                         SaleListItem item=new SaleListItem(
                                 list.getInt("sale_id"),
-                                list.getString("time"),
+                                list.getString("time")+"--"+list.getString("user"),
                                 list.getString("member_name"),
                                 list.getString("sum"),
                                 order?0:list.getInt("finish"),
                                 list.getInt("member_id")
                                 );
+                        item.remark=list.getString("summary");
                         saleListItemList.add(item);
                     }
                     mPage++;

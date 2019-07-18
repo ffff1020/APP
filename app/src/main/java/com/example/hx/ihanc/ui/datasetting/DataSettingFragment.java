@@ -146,7 +146,8 @@ public class DataSettingFragment extends Fragment {
                         JSONObject myjObject = resArray.getJSONObject(i);
                         member mItem=new member(myjObject.getInt("member_id"),
                                 myjObject.getString("member_name"),
-                                myjObject.getString("member_sn")
+                                myjObject.getString("member_sn"),
+                                myjObject.getString("member_phone")
                         );
                         memberDataList.add(mItem);
                     }

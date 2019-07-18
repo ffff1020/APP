@@ -125,7 +125,7 @@ public class GPrinter {
         byte[] command = new byte[]{29, 33, 17};
         esc.addUserCommand(command);
         if(info!=null){
-           // Log.d("BITMAP","GPRINT");
+            // Log.d("BITMAP","GPRINT");
             esc.addSelectJustification(EscCommand.JUSTIFICATION.CENTER);
             esc.addOriginRastBitImage(info,576,0);
             //return;
@@ -138,7 +138,7 @@ public class GPrinter {
             command = new byte[]{29, 33, 0};
             esc.addUserCommand(command);
             if(receiptType.equals(RECEIPT_TYPE_CREDIT))
-               esc.addText("对账单\n");
+                esc.addText("对账单\n");
             else esc.addText("销售单\n");
             esc.addPrintAndLineFeed();
             esc.addSelectJustification(EscCommand.JUSTIFICATION.LEFT);
@@ -170,183 +170,183 @@ public class GPrinter {
             // 商品信息
             if (creditJson!= null && creditJson.length() > 0) {
                 int preSale_id=0;
-               for (int i = 0; i < creditJson.length(); i++) {
-                   try{
-                       JSONObject mDetail = creditJson.getJSONObject(i);
-                       esc.addSetHorAndVerMotionUnits((byte) PRINT_UNIT, (byte) 0);
-                       String info="";
-                       String type=mDetail.getString("type");
-                       switch (type) {
-                           case "S":
-                               if(preSale_id==0||preSale_id!=mDetail.getInt("sale_id")) {
-                                   preSale_id=mDetail.getInt("sale_id");
-                                   info=mDetail.getString("time").substring(5,10)+"  ";
-                               }else info="";
-                               esc.addText(info);
-                               info = mDetail.getString("goods_name");
-                               String[] goodsNames = new String[]{};
-                               Log.d("goodsName", info.length() + "");
-                               if (info.getBytes().length > 18) {
-                                   goodsNames = getStrList(info, 6);
-                               }
-                               esc.addSetAbsolutePrintPosition(PRINT_POSITION_0);
-                               if (goodsNames.length > 0) {
-                                   esc.addText(goodsNames[0]);
-                               } else {
-                                   esc.addText(info);
-                               }
-                               // 单价
-                               int length = mDetail.getString("price").length() - 1;
-                               info = "￥" + mDetail.getString("price").substring(0, length);
-                               //  int priceLength =info.getBytes().length;
-                               //short pricePosition = (short) (PRINT_POSITION_1 + 12 - priceLength * 3);
-                               esc.addSetAbsolutePrintPosition(PRINT_POSITION_2);
-                               esc.addText(info);      // 单价还未获取
+                for (int i = 0; i < creditJson.length(); i++) {
+                    try{
+                        JSONObject mDetail = creditJson.getJSONObject(i);
+                        esc.addSetHorAndVerMotionUnits((byte) PRINT_UNIT, (byte) 0);
+                        String info="";
+                        String type=mDetail.getString("type");
+                        switch (type) {
+                            case "S":
+                                if(preSale_id==0||preSale_id!=mDetail.getInt("sale_id")) {
+                                    preSale_id=mDetail.getInt("sale_id");
+                                    info=mDetail.getString("time").substring(5,10)+"  ";
+                                }else info="";
+                                esc.addText(info);
+                                info = mDetail.getString("goods_name");
+                                String[] goodsNames = new String[]{};
+                                Log.d("goodsName", info.length() + "");
+                                if (info.getBytes().length > 18) {
+                                    goodsNames = getStrList(info, 6);
+                                }
+                                esc.addSetAbsolutePrintPosition(PRINT_POSITION_0);
+                                if (goodsNames.length > 0) {
+                                    esc.addText(goodsNames[0]);
+                                } else {
+                                    esc.addText(info);
+                                }
+                                // 单价
+                                int length = mDetail.getString("price").length() - 1;
+                                info = "￥" + mDetail.getString("price").substring(0, length);
+                                //  int priceLength =info.getBytes().length;
+                                //short pricePosition = (short) (PRINT_POSITION_1 + 12 - priceLength * 3);
+                                esc.addSetAbsolutePrintPosition(PRINT_POSITION_2);
+                                esc.addText(info);      // 单价还未获取
 
-                               // 数量
-                               length = mDetail.getString("number").length() - 1;
-                               info = mDetail.getString("number").substring(0, length) + mDetail.getString("unit_name");
-                               int numLength = info.getBytes().length;
-                               short numPosition = (short) (PRINT_POSITION_1 + 14 - numLength * 3);
-                               esc.addSetAbsolutePrintPosition(numPosition);
-                               esc.addText(info);
-                               totalNum += mDetail.getDouble("number");
+                                // 数量
+                                length = mDetail.getString("number").length() - 1;
+                                info = mDetail.getString("number").substring(0, length) + mDetail.getString("unit_name");
+                                int numLength = info.getBytes().length;
+                                short numPosition = (short) (PRINT_POSITION_1 + 14 - numLength * 3);
+                                esc.addSetAbsolutePrintPosition(numPosition);
+                                esc.addText(info);
+                                totalNum += mDetail.getDouble("number");
 
-                               // 金额
-                               if(mDetail.getInt("sum")>0)
-                                  info = "￥" + mDetail.getInt("sum");
-                               else
-                                   info = "￥-" + mDetail.getInt("sum")*-1;
-                               int amountLength = info.getBytes().length;
-                               short amountPosition = (short) (PRINT_POSITION_3 + 11 - amountLength * 3);
-                               amountPosition = PRINT_POSITION_3;
-                               esc.addSetAbsolutePrintPosition(amountPosition);
-                               esc.addText(info);
-                               totalSum += mDetail.getInt("sum");
-                               esc.addPrintAndLineFeed();
-                               if (goodsNames == null || goodsNames.length == 0) {
-                                   esc.addPrintAndLineFeed();
-                               } else if (goodsNames != null && goodsNames.length > 1) {
-                                   esc.addSetAbsolutePrintPosition(PRINT_POSITION_0);
-                                   for (int j = 1; j < goodsNames.length; j++) {
-                                       esc.addText("" + goodsNames[j]);
-                                       esc.addPrintAndLineFeed();
-                                   }
-                               }
-                               break;
-                           case "Init":
-                               esc.addSetAbsolutePrintPosition(PRINT_POSITION_0);
-                               esc.addText("初期录入应收款");
-                               esc.addSetAbsolutePrintPosition(PRINT_POSITION_3);
-                               info = "￥" + mDetail.getString("ttl")+"\n\n";
-                               totalSum += mDetail.getInt("ttl");
-                               esc.addText(info);
-                               esc.addPrintAndLineFeed();
-                               break;
-                           case "P":
-                               esc.addSetAbsolutePrintPosition(PRINT_POSITION_0);
-                               esc.addText("客户付款");
-                               esc.addSetAbsolutePrintPosition(PRINT_POSITION_3);
-                               info = "￥" + mDetail.getString("ttl")+"\n\n";
-                               totalSum += mDetail.getInt("ttl");
-                               esc.addText(info);
-                               esc.addPrintAndLineFeed();
-                               break;
-                           case "income":
-                               esc.addSetAbsolutePrintPosition(PRINT_POSITION_0);
-                               String summary=mDetail.getString("summary");
-                               String[] sum=summary.split("-");
-                               esc.addText(sum[sum.length-1]);
-                               esc.addSetAbsolutePrintPosition(PRINT_POSITION_3);
-                               if(mDetail.getInt("ttl")>=0)
-                               info = "￥" + mDetail.getString("ttl")+"\n";
-                               else
-                                   info = "￥-" + mDetail.getInt("ttl")*-1+"\n";
-                               totalSum += mDetail.getInt("ttl");
-                               esc.addText(info);
-                               esc.addPrintAndLineFeed();
-                               break;
-                           case "cost":
-                               esc.addSetAbsolutePrintPosition(PRINT_POSITION_0);
-                               summary=mDetail.getString("summary");
-                               sum=summary.split("-");
-                               esc.addText(sum[sum.length-1]);
-                               esc.addSetAbsolutePrintPosition(PRINT_POSITION_3);
-                               if(mDetail.getInt("ttl")>0)
-                                   info = "￥" + mDetail.getString("ttl")+"\n";
-                               else
-                                   info = "￥-" + mDetail.getInt("ttl")*-1+"\n";
-                               totalSum += mDetail.getInt("ttl");
-                               esc.addText(info);
-                               esc.addPrintAndLineFeed();
-                               break;
-                           case "CF":
-                               esc.addSetAbsolutePrintPosition(PRINT_POSITION_0);
-                               esc.addText("结转余额");
-                               esc.addSetAbsolutePrintPosition(PRINT_POSITION_3);
-                               info = "￥" + mDetail.getString("ttl")+"\n";
-                               totalSum += mDetail.getInt("ttl");
-                               esc.addText(info);
-                               esc.addPrintAndLineFeed();
-                               break;
-                           case "B":
-                               if(preSale_id==0||preSale_id!=mDetail.getInt("sale_id")) {
-                                   preSale_id=mDetail.getInt("sale_id");
-                                   info=mDetail.getString("time").substring(5,10)+"  ";
-                               }else info="";
-                               esc.addText(info);
-                               info = mDetail.getString("goods_name");
-                               goodsNames = new String[]{};
-                               Log.d("goodsName", info.length() + "");
-                               if (info.length() > 6) {
-                                   goodsNames = getStrList(info, 6);
-                               }
-                               esc.addSetAbsolutePrintPosition(PRINT_POSITION_0);
-                               if (goodsNames.length > 0) {
-                                   esc.addText(goodsNames[0]);
-                               } else {
-                                   esc.addText(info);
-                               }
-                               // 单价
-                               length = mDetail.getString("price").length() - 1;
-                               info = "￥" + mDetail.getString("price").substring(0, length);
-                               //  int priceLength =info.getBytes().length;
-                               //short pricePosition = (short) (PRINT_POSITION_1 + 12 - priceLength * 3);
-                               esc.addSetAbsolutePrintPosition(PRINT_POSITION_2);
-                               esc.addText(info);      // 单价还未获取
+                                // 金额
+                                if(mDetail.getInt("sum")>0)
+                                    info = "￥" + mDetail.getInt("sum");
+                                else
+                                    info = "￥-" + mDetail.getInt("sum")*-1;
+                                int amountLength = info.getBytes().length;
+                                short amountPosition = (short) (PRINT_POSITION_3 + 11 - amountLength * 3);
+                                amountPosition = PRINT_POSITION_3;
+                                esc.addSetAbsolutePrintPosition(amountPosition);
+                                esc.addText(info);
+                                totalSum += mDetail.getInt("sum");
+                                esc.addPrintAndLineFeed();
+                                if (goodsNames == null || goodsNames.length == 0) {
+                                    esc.addPrintAndLineFeed();
+                                } else if (goodsNames != null && goodsNames.length > 1) {
+                                    esc.addSetAbsolutePrintPosition(PRINT_POSITION_0);
+                                    for (int j = 1; j < goodsNames.length; j++) {
+                                        esc.addText("" + goodsNames[j]);
+                                        esc.addPrintAndLineFeed();
+                                    }
+                                }
+                                break;
+                            case "Init":
+                                esc.addSetAbsolutePrintPosition(PRINT_POSITION_0);
+                                esc.addText("初期录入应收款");
+                                esc.addSetAbsolutePrintPosition(PRINT_POSITION_3);
+                                info = "￥" + mDetail.getString("ttl")+"\n\n";
+                                totalSum += mDetail.getInt("ttl");
+                                esc.addText(info);
+                                esc.addPrintAndLineFeed();
+                                break;
+                            case "P":
+                                esc.addSetAbsolutePrintPosition(PRINT_POSITION_0);
+                                esc.addText("客户付款");
+                                esc.addSetAbsolutePrintPosition(PRINT_POSITION_3);
+                                info = "￥" + mDetail.getString("ttl")+"\n\n";
+                                totalSum += mDetail.getInt("ttl");
+                                esc.addText(info);
+                                esc.addPrintAndLineFeed();
+                                break;
+                            case "income":
+                                esc.addSetAbsolutePrintPosition(PRINT_POSITION_0);
+                                String summary=mDetail.getString("summary");
+                                String[] sum=summary.split("-");
+                                esc.addText(sum[sum.length-1]);
+                                esc.addSetAbsolutePrintPosition(PRINT_POSITION_3);
+                                if(mDetail.getInt("ttl")>=0)
+                                    info = "￥" + mDetail.getString("ttl")+"\n";
+                                else
+                                    info = "￥-" + mDetail.getInt("ttl")*-1+"\n";
+                                totalSum += mDetail.getInt("ttl");
+                                esc.addText(info);
+                                esc.addPrintAndLineFeed();
+                                break;
+                            case "cost":
+                                esc.addSetAbsolutePrintPosition(PRINT_POSITION_0);
+                                summary=mDetail.getString("summary");
+                                sum=summary.split("-");
+                                esc.addText(sum[sum.length-1]);
+                                esc.addSetAbsolutePrintPosition(PRINT_POSITION_3);
+                                if(mDetail.getInt("ttl")>0)
+                                    info = "￥" + mDetail.getString("ttl")+"\n";
+                                else
+                                    info = "￥-" + mDetail.getInt("ttl")*-1+"\n";
+                                totalSum += mDetail.getInt("ttl");
+                                esc.addText(info);
+                                esc.addPrintAndLineFeed();
+                                break;
+                            case "CF":
+                                esc.addSetAbsolutePrintPosition(PRINT_POSITION_0);
+                                esc.addText("结转余额");
+                                esc.addSetAbsolutePrintPosition(PRINT_POSITION_3);
+                                info = "￥" + mDetail.getString("ttl")+"\n";
+                                totalSum += mDetail.getInt("ttl");
+                                esc.addText(info);
+                                esc.addPrintAndLineFeed();
+                                break;
+                            case "B":
+                                if(preSale_id==0||preSale_id!=mDetail.getInt("sale_id")) {
+                                    preSale_id=mDetail.getInt("sale_id");
+                                    info=mDetail.getString("time").substring(5,10)+"  ";
+                                }else info="";
+                                esc.addText(info);
+                                info = mDetail.getString("goods_name");
+                                goodsNames = new String[]{};
+                                Log.d("goodsName", info.length() + "");
+                                if (info.length() > 6) {
+                                    goodsNames = getStrList(info, 6);
+                                }
+                                esc.addSetAbsolutePrintPosition(PRINT_POSITION_0);
+                                if (goodsNames.length > 0) {
+                                    esc.addText(goodsNames[0]);
+                                } else {
+                                    esc.addText(info);
+                                }
+                                // 单价
+                                length = mDetail.getString("price").length() - 1;
+                                info = "￥" + mDetail.getString("price").substring(0, length);
+                                //  int priceLength =info.getBytes().length;
+                                //short pricePosition = (short) (PRINT_POSITION_1 + 12 - priceLength * 3);
+                                esc.addSetAbsolutePrintPosition(PRINT_POSITION_2);
+                                esc.addText(info);      // 单价还未获取
 
-                               // 数量
-                               length = mDetail.getString("number").length() - 1;
-                               info = mDetail.getString("number").substring(0, length) + mDetail.getString("unit_name");
-                               numLength = info.getBytes().length;
-                               numPosition = (short) (PRINT_POSITION_1 + 14 - numLength * 3);
-                               esc.addSetAbsolutePrintPosition(numPosition);
-                               esc.addText(info);
-                               totalNum += mDetail.getDouble("number");
+                                // 数量
+                                length = mDetail.getString("number").length() - 1;
+                                info = mDetail.getString("number").substring(0, length) + mDetail.getString("unit_name");
+                                numLength = info.getBytes().length;
+                                numPosition = (short) (PRINT_POSITION_1 + 14 - numLength * 3);
+                                esc.addSetAbsolutePrintPosition(numPosition);
+                                esc.addText(info);
+                                totalNum += mDetail.getDouble("number");
 
-                               // 金额
-                               info = "￥" +formatter.format( mDetail.getString("sum"));
-                               amountLength = info.getBytes().length;
-                               amountPosition = (short) (PRINT_POSITION_3 + 11 - amountLength * 3);
-                               amountPosition = PRINT_POSITION_3;
-                               esc.addSetAbsolutePrintPosition(amountPosition);
-                               esc.addText(info);
-                               totalSum += mDetail.getInt("sum");
-                               esc.addPrintAndLineFeed();
-                               if (goodsNames == null || goodsNames.length == 0) {
-                                   esc.addPrintAndLineFeed();
-                               } else if (goodsNames != null && goodsNames.length > 1) {
-                                   esc.addSetAbsolutePrintPosition(PRINT_POSITION_0);
-                                   for (int j = 1; j < goodsNames.length; j++) {
-                                       esc.addText("" + goodsNames[j]);
-                                       esc.addPrintAndLineFeed();
-                                   }
-                               }
-                               break;
-                           default:
-                               break;
-                       }
-                   }catch (JSONException e){e.printStackTrace();}
+                                // 金额
+                                info = "￥" +formatter.format( mDetail.getString("sum"));
+                                amountLength = info.getBytes().length;
+                                amountPosition = (short) (PRINT_POSITION_3 + 11 - amountLength * 3);
+                                amountPosition = PRINT_POSITION_3;
+                                esc.addSetAbsolutePrintPosition(amountPosition);
+                                esc.addText(info);
+                                totalSum += mDetail.getInt("sum");
+                                esc.addPrintAndLineFeed();
+                                if (goodsNames == null || goodsNames.length == 0) {
+                                    esc.addPrintAndLineFeed();
+                                } else if (goodsNames != null && goodsNames.length > 1) {
+                                    esc.addSetAbsolutePrintPosition(PRINT_POSITION_0);
+                                    for (int j = 1; j < goodsNames.length; j++) {
+                                        esc.addText("" + goodsNames[j]);
+                                        esc.addPrintAndLineFeed();
+                                    }
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                    }catch (JSONException e){e.printStackTrace();}
 
                 }
                 esc.addText(PRINT_LINE);
@@ -354,10 +354,10 @@ public class GPrinter {
 
             // 总计信息
             esc.addSelectJustification(EscCommand.JUSTIFICATION.RIGHT);// 设置打印居右
-            String num="合计数量："+totalNum;
+            String num="合计数量："+formatter.format(totalNum);
             esc.addText(num.substring(0,num.length())+"\n");
             if(totalSum>=0)
-            esc.addText("合计金额：￥"+formatter.format(totalSum)+"\n");
+                esc.addText("合计金额：￥"+formatter.format(totalSum)+"\n");
             else{
                 esc.addText("合计金额：￥-"+formatter.format(totalSum*-1)+"\n");
             }
@@ -381,7 +381,7 @@ public class GPrinter {
         esc.addPrintAndLineFeed();
         esc.addPrintAndLineFeed();
         esc.addPrintAndFeedLines((byte) 5);
-       // Log.d("Gprint","kaishi");
+        // Log.d("Gprint","kaishi");
         //切纸
         command = new byte[]{29, 86, 1};
         esc.addUserCommand(command);
@@ -445,9 +445,9 @@ public class GPrinter {
                             break;
                     }
                     break;
-                    case DeviceConnFactoryManager.ACTION_QUERY_PRINTER_STATE:
-                        finishPrint();
-                        break;
+                case DeviceConnFactoryManager.ACTION_QUERY_PRINTER_STATE:
+                    finishPrint();
+                    break;
                 default:
                     break;
             }
@@ -468,8 +468,8 @@ public class GPrinter {
                                 if(mSaleDetails!=null&&mSaleDetails.size()>0)
                                     sendReceiptWithResponseSale();
                                 else sendReceiptWithResponse();
-                             mORDER_PRINT=false;
-                             //finishPrint();
+                                mORDER_PRINT=false;
+                                //finishPrint();
                             }
                         });
                     }
@@ -607,7 +607,7 @@ public class GPrinter {
             esc.addSelectJustification(EscCommand.JUSTIFICATION.RIGHT);// 设置打印居右
             esc.addText("合计金额：￥"+f.format(totalSum)+"\n");
             if(paid_sum>=0)
-            esc.addText("实收金额：￥"+f.format(paid_sum)+"\n");
+                esc.addText("实收金额：￥"+f.format(paid_sum)+"\n");
             else{
                 esc.addText("实收金额：￥-"+f.format(paid_sum*-1)+"\n");
             }

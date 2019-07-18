@@ -70,10 +70,9 @@ public class PurchaseMainFragment extends Fragment {
         super.onDestroyView();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         setArguments(purchaseFragment.getBundle());
-        for (int i = 0; i <size ; i++) {
-            fragmentTransaction.remove(fragments[i]);
-        }
-        fragmentTransaction.commitAllowingStateLoss();
+        fragmentTransaction.remove(fragments[0]);
+        fragmentTransaction.remove(fragments[1]);
+        fragmentTransaction.remove(fragments[2]).commitAllowingStateLoss();
     }
 
     @Override

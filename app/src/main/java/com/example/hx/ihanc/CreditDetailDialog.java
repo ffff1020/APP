@@ -1,15 +1,18 @@
 package com.example.hx.ihanc;
 
+import android.Manifest;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.app.Application;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.preference.PreferenceManager;
@@ -17,6 +20,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.content.PermissionChecker;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -25,6 +29,7 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -87,6 +92,8 @@ public class CreditDetailDialog extends DialogFragment {
     private OnFreshCredit onFreshCredit;
     private ProgressBar mProgressView;
     private TextView selectedSumTV;
+    private ImageButton tel;
+    private String phoneNumber;
 
     public static CreditDetailDialog newInstance(int member_id,String title) {
         CreditDetailDialog f = new CreditDetailDialog();
@@ -156,6 +163,7 @@ public class CreditDetailDialog extends DialogFragment {
         paymentButton=view.findViewById(R.id.payButton);
         paymentButton.setOnClickListener(getPaymentButtonListener());
         mProgressView=view.findViewById(R.id.loading_progress);
+        tel=view.findViewById(R.id.tel);
         initData();
 
         return view;
@@ -171,7 +179,7 @@ public class CreditDetailDialog extends DialogFragment {
                 }
                 if (Utils.mCompanyInfo == null) Utils.getCompanyInfo();
                 String[] titles = title.split("--");
-                Utils.printMemberName = new member(member_id, titles[0], "");
+                Utils.printMemberName = new member(member_id, titles[0], "","");
                 MainActivity parentActivity = (MainActivity) getActivity();
                 parentActivity.printDetails();
                 SharedPreferences sp=PreferenceManager.getDefaultSharedPreferences(getActivity());
@@ -408,10 +416,30 @@ public class CreditDetailDialog extends DialogFragment {
                 String res=new String(responseBody);
                 try {
                     JSONObject resJson=new JSONObject(res);
+                    try {
+                        phoneNumber=resJson.getString("tel");
+                        if (phoneNumber.length()>7){
+                            tel.setVisibility(View.VISIBLE);
+                           // tel.setVisibility(View.GONE);
+                            tel.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View view) {
+                                    if(!hasPermission()){
+                                        requestPermissions(new String[]{Manifest.permission.CALL_PHONE},1);
+                                    }else{
+                                        intentToCall();
+                                    }
+                                }
+                            });
+                        }else{
+                            tel.setVisibility(View.GONE);
+                        }
+                    }catch (JSONException e){e.printStackTrace();tel.setVisibility(View.GONE);}
                     JSONArray list=resJson.getJSONArray("credit");
                     creditSum=resJson.getInt("credit_sum");
                     int sale_id=0;
                     for (int i = 0; i <list.length() ; i++) {
+                        Log.d("creditDetailDialog",i+"");
                         JSONObject itemJSON=list.getJSONObject(i);
                         String type=itemJSON.getString("type");
                         String goods_name="";
@@ -510,6 +538,46 @@ public class CreditDetailDialog extends DialogFragment {
             });
         } else {
             mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    private boolean hasPermission() {
+        if(Build.VERSION.SDK_INT >=23){
+            if (getContext().checkSelfPermission(Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }else{
+            if (PermissionChecker.checkSelfPermission(getContext(),Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private void intentToCall() {
+        Intent intent = new Intent(Intent.ACTION_CALL);
+        Uri data = Uri.parse("tel:" + phoneNumber);
+        intent.setData(data);
+        startActivity(intent);
+    }
+
+
+    /**
+     * 动态请求拨打电话权限后，监听用户的点击事件
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 0x11) {
+            // If request is cancelled, the result arrays are empty.
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                intentToCall();
+            } else {
+
+            }
         }
     }
 }

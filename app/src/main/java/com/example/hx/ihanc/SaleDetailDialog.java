@@ -6,6 +6,7 @@ import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Dialog;
 import android.content.ComponentName;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -21,6 +22,7 @@ import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.content.FileProvider;
+import android.support.v7.app.AlertDialog;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
@@ -30,6 +32,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -47,6 +50,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.lang.reflect.Parameter;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -87,6 +91,7 @@ public class SaleDetailDialog extends DialogFragment {
     private Button paymentButton;
     private onFreshList onFreshList;
     private Button saleButton;
+    public String remark;
 
     public static SaleDetailDialog newInstance(int sale_id,
                             String member_name,int credit,
@@ -180,7 +185,7 @@ public class SaleDetailDialog extends DialogFragment {
                 if(mSaleDetails.size()==0) return;
                 mPrintButton.setClickable(false);
                 if(Utils.mCompanyInfo==null) Utils.getCompanyInfo();
-                Utils.printMemberName=new member(member_id,member_name,"");
+                Utils.printMemberName=new member(member_id,member_name,"","");
                 RequestParams params = new RequestParams();
                 params.put("member_id", member_id);
                 params.put("sale_id", sale_id);
@@ -218,7 +223,7 @@ public class SaleDetailDialog extends DialogFragment {
                 if(mSaleDetails.size()==0) return;
                 sendWxButton.setClickable(false);
                 if(Utils.mCompanyInfo==null) Utils.getCompanyInfo();
-                Utils.printMemberName=new member(member_id,member_name,"");
+                Utils.printMemberName=new member(member_id,member_name,"","");
                 RequestParams params = new RequestParams();
                 params.put("member_id", member_id);
                 params.put("sale_id", sale_id);
@@ -280,6 +285,57 @@ public class SaleDetailDialog extends DialogFragment {
                 }
             });
         }
+
+        Button remarkButton=(Button)view.findViewById(R.id.remarkButton);
+        remarkButton.setVisibility(View.VISIBLE);
+        remarkButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                final EditText editText = new EditText(getContext());
+                editText.setTextSize(14);
+                editText.setText(remark);
+                AlertDialog dialog = new AlertDialog.Builder(getContext())
+                        .setTitle("请输入备注:")
+                        .setView(editText )
+                        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                RequestParams params=new RequestParams();
+                                params.put("sale_id",sale_id);
+                                params.put("finish",paid?1:0);
+                                params.put("summary",editText.getText().toString());
+                                IhancHttpClient.get("/index/sale/editSummary", params, new AsyncHttpResponseHandler() {
+                                    @Override
+                                    public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                                        dismiss();
+                                        mListener.fresh();
+                                    }
+
+                                    @Override
+                                    public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+
+                                    }
+                                });
+
+                            }
+                        })
+                        .setNegativeButton("取消", null)
+                        .show();
+                try {
+                    Field mAlert = AlertDialog.class.getDeclaredField("mAlert");
+                    mAlert.setAccessible(true);
+                    Object mAlertController = mAlert.get(dialog);
+                    Field mMessage = mAlertController.getClass().getDeclaredField("mTitleView");
+                    mMessage.setAccessible(true);
+                    TextView mMessageView = (TextView) mMessage.get(mAlertController);
+                    mMessageView.setTextSize(12);
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                } catch (NoSuchFieldException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
 
 
     }

@@ -26,6 +26,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import cz.msebera.android.httpclient.Header;
 
@@ -46,6 +47,8 @@ public class Utils {
     public static String printSaleId="";
     public static boolean saleTypeOrder=false;
     public static Loading loading=null;
+    public static boolean role=false;
+    public static Map<String, Boolean> auth = new HashMap<String, Boolean>();
 
 
     public static UsbDevice getUsbDeviceFromName(Context context, String usbName) {
@@ -118,4 +121,5 @@ public class Utils {
         else
             loading.dismiss();
     }
+
 }

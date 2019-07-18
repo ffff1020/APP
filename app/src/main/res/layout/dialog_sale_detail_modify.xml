@@ -5,94 +5,94 @@
     android:orientation="vertical"
     android:padding="20dp"
     >
+  <TextView
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:gravity="center"
+      android:text="@string/goods_name"
+      android:id="@+id/title"
+      android:paddingBottom="20dp"
+      />
+  <TextView
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:gravity="left"
+      android:text="@string/goods_name"
+      android:id="@+id/goods"
+      android:textColor="@color/colorAccent"
+      android:paddingBottom="10dp"
+      />
+  <EditText
+      android:layout_width="match_parent"
+      android:layout_height="0dp" />
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      >
     <TextView
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:text="@string/goods_name"
-        android:id="@+id/title"
-        android:paddingBottom="20dp"
-        />
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="left"
-        android:text="@string/goods_name"
-        android:id="@+id/goods"
+        android:text="单位:"
         android:textColor="@color/colorAccent"
         android:paddingBottom="10dp"
         />
-    <EditText
-        android:layout_width="match_parent"
-        android:layout_height="0dp" />
-    <LinearLayout
-        android:layout_width="match_parent"
+    <Spinner
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        >
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="单位:"
-            android:textColor="@color/colorAccent"
-            android:paddingBottom="10dp"
-            />
-        <Spinner
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/unitSpinner"
-            ></Spinner>
-    </LinearLayout>
-    <com.example.hx.ihanc.MyNumberEdit
-        android:id="@+id/number"
-        android:layout_width="match_parent"
-        android:layout_height="30dp"
-        >
-    </com.example.hx.ihanc.MyNumberEdit>
+        android:id="@+id/unitSpinner"
+        ></Spinner>
+  </LinearLayout>
+  <com.example.hx.ihanc.MyNumberEdit
+      android:id="@+id/number"
+      android:layout_width="match_parent"
+      android:layout_height="30dp"
+      >
+  </com.example.hx.ihanc.MyNumberEdit>
 
-    <com.example.hx.ihanc.MyNumberEdit
-        android:id="@+id/price"
-        android:layout_width="match_parent"
-        android:layout_height="30dp">
-    </com.example.hx.ihanc.MyNumberEdit>
+  <com.example.hx.ihanc.MyNumberEdit
+      android:id="@+id/price"
+      android:layout_width="match_parent"
+      android:layout_height="30dp">
+  </com.example.hx.ihanc.MyNumberEdit>
 
-    <com.example.hx.ihanc.MyNumberEdit
-        android:id="@+id/sum"
-        android:layout_width="match_parent"
-        android:layout_height="30dp">
-    </com.example.hx.ihanc.MyNumberEdit>
+  <com.example.hx.ihanc.MyNumberEdit
+      android:id="@+id/sum"
+      android:layout_width="match_parent"
+      android:layout_height="30dp">
+  </com.example.hx.ihanc.MyNumberEdit>
 
-    <LinearLayout
-        android:layout_width="match_parent"
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:paddingTop="10dp"
+      >
+    <Button
+        android:layout_marginLeft="10dp"
+        android:layout_width="0dp"
+        android:layout_weight="1"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingTop="10dp"
-        >
-        <Button
-            android:layout_marginLeft="10dp"
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:id="@+id/deleteButton"
-            android:background="@drawable/save_button"
-            android:textColor="@color/white"
-            android:text="删除"
-            android:minHeight="30dp"
-            android:layout_marginRight="10dp"
-            />
-        <Button
-            android:layout_width="0dp"
-            android:layout_weight="1"
-            android:layout_height="wrap_content"
-            android:id="@+id/saveButton"
-            android:background="@drawable/order_button"
-            android:textColor="@color/addButtonBorder"
-            android:minHeight="30dp"
-            android:text="保存"
-            android:layout_marginRight="10dp"
-            android:layout_marginLeft="10dp"
-            />
+        android:id="@+id/deleteButton"
+        android:background="@drawable/save_button"
+        android:textColor="@color/white"
+        android:text="删除"
+        android:minHeight="30dp"
+        android:layout_marginRight="10dp"
+        />
+    <Button
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="wrap_content"
+        android:id="@+id/saveButton"
+        android:background="@drawable/order_button"
+        android:textColor="@color/addButtonBorder"
+        android:minHeight="30dp"
+        android:text="保存"
+        android:layout_marginRight="10dp"
+        android:layout_marginLeft="10dp"
+        />
 
-    </LinearLayout>
+  </LinearLayout>
 
 </LinearLayout>

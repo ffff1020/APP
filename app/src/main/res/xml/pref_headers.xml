@@ -27,6 +27,14 @@
             />
     </header>
     <header
+        android:icon="@drawable/ic_format_align_justify_black_24dp"
+        android:title="系统日志" >
+        <intent
+            android:targetPackage="com.example.hx.ihanc"
+            android:targetClass="com.example.hx.ihanc.LogActivity"
+            />
+    </header>
+    <header
         android:icon="@drawable/ic_person_black_24dp"
         android:title="账号密码管理" >
         <intent

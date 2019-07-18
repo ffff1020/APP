@@ -8,7 +8,7 @@
     android:layout_height="wrap_content"
     android:padding="10dp"
     android:maxHeight="500dp"
-   >
+    >
 
     <TextView
         android:id="@+id/member_name"
@@ -37,21 +37,21 @@
         android:orientation="horizontal"
         app:layout_constraintBottom_toTopOf="@id/saleButton"
         >
-    <Button
-        android:id="@+id/wxButton"
-        style="?android:attr/buttonBarButtonStyle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="@string/send_to_wx" />
+        <Button
+            android:id="@+id/wxButton"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/send_to_wx" />
 
-    <Button
-        android:id="@+id/printButton"
-        style="?android:attr/buttonBarButtonStyle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="打印销售单" />
+        <Button
+            android:id="@+id/printButton"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="打印销售单" />
         <Button
             android:id="@+id/paymentButton"
             style="?android:attr/buttonBarButtonStyle"
@@ -59,6 +59,15 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="客户付款" />
+
+        <Button
+            android:id="@+id/remarkButton"
+            style="?android:attr/buttonBarButtonStyle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.6"
+            android:visibility="gone"
+            android:text="备注" />
 
 
     </LinearLayout>

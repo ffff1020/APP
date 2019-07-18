@@ -7,12 +7,14 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import com.example.hx.ihanc.ListPagerAdapter;
 import com.example.hx.ihanc.MainActivity;
 import com.example.hx.ihanc.R;
+import com.example.hx.ihanc.Utils;
 
 
 public class StoreFragment extends Fragment {
@@ -42,6 +44,11 @@ public class StoreFragment extends Fragment {
                              Bundle savedInstanceState) {
         //Log.d("storeFragment","onCreateView");
         // Inflate the layout for this fragment
+        if(!Utils.role && !Utils.auth.containsKey("stock")){
+            //Log.d("no auth","no auth");
+            Utils.toast(getContext(),"Sorry啊，您没有查看库存的权限！");
+            return null;
+        }
         setData();
         View view = inflater.inflate(R.layout.fragment_list, container, false);
         viewPager=view.findViewById(R.id.viewPager);

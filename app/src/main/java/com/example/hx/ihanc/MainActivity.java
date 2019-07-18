@@ -183,10 +183,20 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d("ihanc","MainActivity onCreate");
+        //Log.d("ihanc","MainActivity onCreate");
         setContentView(R.layout.activity_main);
         ActivityCollector.addActivity(this);
+        View viewStock=(View)findViewById(R.id.navigation_stock);
+        viewStock.setVisibility(View.GONE);
+        View viewPurchase=(View)findViewById(R.id.navigation_purchase);
+        viewPurchase.setVisibility(View.GONE);
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
+        if(Utils.role || Utils.auth.containsKey("stock")){
+            viewStock.setVisibility(View.VISIBLE);
+        }
+        if(Utils.role || Utils.auth.containsKey("purchase") ||Utils.auth.containsKey("purchase_list") ||Utils.auth.containsKey("scredit")){
+            viewPurchase.setVisibility(View.VISIBLE);
+        }
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
         navigation.setSelectedItemId(R.id.navigation_home);
         getStore();

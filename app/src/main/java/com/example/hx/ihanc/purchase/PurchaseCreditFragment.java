@@ -25,6 +25,7 @@ import com.example.hx.ihanc.CreditDetailDialog;
 import com.example.hx.ihanc.IhancHttpClient;
 import com.example.hx.ihanc.MycreditRecyclerViewAdapter;
 import com.example.hx.ihanc.R;
+import com.example.hx.ihanc.Utils;
 import com.example.hx.ihanc.creditFragment;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
@@ -83,6 +84,10 @@ public class PurchaseCreditFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        if(!Utils.role && !Utils.auth.containsKey("scredit")){
+            Utils.toast(getContext(),"Sorry啊，您没有查看应付款的权限！");
+            return null;
+        }
         view = inflater.inflate(R.layout.fragment_credit_list, container, false);
         context = view.getContext();
         recyclerView = (RecyclerView) view.findViewById(R.id.creditListRecyclerView);
@@ -100,7 +105,6 @@ public class PurchaseCreditFragment extends Fragment {
             }
         });
         swipeRefreshLayout.setRefreshing(true);
-        initCreditData();
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
@@ -168,11 +172,12 @@ public class PurchaseCreditFragment extends Fragment {
 
             }
         });
-
+        //initCreditData();
         return view;
     }
 
     public void initCreditData(){
+        Log.d("purchaseCredit","initCreditData");
         RequestParams params=new RequestParams();
         params.put("page",page);
         params.put("search",search);

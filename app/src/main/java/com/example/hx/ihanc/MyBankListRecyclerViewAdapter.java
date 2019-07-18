@@ -101,7 +101,5 @@ public class MyBankListRecyclerViewAdapter extends RecyclerView.Adapter<MyBankLi
                 mSumView = null;
             }
         }
-
-
     }
 }

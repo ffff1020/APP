@@ -13,10 +13,12 @@
     <item
         android:id="@+id/navigation_stock"
         android:icon="@drawable/ic_store_black_24dp"
+
         android:title="库存" />
     <item
         android:id="@+id/navigation_purchase"
         android:icon="@drawable/ic_add_to_queue_black_24dp"
+
         android:title="进货" />
     <item
         android:id="@+id/navigation_dashboard"

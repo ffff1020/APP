@@ -92,6 +92,7 @@ public class BankListFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
         view = inflater.inflate(R.layout.fragment_banklist_list, container, false);
         context = view.getContext();
         recyclerView=view.findViewById(R.id.bankListRecyclerView);

@@ -52,6 +52,8 @@ import android.widget.Toast;
 import com.alibaba.sdk.android.push.CloudPushService;
 import com.alibaba.sdk.android.push.CommonCallback;
 import com.alibaba.sdk.android.push.noonesdk.PushServiceFactory;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonIOException;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.loopj.android.http.AsyncHttpClient;
@@ -59,6 +61,7 @@ import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 import com.google.gson.Gson;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -73,7 +76,10 @@ import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.regex.Matcher;
@@ -159,6 +165,29 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                             startActivity(intent);
                             LoginActivity.this.finish();
+                            IhancHttpClient.get("/index/setting/getAuth", null, new AsyncHttpResponseHandler() {
+                                @Override
+                                public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
+                                    JsonObject JSres = new JsonParser().parse(new String(responseBody)).getAsJsonObject();
+                                    Utils.role=JSres.get("role").getAsBoolean();
+                                    if(!Utils.role){
+                                        Utils.auth=new HashMap<String, Boolean>();
+                                        JsonObject auth=JSres.get("role_auth").getAsJsonObject();
+                                        Set<String> keys = auth.keySet();
+                                        Iterator<String> key_Iterator= keys.iterator();
+                                        while (key_Iterator.hasNext()){
+                                            String key=key_Iterator.next();
+                                            Utils.auth.put(key,auth.get(key).getAsBoolean());
+                                        }
+                                    }
+                                    Log.d("login",Utils.auth.toString());
+                                }
+
+                                @Override
+                                public void onFailure(int statusCode, Header[] headers, byte[] responseBody, Throwable error) {
+
+                                }
+                            });
                         } catch (JSONException e) {
                             Log.d("JSONException", e.toString());
                             showProgress(false);
@@ -175,6 +204,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     mPrefEditor.putString("token","").commit();
                 }
             });
+
 
         }else
             {
@@ -349,7 +379,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
                     String res = new String(responseBody);
-                    Log.d("login OK",res.toString());
                     if(res.indexOf("error")>-1){
                         String error=new String("密码或验证码错误！");
                         Toast.makeText(LoginActivity.this,error,Toast.LENGTH_LONG).show();
@@ -360,6 +389,18 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                         mPrefEditor.putString("token",token);
                         mPrefEditor.putString("name",userName);
                         mPrefEditor.commit();
+                        Utils.role=JSres.get("role").getAsBoolean();
+                        if(!Utils.role){
+                            Utils.auth=new HashMap<String, Boolean>();
+                            JsonObject auth=JSres.get("role_auth").getAsJsonObject();
+                            Set<String> keys = auth.keySet();
+                            Iterator<String> key_Iterator= keys.iterator();
+                            while (key_Iterator.hasNext()){
+                                String key=key_Iterator.next();
+                                Utils.auth.put(key,auth.get(key).getAsBoolean());
+                            }
+                        }
+                        Log.d("login",Utils.auth.toString());
                         IhancHttpClient.setAuth(token);
                         IhancHttpClient.get("/index/setting/info", null, new AsyncHttpResponseHandler() {
                                     @Override
@@ -409,7 +450,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     private boolean isEmailValid(String email) {
         //TODO: Replace this with your own logic
-        Pattern p = Pattern.compile("^((13[0-9])|(19[^4,\\D])|(15[^4,\\D])|(18[0-9]))\\d{8}$");
+        Pattern p = Pattern.compile("^((18[0-9])|(13[0-9])|(19[^4,\\D])|(15[^4,\\D])|(18[0-9]))\\d{8}$");
+       // String tel = "^((1[0-9]))\\d{9}$";
+       // p = Pattern.compile(tel);
         Matcher m = p.matcher(email);
         System.out.println(m.matches()+"---");
         return m.matches();
