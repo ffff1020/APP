@@ -191,6 +191,7 @@ public class MainActivity extends AppCompatActivity {
         View viewPurchase=(View)findViewById(R.id.navigation_purchase);
         viewPurchase.setVisibility(View.GONE);
         BottomNavigationView navigation = (BottomNavigationView) findViewById(R.id.navigation);
+        Log.d("login",Utils.auth.containsKey("stock")+"");
         if(Utils.role || Utils.auth.containsKey("stock")){
             viewStock.setVisibility(View.VISIBLE);
         }

@@ -483,7 +483,7 @@ public class SaleFragment extends Fragment {
             params.put("data",data);
             params.put("detail",details);
             Date now=new Date();
-            SimpleDateFormat f=new SimpleDateFormat("yyyy-MM-dd HH:mm");
+            SimpleDateFormat f=new SimpleDateFormat("yyyy-MM-dd 00:00");
             params.put("time",f.format(now));
         }catch (JSONException e){
             e.printStackTrace();

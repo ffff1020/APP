@@ -161,10 +161,8 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                     mObject.getString("ctel"),
                                     address
                             );
-                            showProgress(false);
-                            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                            startActivity(intent);
-                            LoginActivity.this.finish();
+
+
                             IhancHttpClient.get("/index/setting/getAuth", null, new AsyncHttpResponseHandler() {
                                 @Override
                                 public void onSuccess(int statusCode, Header[] headers, byte[] responseBody) {
@@ -181,6 +179,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                         }
                                     }
                                     Log.d("login",Utils.auth.toString());
+                                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                                    startActivity(intent);
+                                    LoginActivity.this.finish();
+                                    showProgress(false);
                                 }
 
                                 @Override
